@@ -3,629 +3,600 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>權證小哥交易重點 - 實戰大會考</title>
+    <title>實戰操盤特訓戰情室 | Trading War Room</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --primary-color: #2c3e50;
-            --accent-color: #e74c3c;
-            --success-color: #27ae60;
-            --bg-color: #ecf0f1;
-            --card-bg: #ffffff;
-        }
-        
         body {
-            font-family: "Microsoft JhengHei", "Heiti TC", sans-serif;
-            background-color: var(--bg-color);
-            color: var(--primary-color);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            min-height: 100vh;
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #0f172a;
+            color: #e2e8f0;
+            overflow-x: hidden;
         }
-
-        .container {
-            background-color: var(--card-bg);
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .neon-border {
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+        }
+        .neon-text {
+            text-shadow: 0 0 10px rgba(56, 189, 248, 0.8);
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+            border-color: #38bdf8;
+        }
+        .glitch-effect {
+            position: relative;
+        }
+        .glitch-effect::before,
+        .glitch-effect::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
-            max-width: 800px;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 30px;
-            border-bottom: 2px solid var(--bg-color);
-            padding-bottom: 20px;
-        }
-
-        h1 {
-            color: var(--primary-color);
-            margin: 0;
-        }
-
-        .subtitle {
-            color: #7f8c8d;
-            margin-top: 10px;
-            font-size: 0.9em;
-        }
-
-        .info-bar {
-            display: flex;
-            justify-content: space-between;
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-weight: bold;
-        }
-
-        .question-box {
-            font-size: 1.2em;
-            margin-bottom: 25px;
-            line-height: 1.5;
-        }
-
-        .options-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 15px;
-        }
-
-        .option-btn {
-            background: white;
-            border: 2px solid #bdc3c7;
-            padding: 15px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1em;
-            transition: all 0.2s;
-            text-align: left;
-        }
-
-        .option-btn:hover:not(:disabled) {
-            background-color: #eaf2f8;
-            border-color: #3498db;
-        }
-
-        .option-btn.correct {
-            background-color: var(--success-color);
-            color: white;
-            border-color: var(--success-color);
-        }
-
-        .option-btn.wrong {
-            background-color: var(--accent-color);
-            color: white;
-            border-color: var(--accent-color);
-        }
-
-        .next-btn {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            font-size: 1.1em;
-            border-radius: 50px;
-            cursor: pointer;
-            margin-top: 25px;
-            display: none;
-            float: right;
-        }
-
-        .next-btn:hover {
-            opacity: 0.9;
-        }
-
-        .result-screen {
-            text-align: center;
-            display: none;
-        }
-
-        .score-display {
-            font-size: 4em;
-            color: var(--accent-color);
-            font-weight: bold;
-            margin: 20px 0;
-        }
-
-        .restart-btn {
-            background-color: var(--success-color);
-            color: white;
-            border: none;
-            padding: 15px 40px;
-            font-size: 1.2em;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-
-        .progress-bar {
-            height: 6px;
-            background: #eee;
-            border-radius: 3px;
-            margin-bottom: 20px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
             height: 100%;
-            background: var(--success-color);
-            width: 0%;
-            transition: width 0.3s ease;
+            background: #0f172a;
         }
-        
-        .explanation {
-            margin-top: 15px;
-            padding: 15px;
-            background-color: #fff3cd;
-            border-left: 5px solid #ffc107;
-            border-radius: 4px;
+        .btn-primary {
+            background: linear-gradient(45deg, #0ea5e9, #2563eb);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            box-shadow: 0 0 15px #0ea5e9;
+            transform: scale(1.05);
+        }
+        .scrollbar-hide::-webkit-scrollbar {
             display: none;
-            color: #856404;
         }
-
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        /* Custom Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
     </style>
 </head>
-<body>
+<body class="min-h-screen flex flex-col">
 
-<div class="container">
-    <header>
-        <h1>權證小哥交易重點 - 實戰大會考</h1>
-        <p class="subtitle">涵蓋：挑權證6大原則、獲利7大招、除權息操作策略</p>
-    </header>
+    <!-- Navbar -->
+    <nav class="border-b border-slate-700 bg-slate-900/80 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <span class="text-2xl font-black text-sky-400 tracking-tighter neon-text">飆股<span class="text-white">菁英班</span></span>
+                    </div>
+                    <div class="hidden md:block">
+                        <div class="ml-10 flex items-baseline space-x-4">
+                            <button onclick="switchView('home')" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition">首頁</button>
+                            <button onclick="switchView('archive')" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition">機密題庫 (150題)</button>
+                            <button onclick="startSimulation()" class="bg-sky-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-sky-500 transition shadow-lg shadow-sky-900/50">開始模擬 (隨機20題)</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="md:hidden">
+                    <span class="text-xs text-slate-500 font-mono">SYS.READY</span>
+                </div>
+            </div>
+        </div>
+    </nav>
 
-    <div id="quiz-area">
-        <div class="progress-bar">
-            <div class="progress-fill" id="progress-fill"></div>
+    <!-- Main Content Area -->
+    <main id="app-container" class="flex-grow container mx-auto px-4 py-8 relative">
+        
+        <!-- View: Home -->
+        <div id="view-home" class="animate-fade-in flex flex-col items-center justify-center min-h-[80vh] text-center">
+            <div class="mb-8 relative inline-block">
+                <div class="absolute -inset-1 bg-gradient-to-r from-cyan-400 to-blue-600 rounded-lg blur opacity-25 animate-pulse"></div>
+                <span class="relative px-4 py-1 bg-slate-800 rounded-full text-xs font-mono text-cyan-300 border border-cyan-500/30">VER 5.0 // MASTER_CLASS</span>
+            </div>
+            <h1 class="text-5xl md:text-7xl font-black mb-6 tracking-tight">
+                實戰操盤<span class="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-indigo-500">特訓戰情室</span>
+            </h1>
+            <p class="text-xl text-slate-400 max-w-2xl mb-12 font-light">
+                「在市場面前保持謙卑，在訊號面前保持果斷。」<br>
+                150道大師級試煉，挑戰你的技術極限。
+            </p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl">
+                <div onclick="switchView('archive')" class="group cursor-pointer bg-slate-800/50 hover:bg-slate-800 border border-slate-700 hover:border-sky-500 rounded-2xl p-8 transition-all duration-300 neon-border">
+                    <div class="h-12 w-12 bg-slate-700 rounded-lg flex items-center justify-center mb-4 group-hover:bg-sky-600 transition-colors">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 4.168 6.253v13C4.168 19.624 5.832 20 7.5 20s3.332-.376 3.332-1.747M12 6.253c1.168-.776 2.754-1.253 4.5-1.253s3.332.477 3.332 1.253v13C19.832 19.624 18.168 20 16.5 20s-3.332-.376-3.332-1.747"></path></svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-2">閱覽機密題庫</h3>
+                    <p class="text-slate-400">完整存取 150 道高階技術分析試題，包含複雜型態、指標背離與資金控管模型。</p>
+                </div>
+
+                <div onclick="startSimulation()" class="group cursor-pointer bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 hover:border-emerald-500 rounded-2xl p-8 transition-all duration-300 neon-border relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <svg class="w-24 h-24 text-emerald-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"></path></svg>
+                    </div>
+                    <div class="h-12 w-12 bg-slate-700 rounded-lg flex items-center justify-center mb-4 group-hover:bg-emerald-600 transition-colors">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-2">啟動實戰模擬</h3>
+                    <p class="text-slate-400">系統將隨機抽取 20 題進行測驗。難度提升，測試你的大師級判斷力。</p>
+                </div>
+            </div>
         </div>
 
-        <div class="info-bar">
-            <span>題目: <span id="current-question-num">1</span> / <span id="total-questions">50</span></span>
-            <span>分數: <span id="score">0</span></span>
-        </div>
-
-        <div class="question-box" id="question-text">
-            題目載入中...
-        </div>
-
-        <div class="options-grid" id="options-container">
+        <!-- View: Archive (150 Questions) -->
+        <div id="view-archive" class="hidden">
+            <div class="flex justify-between items-end mb-8 border-b border-slate-700 pb-4">
+                <div>
+                    <h2 class="text-3xl font-bold text-white">機密檔案庫</h2>
+                    <p class="text-slate-400 font-mono mt-1">TOTAL_RECORDS: 150 // ACCESS_LEVEL: MASTER</p>
+                </div>
+                <div class="flex space-x-2">
+                    <span class="px-3 py-1 rounded bg-blue-900/30 text-blue-400 text-xs border border-blue-800">基礎內功</span>
+                    <span class="px-3 py-1 rounded bg-purple-900/30 text-purple-400 text-xs border border-purple-800">進階招式</span>
+                    <span class="px-3 py-1 rounded bg-orange-900/30 text-orange-400 text-xs border border-orange-800">實戰心法</span>
+                </div>
             </div>
 
-        <div class="explanation" id="explanation"></div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6" id="archive-grid">
+                <!-- JS will populate cards here -->
+            </div>
+        </div>
 
-        <button class="next-btn" id="next-btn" onclick="nextQuestion()">下一題</button>
-    </div>
+        <!-- View: Simulation (Quiz) -->
+        <div id="view-simulation" class="hidden max-w-2xl mx-auto">
+            <!-- Progress Bar -->
+            <div class="mb-8">
+                <div class="flex justify-between text-xs font-mono text-slate-400 mb-2">
+                    <span id="quiz-progress-text">QUESTION 01/20</span>
+                    <span id="quiz-score-text">SCORE: 0</span>
+                </div>
+                <div class="h-1 w-full bg-slate-800 rounded-full overflow-hidden">
+                    <div id="quiz-progress-bar" class="h-full bg-sky-500 transition-all duration-500" style="width: 5%"></div>
+                </div>
+            </div>
 
-    <div id="result-screen" class="result-screen">
-        <h2>測驗結束！</h2>
-        <p>你的權證交易知識得分是：</p>
-        <div class="score-display" id="final-score">0</div>
-        <p id="feedback-text"></p>
-        <button class="restart-btn" onclick="restartQuiz()">再測一次</button>
-    </div>
-</div>
+            <!-- Question Card -->
+            <div id="quiz-card" class="bg-slate-800 rounded-2xl p-8 border border-slate-700 shadow-2xl relative min-h-[400px] flex flex-col">
+                <div class="absolute -top-3 -right-3">
+                    <span class="relative flex h-6 w-6">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-6 w-6 bg-sky-500"></span>
+                    </span>
+                </div>
+                
+                <div class="mb-6">
+                    <span id="quiz-category" class="inline-block px-2 py-1 bg-slate-900 rounded text-xs text-sky-400 font-mono mb-3">CATEGORY</span>
+                    <h3 id="quiz-question" class="text-2xl font-bold text-white leading-relaxed">
+                        題目載入中...
+                    </h3>
+                </div>
 
-<script>
-    // 這裡我根據小哥的講義精選了50道題目，你可以繼續依照格式加到100題
-    const questionBank = [
-        // --- 挑選原則 (6大原則) ---
-        {
-            q: "根據小哥的挑選權證原則，關於「價差比」的敘述何者正確？",
-            options: ["價差比越高越好", "價差比越低越好", "價差比不重要", "價差比必須為負值"],
-            a: 1,
-            explain: "小哥原則一：價差比要越低越好。這是交易成本，積少成多會吃光獲利。"
-        },
-        {
-            q: "在查看權證隱含波動率時，小哥認為哪一個數據最重要？",
-            options: ["IV (成交隱波)", "BIV (委買隱波)", "SIV (委賣隱波)", "歷史波動率"],
-            a: 1,
-            explain: "小哥認為最重要的是 BIV (委買隱波)，因為你要賣回給券商時是看他們的委買價，且BIV要「低且穩」。"
-        },
-        {
-            q: "關於「行使比例」的選擇，小哥的建議是？",
-            options: ["選擇行使比例高的", "選擇行使比例低的", "行使比例不影響獲利", "選擇行使比例為0.001的"],
-            a: 0,
-            explain: "原則三：行使比例高，才賺得多。高行使比例的權證通常價差比計算起來較小，且比較不會被券商在報價上吃豆腐。"
-        },
-        {
-            q: "如果預期股價短期內會大漲，應該選擇什麼樣的「實質槓桿」權證？",
-            options: ["實質槓桿愈大愈好", "實質槓桿愈小愈好", "實質槓桿為1", "實質槓桿為負"],
-            a: 0,
-            explain: "原則四：實質槓桿愈大愈賺。看對方向時，高槓桿能放大獲利，但也伴隨高風險。"
-        },
-        {
-            q: "關於 Theta 值（時間價值減損），下列何者正確？",
-            options: ["Theta值越大越好（正值）", "Theta值是負值，且假日也會扣", "Theta值只在交易日會扣", "Theta值與權證價格無關"],
-            a: 1,
-            explain: "原則五：Theta是負值，代表時間價值每天流逝。現在券商多以「日曆日」計算，所以週五買週一賣會損失3天時間價值。"
-        },
-        {
-            q: "若要長抱權證（雖然不建議），應該選擇什麼樣的溢價比率？",
-            options: ["高溢價比", "低溢價比", "溢價比超過100%", "溢價比無所謂"],
-            a: 1,
-            explain: "原則六：若要長抱，要選低溢價比。高溢價比通常是深度價外，歸零機率高。"
-        },
-        {
-            q: "什麼樣的權證容易被券商「降隱波」吃豆腐？",
-            options: ["深度價內權證", "深度價外權證", "即將到期權證", "價平權證"],
-            a: 1,
-            explain: "價外權證最怕降隱含波動率，因為價格主要由時間價值和波動率構成，一旦被降波，價格會跌很慘。"
-        },
-        
-        // --- 基礎名詞與機制 ---
-        {
-            q: "Delta 值為 0.5 的權證，代表標的股票漲 1 元時，權證理論上會漲多少？",
-            options: ["0.5 元", "1 元", "0.1 元", "5 元"],
-            a: 0,
-            explain: "Delta 代表標的漲1元，權證價格變動的金額。0.5 * 1 = 0.5。"
-        },
-        {
-            q: "看多股票（認為會漲）應該買進哪種權證？",
-            options: ["認售權證 (Put)", "認購權證 (Call)", "牛證", "熊證"],
-            a: 1,
-            explain: "看漲買認購 (Call)，看跌買認售 (Put)。"
-        },
-        {
-            q: "權證代號後兩碼若為 P，代表這是一檔？",
-            options: ["認購權證", "認售權證", "牛證", "熊證"],
-            a: 1,
-            explain: "權證代號後方若有 P、U、T 通常代表認售權證。"
-        },
-        {
-            q: "哪一種情況下，發行商可以「不掛單」？",
-            options: ["標的股票漲停時（不掛認購委賣）", "標的股票平盤時", "每天早上10點後", "隨時都可以不掛"],
-            a: 0,
-            explain: "當標的漲停時，發行商不用掛認購權證的委賣價；跌停時不用掛認售的委賣價。另外開盤前5分鐘也可以不掛。"
-        },
-        {
-            q: "權證的交易稅是多少？",
-            options: ["千分之三 (0.3%)", "千分之一 (0.1%)", "萬分之五", "免稅"],
-            a: 1,
-            explain: "權證交易稅是千分之一，比股票的千分之三便宜。"
-        },
-        {
-            q: "如果在週五買進權證，下週一賣出，會損失幾天的時間價值（Theta）？",
-            options: ["1天", "3天", "0天", "5天"],
-            a: 1,
-            explain: "大多數券商採日曆日計算，週六、週日也要扣時間價值，所以是五、六、日共3天。"
-        },
+                <div id="quiz-options" class="space-y-3 flex-grow">
+                    <!-- Options injected here -->
+                </div>
 
-        // --- 除權息策略 ---
-        {
-            q: "使用權證參與除權息的最大優點之一是？",
-            options: ["可以領到紀念品", "股利不用繳所得稅", "絕對不會賠錢", "可以參加股東會"],
-            a: 1,
-            explain: "權證參與除權息，其價值反映在履約價與行使比例的調整，投資人拿到的獲利視為證券交易所得，目前免徵所得稅。"
-        },
-        {
-            q: "小哥提到的「除權息高勝率招」，通常是在什麼時候進場？",
-            options: ["除權息後一個月", "除權息當天", "除權息前1-3天佈局", "除權息當天收盤"],
-            a: 2,
-            explain: "策略通常是：除權息前1-3天佈局（若籌碼好），除權息當天不管有無賺錢都要賣出（或視開盤情況）。"
-        },
-        {
-            q: "若股票除息（發現金），權證的履約價會如何調整？",
-            options: ["向上調整（變高）", "向下調整（變低）", "不變", "變成0"],
-            a: 1,
-            explain: "除息時股價會扣除股息變低，為了保障權證持有者權益，履約價會依比例向下調整。"
-        },
-        {
-            q: "關於二代健保補充保費，權證參與除權息需要繳交嗎？",
-            options: ["要，超過2萬就要繳", "要，不管金額都要繳", "不用繳", "看券商心情"],
-            a: 2,
-            explain: "權證參與除權息「免課徵」二代健保補充保費。"
-        },
-        {
-            q: "為何有些高殖利率股票除息當天容易開高（填息）？",
-            options: ["因為股東人數變少", "因為大股東為了避稅先賣，除息當天買回", "因為發行商拉抬", "因為散戶恐慌"],
-            a: 1,
-            explain: "大股東為了避稅（所得稅、二代健保），常在除息前賣股，除息當天買回，造成股價容易上漲。"
-        },
+                <!-- Feedback Area (Hidden initially) -->
+                <div id="quiz-feedback" class="hidden mt-6 p-4 bg-slate-900/50 rounded-lg border-l-4 border-sky-500 animate-fade-in">
+                    <p id="quiz-feedback-text" class="text-sm text-gray-300"></p>
+                    <button onclick="nextQuestion()" class="mt-4 w-full bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 px-4 rounded transition">下一題 &rarr;</button>
+                </div>
+            </div>
+        </div>
 
-        // --- 獲利7大招與進階策略 ---
-        {
-            q: "小哥的「地板天花板」策略，主要是用來做什麼交易？",
-            options: ["追高殺低", "長線存股", "短線搶反彈（逆勢交易）", "當沖放空"],
-            a: 2,
-            explain: "地板天花板策略是利用股價乖離月線過大（落入地板區）時，搶短線反彈的操作。"
-        },
-        {
-            q: "搶「地板」反彈時，小哥建議的資金控管方式是？",
-            options: ["一次All in", "資金分成10等份，分批進場", "借錢買進", "賣房子買進"],
-            a: 1,
-            explain: "搶反彈像搶銀行，有風險。建議資金分10等份，第一份資金於第二天殺低爆量時進場，若再跌再加碼，嚴格執行停損。"
-        },
-        {
-            q: "什麼是「樂透權證」？",
-            options: ["這是一種彩券", "快到期、價外、低價的權證，用小錢博大翻倍", "穩健型的權證", "發行商送的權證"],
-            a: 1,
-            explain: "樂透權證通常指剩餘天數短、價外、價格極低，一旦標的大漲，權證可能翻好幾倍，但也可能歸零，適合小資金操作。"
-        },
-        {
-            q: "關於「假外資」，小哥的觀察重點是？",
-            options: ["只要是外資都是真的", "透過特定分點（如凱基台北）做極短線交易的外資", "外資一定都做長線", "外資不會買權證"],
-            a: 1,
-            explain: "有些「外資」其實是國內主力透過外資券商戶頭操作（假外資），常有隔日沖或極短線的特性。"
-        },
-        {
-            q: "布林通道（Bollinger Bands）策略中，小哥會留意什麼訊號？",
-            options: ["股價碰到下軌且主力賣超", "股價碰到上軌且主力買超（帶量）", "股價在中間不動", "股價跌破年線"],
-            a: 1,
-            explain: "當主力買超且股價沿著布林通道上軌（翹頭）時，是強勢多頭訊號，適合順勢操作權證。"
-        },
-        {
-            q: "權證交易中，為什麼要避免使用「市價單」？",
-            options: ["市價單手續費比較貴", "容易買到或賣在不合理的價格（滑價）", "系統不支援市價單", "市價單速度太慢"],
-            a: 1,
-            explain: "權證流動性不如股票，掛單量有時不穩，下市價單極易買在漲停價或賣在跌停價，應使用限價單。"
-        },
-        {
-            q: "當發現某檔權證的隱波率（IV）忽高忽低不穩定時，應該？",
-            options: ["立刻買進", "避開該發行商或該檔權證", "加碼攤平", "打電話罵營業員"],
-            a: 1,
-            explain: "隱波不穩定的權證容易讓投資人賠在隱波下降（價格縮水），應避開。"
-        },
-        
-        // --- 更多觀念題 (補足數量) ---
-        {
-            q: "權證的英文名稱是？",
-            options: ["Stock", "Future", "Warrant", "Bond"],
-            a: 2,
-            explain: "Warrant 即為權證。"
-        },
-        {
-            q: "權證有沒有漲跌幅限制？",
-            options: ["沒有限制", "跟隨標的股票的漲跌「金額」連動", "固定10%", "固定50%"],
-            a: 1,
-            explain: "權證的漲跌停是用標的股票的漲跌停金額乘上行使比例計算，所以漲跌「幅度」可以非常大（幾倍都有可能）。"
-        },
-        {
-            q: "如果標的股票是台積電，買進「台積電認購權證」是希望台積電？",
-            options: ["上漲", "下跌", "盤整", "下市"],
-            a: 0,
-            explain: "認購是看漲。"
-        },
-        {
-            q: "如果標的股票下跌，認售權證（Put）的價格理論上會？",
-            options: ["上漲", "下跌", "不變", "歸零"],
-            a: 0,
-            explain: "認售是看跌，所以標的跌，認售權證會漲。"
-        },
-        {
-            q: "小哥建議權證停損的時機？",
-            options: ["永不停損", "看錯方向（如認購標的破線、主力賣超）就要跑", "賠光了再跑", "等到期"],
-            a: 1,
-            explain: "權證有時間價值壓力，看錯方向或趨勢改變應立即停損，「少賠就是賺」。"
-        },
-        {
-            q: "什麼是「價內」權證（以認購為例）？",
-            options: ["履約價 < 標的股價", "履約價 > 標的股價", "履約價 = 標的股價", "權證價格 < 1元"],
-            a: 0,
-            explain: "認購權證中，標的股價高於履約價稱為價內（In-the-money），有內含價值。"
-        },
-        {
-            q: "什麼是「價外」權證（以認購為例）？",
-            options: ["履約價 < 標的股價", "履約價 > 標的股價", "履約價 = 標的股價", "權證價格 > 10元"],
-            a: 1,
-            explain: "認購權證中，標的股價低於履約價稱為價外（Out-of-the-money），只有時間價值。"
-        },
-        {
-            q: "價外權證的特性是？",
-            options: ["槓桿小、風險小", "槓桿大、風險大、歸零機率高", "含金量高", "適合存股"],
-            a: 1,
-            explain: "價外權證價格低、槓桿大，但若到期前未進入價內，將會歸零。"
-        },
-        {
-            q: "小哥常用哪個工具來觀察主力籌碼？",
-            options: ["農民曆", "籌碼K線", "星座運勢", "擲筊"],
-            a: 1,
-            explain: "小哥是「籌碼K線」的愛用者與推廣者，利用它觀察分點進出。"
-        },
-        {
-            q: "買權證時，哪種券商比較好？",
-            options: ["BIV穩定、掛單量足（如499張）的券商", "BIV忽高忽低的券商", "經常不掛單的券商", "買賣價差很大的券商"],
-            a: 0,
-            explain: "好的發行商會維持穩定的委買隱波，且掛單量充足（如常見的499張），方便進出。"
-        },
-        {
-            q: "關於「流通比」過高的權證（例如接近100%），風險在於？",
-            options: ["沒風險，人氣旺最好", "籌碼都在散戶手上，價格容易失真（被買貴）", "發行商會買更多", "會變壁紙"],
-            a: 1,
-            explain: "流通比太高代表權證都在投資人手上，發行商手中無貨可賣，無法造市維持合理價格，價格容易被散戶買高，導致隱波不合理飆升。"
-        },
-        {
-            q: "權證代號通常是幾碼？",
-            options: ["4碼", "6碼", "8碼", "英文"],
-            a: 1,
-            explain: "台灣權證代號通常是6碼（如 08xxxx 或 7xxxxx）。"
-        },
-        {
-            q: "牛證跟熊證跟一般權證最大的差別是？",
-            options: ["動物不同", "有「限制價格」（回收價），碰到會強制提早結算", "沒有到期日", "不用錢"],
-            a: 1,
-            explain: "牛熊證設有界限價格，一旦觸及會強制回收（提早到期），這是與一般權證最大不同。"
-        },
-        {
-            q: "小哥說「全家一起去旅遊」時，通常暗示什麼？（講義截圖中的對話）",
-            options: ["真的去旅遊", "操作除權息行情賺旅費", "要退出股市", "推薦旅遊股"],
-            a: 1,
-            explain: "講義中學員分享「小哥教得好，用除權息賺到全家去九州的旅費」。"
-        },
-        {
-            q: "權證的「槓桿」通常大約是多少倍？",
-            options: ["1倍", "2-3倍", "3-15倍甚至更高", "100倍"],
-            a: 2,
-            explain: "權證具有高槓桿特性，常見在5-10倍，甚至更高。"
-        },
-        {
-            q: "如果一支股票成交量太小（流動性差），適合買它的權證嗎？",
-            options: ["適合，沒人搶", "不適合，標的難進出，權證更難進出（甚至券商會拉大價差）", "沒差", "適合長抱"],
-            a: 1,
-            explain: "標的流動性差，發行商避險困難，通常會拉大權證的買賣價差或降低掛單量，不適合操作。"
-        },
-        {
-            q: "小哥建議每檔權證投入的資金不要超過總資金的多少？",
-            options: ["100% (All in)", "50%", "10%", "0%"],
-            a: 2,
-            explain: "講義提到：每檔不要投入超過10%資金，風險控管很重要。"
-        },
-        {
-            q: "權證最後交易日跟到期日一樣嗎？",
-            options: ["一樣", "不一樣，最後交易日通常在到期日前2個交易日", "最後交易日比到期日晚", "看心情"],
-            a: 1,
-            explain: "權證需在「最後交易日」前賣出，否則就要進入現金結算（若價內），通常最後交易日是到期日前2天。"
-        },
-        {
-            q: "若打算持有權證參加除權息，最好選擇哪種狀態的權證？",
-            options: ["深度價外", "價平或價內", "快到期的", "隱波超高的"],
-            a: 1,
-            explain: "價內或價平權證與股價連動性較高（Delta大），較能完整吃到除權息行情的漲幅。"
-        },
-        {
-            q: "什麼是「吃歸零膏」？",
-            options: ["吃龜苓膏甜點", "權證放到期變成廢紙（價值歸零）", "賺翻了", "被券商請客"],
-            a: 1,
-            explain: "市場術語，指買進價外權證放到期，履約價值為0，本金全沒了。"
-        },
-        {
-            q: "小哥提到的「股票期貨」跟權證相比，哪個交易成本（稅+手續費）通常更低？",
-            options: ["權證", "股票期貨", "一樣", "現股"],
-            a: 1,
-            explain: "股票期貨的交易成本極低（稅十萬分之二），且無時間價值流失問題，是除權息操作的另一利器。"
-        },
-        {
-            q: "在「個股事件獲利王」中，小哥會統計什麼數據來判斷除權息勝率？",
-            options: ["公司董事長年齡", "過去幾年除權息當日的開高機率與報酬率", "公司員工人數", "公司地址"],
-            a: 1,
-            explain: "統計過去歷史數據（除息當天是否開高、填息機率）是提高勝率的關鍵。"
-        },
-        {
-            q: "如果發現有特定分點（券商）在某檔權證上大買，隔天通常會？",
-            options: ["長期持有", "隔日沖賣出（造成賣壓）", "變股東", "不一定"],
-            a: 1,
-            explain: "若是「隔日沖主力」大買權證，隔天開高通常會直接倒貨，造成權證與現股殺盤，要避開或跟著做空/賣出。"
-        },
-        {
-            q: "關於「價差比」公式，下列何者正確？",
-            options: ["(委賣-委買)/委賣", "(委賣-委買)/成交價", "(委買-委賣)/委買", "委賣/委買"],
-            a: 0,
-            explain: "價差比 = (委賣價 - 委買價) / 委賣價。分母越大或分子越小，價差比越低。"
-        },
-        {
-            q: "權證小哥是哪一家理財軟體的合作作者？",
-            options: ["CMoney 理財寶", "Yahoo股市", "PChome", "Google"],
-            a: 0,
-            explain: "講義與檔案皆來自 CMoney 理財寶。"
-        }
-    ];
+        <!-- View: Results -->
+        <div id="view-results" class="hidden max-w-2xl mx-auto text-center animate-fade-in">
+            <div class="mb-8">
+                <div class="inline-block p-6 rounded-full bg-slate-800 border-4 border-slate-700 mb-6">
+                    <span id="final-score" class="text-6xl font-black text-white">80</span>
+                    <span class="text-xl text-slate-500">/100</span>
+                </div>
+                <h2 id="result-title" class="text-3xl font-bold text-white mb-2">任務完成</h2>
+                <p id="result-msg" class="text-slate-400">分析師等級評估中...</p>
+            </div>
 
-    // 如果要補到100題，可以在這裡繼續添加...
-    // 範例：
-    // questionBank.push({ q: "題目...", options: ["A", "B"], a: 0, explain: "..." });
+            <div class="bg-slate-800/50 rounded-xl p-6 border border-slate-700 mb-8 text-left">
+                <h3 class="text-lg font-bold text-white mb-4 border-b border-slate-700 pb-2">錯題回顧</h3>
+                <ul id="wrong-answers-list" class="space-y-4 text-sm text-slate-300">
+                    <!-- Wrong answers injected here -->
+                </ul>
+            </div>
 
-    let currentQuestion = 0;
-    let score = 0;
-    let userAnswers = [];
+            <div class="flex justify-center space-x-4">
+                <button onclick="startSimulation()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-3 rounded-lg font-bold transition shadow-lg">再次挑戰</button>
+                <button onclick="switchView('home')" class="bg-slate-700 hover:bg-slate-600 text-white px-6 py-3 rounded-lg font-bold transition">返回首頁</button>
+            </div>
+        </div>
 
-    const questionText = document.getElementById('question-text');
-    const optionsContainer = document.getElementById('options-container');
-    const nextBtn = document.getElementById('next-btn');
-    const scoreDisplay = document.getElementById('score');
-    const currentQNum = document.getElementById('current-question-num');
-    const totalQNum = document.getElementById('total-questions');
-    const progressBar = document.getElementById('progress-fill');
-    const explanationDiv = document.getElementById('explanation');
-    const quizArea = document.getElementById('quiz-area');
-    const resultScreen = document.getElementById('result-screen');
-    const finalScore = document.getElementById('final-score');
-    const feedbackText = document.getElementById('feedback-text');
+    </main>
 
-    totalQNum.textContent = questionBank.length;
+    <!-- Footer -->
+    <footer class="border-t border-slate-800 py-6 mt-auto">
+        <div class="container mx-auto text-center text-slate-600 text-sm">
+            <p>&copy; 2025 實戰操盤特訓戰情室. Designed for Traders.</p>
+        </div>
+    </footer>
 
-    function loadQuestion() {
-        const qData = questionBank[currentQuestion];
-        questionText.textContent = `${currentQuestion + 1}. ${qData.q}`;
-        currentQNum.textContent = currentQuestion + 1;
-        
-        // Update Progress
-        const progress = ((currentQuestion) / questionBank.length) * 100;
-        progressBar.style.width = `${progress}%`;
+    <!-- Data & Logic -->
+    <script>
+        // 150 Questions Data
+        const questionsDB = [
+            // Phase 1: Basic (Original 1-10)
+            { id: 1, category: "基礎內功", q: "多頭趨勢（牛市）最核心的定義「底底高、頭頭高」是指什麼？", options: ["股價站上所有均線", "低點比前低高，高點突破前高", "成交量持續放大", "KD黃金交叉"], ans: 1, expl: "正確。多頭趨勢的定義就是每一個回檔的低點比前一個低點高（底底高），且每一個上漲的高點突破前一個高點（頭頭高）。" },
+            { id: 2, category: "基礎內功", q: "空頭趨勢（熊市）的特徵「頭頭低、底底低」代表什麼意義？", options: ["反彈不過前高，下跌跌破前低", "股價跌破年線", "融資餘額過高", "主力持續買超"], ans: 0, expl: "反彈不過前高，下跌跌破前低，代表賣壓持續大於買盤，是空頭標準架構。" },
+            { id: 3, category: "基礎內功", q: "哪一條均線被稱為「生命線」，是判斷中期多空的重要分水嶺？", options: ["10日線(10MA)", "20日線(20MA)", "60日線(60MA)", "120日線(120MA)"], ans: 2, expl: "60日均線（季線）代表一季的平均成本，通常被稱為「生命線」。" },
+            { id: 4, category: "基礎內功", q: "月線 (20MA) 在實戰中通常扮演什麼角色？", options: ["極短線當沖依據", "波段操作輔助與短中期趨勢線", "長期投資成本線", "判斷除權息行情"], ans: 1, expl: "20MA是月線，常被視為短中期的輔助線或主力控盤線。" },
+            { id: 5, category: "基礎內功", q: "「量先價行」在低檔起漲時如何體現？", options: ["股價漲停但量縮", "股價未大漲，成交量先異常放大", "量價同時萎縮", "融券異常增加"], ans: 1, expl: "股價尚未大漲，但成交量先出現異常放大，暗示有資金進場佈局。" },
+            { id: 6, category: "基礎內功", q: "一根實體的「長紅K棒」代表當天多空交戰的結果為何？", options: ["多空平衡", "空方勝出", "多方完全勝出", "主力出貨"], ans: 2, expl: "開低走高收最高（或接近最高），代表多方力道強勁，完全勝出。" },
+            { id: 7, category: "基礎內功", q: "「十字線」(Doji) 出現在漲多高檔或跌深低檔，通常暗示什麼？", options: ["趨勢延續", "變盤訊號（轉折）", "成交量不足", "無意義"], ans: 1, expl: "十字線代表多空力道暫時平衡，原有力道受阻，常是變盤前兆。" },
+            { id: 8, category: "基礎內功", q: "「W底」型態要確認完成，必須突破哪個位置？", options: ["左腳低點", "右腳低點", "頸線（中間高點）", "季線"], ans: 2, expl: "W底必須帶量突破頸線，型態才算完成。" },
+            { id: 9, category: "基礎內功", q: "向上跳空缺口若三天內沒有被回補，代表什麼？", options: ["多方力道強勁，趨勢可能加速", "空方力道強勁", "準備回檔", "主力誘多"], ans: 0, expl: "缺口未補代表支撐強勁，是強勢多頭的特徵。" },
+            { id: 10, category: "基礎內功", q: "KD指標中，K值大於D值（黃金交叉）通常視為哪種訊號？", options: ["賣出訊號", "觀望訊號", "短線偏多（買進）訊號", "長線空頭訊號"], ans: 2, expl: "黃金交叉是短線轉強的訊號，適合尋找買點。" },
 
-        optionsContainer.innerHTML = '';
-        explanationDiv.style.display = 'none';
-        nextBtn.style.display = 'none';
+            // Phase 2: Advanced (Original 11-20)
+            { id: 11, category: "進階招式", q: "「盤整突破」的最佳型態組合是什麼？", options: ["黑K+量縮", "長紅K+爆大量+突破切線", "十字線+量平", "長上影線+爆大量"], ans: 1, expl: "長紅K棒搭配爆大量並突破壓力線，是真突破的標準特徵。" },
+            { id: 12, category: "進階招式", q: "高檔「價漲量縮」是多頭力竭的徵兆，稱為什麼背離？", options: ["指標背離", "價量背離", "均線背離", "籌碼背離"], ans: 1, expl: "價格創新高但成交量沒跟上，稱為價量背離，暗示買盤竭盡。" },
+            { id: 13, category: "進階招式", q: "上漲途中的「量縮回檔」，只要不跌破哪裡，都視為多頭修正？", options: ["前波高點", "前波低點（支撐）", "5日均線", "開盤價"], ans: 1, expl: "只要低點不破前低，多頭架構（底底高）就沒被破壞。" },
+            { id: 14, category: "進階招式", q: "KD指標在高檔（>80）鈍化，不回檔反而持續噴出，該如何操作？", options: ["立即放空", "獲利了結", "續抱或找短線買點", "加碼攤平"], ans: 2, expl: "高檔鈍化是超強勢股特徵，通常代表主升段，不應輕易看空。" },
+            { id: 15, category: "進階招式", q: "出現「高檔爆量長黑」或「高檔爆量長上影線」通常暗示？", options: ["主力進貨", "換手成功", "主力調節或出貨", "底部確立"], ans: 2, expl: "高檔爆量收黑或留長上影線，代表賣壓湧現，主力可能正在倒貨。" },
+            { id: 16, category: "進階招式", q: "當股價在季線之上，且季線扣抵值在低檔，季線方向會如何？", options: ["下彎", "持平", "持續上揚助漲", "無方向"], ans: 2, expl: "新價高於扣抵價，均線會上揚，對股價有助漲效果。" },
+            { id: 17, category: "進階招式", q: "盤中突破壓力，收盤卻留長上影線跌回壓力之下，稱為？", options: ["真突破", "假突破（誘多）", "回後買上漲", "強勢整理"], ans: 1, expl: "這通常是主力誘多殺盤，假突破後常伴隨修正。" },
+            { id: 18, category: "進階招式", q: "MACD柱狀體由紅翻綠，代表什麼力道增強？", options: ["多方", "空方", "盤整", "主力"], ans: 1, expl: "MACD柱狀體翻綠代表空方動能增強，股價可能轉弱。" },
+            { id: 19, category: "進階招式", q: "什麼是「回後買上漲」策略？", options: ["回檔時直接接刀", "回檔破底後買進", "回檔守住支撐，轉折向上時買進", "突破新高追價"], ans: 2, expl: "確認支撐有效且多頭架構不變，看到轉折紅K再進場，勝率最高。" },
+            { id: 20, category: "進階招式", q: "為什麼選股要先看週線，再看日線？", options: ["長線保護短線", "短線決定長線", "週線比較準", "日線雜訊少"], ans: 0, expl: "確認大趨勢（週線）是多頭，日線的操作容錯率較高，稱為長線保護短線。" },
 
-        qData.options.forEach((opt, index) => {
-            const btn = document.createElement('button');
-            btn.className = 'option-btn';
-            btn.textContent = opt;
-            btn.onclick = () => checkAnswer(index, btn);
-            optionsContainer.appendChild(btn);
-        });
-    }
+            // Phase 3: Mindset (Original 21-30)
+            { id: 21, category: "實戰心法", q: "技術派最基本的停損點通常設在哪裡？", options: ["跌破買價10%", "跌破前波低點或關鍵支撐", "隨心情決定", "賠光為止"], ans: 1, expl: "跌破關鍵支撐代表進場理由消失，必須停損。" },
+            { id: 22, category: "實戰心法", q: "為什麼不能在第一筆交易就All-in滿倉？", options: ["手續費太貴", "保留容錯空間與加碼機會", "券商規定", "系統限制"], ans: 1, expl: "資金控管是生存關鍵，分批進場能降低風險。" },
+            { id: 23, category: "實戰心法", q: "當買進理由消失（例如跌破支撐），你的下一步必須是什麼？", options: ["加碼攤平", "祈禱反彈", "紀律執行停損", "刪除APP"], ans: 2, expl: "紀律是交易的靈魂，理由消失就該離場。" },
+            { id: 24, category: "實戰心法", q: "為什麼要「買強不買弱」？", options: ["強勢股上方無套牢賣壓，漲得快", "弱勢股比較便宜", "強勢股風險小", "弱勢股補漲空間大"], ans: 0, expl: "強勢股代表資金集中，趨勢明確，效率最高。" },
+            { id: 25, category: "實戰心法", q: "盤整盤（無趨勢）時，最好的操作策略是什麼？", options: ["區間來回操作", "追高殺低", "空手觀望，多看少做", "融資買進"], ans: 2, expl: "盤整期容易被雙巴，保留資金等待趨勢出現是上策。" },
+            { id: 26, category: "實戰心法", q: "看到股價急拉噴出才想追，通常犯了什麼心理謬誤？", options: ["錨定效應", "FOMO (錯失恐懼症)", "處置效應", "過度自信"], ans: 1, expl: "害怕賺不到錢而盲目追高，往往買在短線高點。" },
+            { id: 27, category: "實戰心法", q: "「利多見報」且股價在高檔不漲反跌，意味著什麼？", options: ["利多出盡，主力出貨", "洗盤", "進貨良機", "政府護盤"], ans: 0, expl: "消息面通常是落後的，高檔利多不漲往往是主力利用消息出貨。" },
+            { id: 28, category: "實戰心法", q: "賠錢的交易最重要的價值是什麼？", options: ["折抵稅金", "找出錯誤原因，修正系統", "訓練心臟", "增加經驗值"], ans: 1, expl: "檢討失敗是進步最快的方式，避免重複犯錯。" },
+            { id: 29, category: "實戰心法", q: "為什麼不要去猜測股價的頭部或底部（摸頭猜底）？", options: ["因為猜不到", "逆勢操作風險大，應等訊號確認", "主力會生氣", "軟體不支援"], ans: 1, expl: "頭部底部是市場走出來的，順勢交易者應等待趨勢反轉確認。" },
+            { id: 30, category: "實戰心法", q: "技術分析的終極目的不是預測未來，而是什麼？", options: ["解釋過去", "炫耀技術", "擬定對策", "預測股價"], ans: 2, expl: "針對各種可能走勢（漲/跌/盤）事先擬定對應的操作劇本，才是技術分析的核心。" },
 
-    function checkAnswer(selectedIndex, btn) {
-        const qData = questionBank[currentQuestion];
-        const buttons = optionsContainer.getElementsByClassName('option-btn');
-        
-        // Disable all buttons
-        for(let b of buttons) {
-            b.disabled = true;
+            // Questions 31-80 (Previous Batch)
+            { id: 31, category: "基礎內功", q: "K線組合「晨星」(Morning Star) 出現在底部，通常代表？", options: ["趨勢持續下跌", "多頭反轉訊號", "盤整訊號", "成交量萎縮"], ans: 1, expl: "晨星由長黑、跳空小十字、長紅組成，是標準的底部反轉訊號。" },
+            { id: 32, category: "基礎內功", q: "「夜星」(Evening Star) 出現在高檔，其型態特徵為？", options: ["長紅→跳空小紅/黑→長黑", "長黑→跳空小紅→長紅", "紅三兵", "黑三兵"], ans: 0, expl: "夜星是高檔反轉訊號，中間的星線代表多方力竭，隨後被長黑吞噬。" },
+            { id: 33, category: "基礎內功", q: "「多頭吞噬」型態發生時，右邊紅K實體必須？", options: ["完全包覆左邊黑K實體", "比左邊黑K短", "與左邊黑K一樣長", "不重要"], ans: 0, expl: "右邊長紅將左邊黑K完全包覆，代表多方力道強烈反擊，扭轉局勢。" },
+            { id: 34, category: "基礎內功", q: "在多頭排列中，均線的順序由上而下應為？", options: ["季線>月線>10日>5日", "5日>10日>20日>60日", "年線>季線>月線", "隨機排列"], ans: 1, expl: "多頭排列特徵是短天期均線在長天期均線之上，助漲力道最強。" },
+            { id: 35, category: "基礎內功", q: "K線留下極長的下影線（錘子），代表盤中發生什麼事？", options: ["空方一路殺盤", "多方防守成功，低接買盤強勁", "成交量急凍", "主力棄守"], ans: 1, expl: "長下影線表示盤中雖有殺盤，但收盤被多方強力拉回，有探底成功的意味。" },
+            { id: 36, category: "基礎內功", q: "什麼是「扣抵值」在均線分析中的主要功能？", options: ["計算手續費", "預測未來均線的方向（上揚或下彎）", "判斷除權息", "計算成交量"], ans: 1, expl: "若新收盤價大於扣抵價，均線會上揚；反之則下彎。可用來預判支撐或壓力變化。" },
+            { id: 37, category: "基礎內功", q: "布林通道（Bollinger Bands）的「頻寬」突然收縮變窄，通常暗示？", options: ["波動率變大", "行情即將噴出或變盤（暴風雨前的寧靜）", "成交量放大", "股價將長期盤整"], ans: 1, expl: "布林通道收縮代表波動率極低，通常是變盤前兆，接下來常伴隨大行情的突破。" },
+            { id: 38, category: "基礎內功", q: "關於「紅三兵」型態的敘述，何者正確？", options: ["連續三根黑K", "底部連續三根紅K，高點創新高", "高檔連續三根紅K", "成交量遞減"], ans: 1, expl: "紅三兵是底部反轉訊號，代表多方連續三天發動攻勢，趨勢可能翻多。" },
+            { id: 39, category: "基礎內功", q: "KD指標中的D值，相較於K值，其特性為？", options: ["反應較快，波動大", "反應較慢，較平滑穩定", "只在熊市有效", "計算成交量"], ans: 1, expl: "D值是K值的平均，反應較慢但趨勢性較強，用來確認方向。" },
+            { id: 40, category: "基礎內功", q: "當5日均線由上往下跌破20日均線，稱為？", options: ["黃金交叉", "死亡交叉", "多頭排列", "背離"], ans: 1, expl: "短均線跌破長均線，是轉弱的訊號，稱為死亡交叉。" },
+            { id: 41, category: "進階招式", q: "「島狀反轉」通常伴隨著什麼技術現象？", options: ["連續漲停", "左右兩邊都有跳空缺口", "成交量窒息", "均線糾結"], ans: 1, expl: "左右出現對稱缺口，股價像孤島一樣被隔開，是非常強烈的反轉訊號。" },
+            { id: 42, category: "進階招式", q: "遇到「假跌破」翻紅（破底翻）時，積極的操作策略是？", options: ["站回支撐或突破頸線時買進", "逢高放空", "觀望", "加碼空單"], ans: 0, expl: "假跌破常是主力洗盤，一旦站回支撐，往往伴隨強勢軋空行情。" },
+            { id: 43, category: "進階招式", q: "所謂「三線糾結」後的長紅突破，為什麼威力強大？", options: ["主力成本集中，市場共識一致", "散戶都在買", "基本面突然變好", "消息面利多"], ans: 0, expl: "均線糾結代表長中短線成本趨於一致，一旦突破，全市場皆獲利，賣壓最小。" },
+            { id: 44, category: "進階招式", q: "「上升趨勢線」的畫法是連接哪兩點？", options: ["任意兩個高點", "連續兩個波段的低點", "最高價與最低價", "開盤價與收盤價"], ans: 1, expl: "連接連續兩個波段的低點，這條線即為上升趨勢線，具支撐作用。" },
+            { id: 45, category: "進階招式", q: "在多頭回檔修正中，成交量呈現什麼狀態最健康？", options: ["量增價跌", "量縮價穩（量縮整理）", "爆大量", "無規律"], ans: 1, expl: "多頭回檔時量縮，代表獲利了結賣壓不大，籌碼安定，有利後續上攻。" },
+            { id: 46, category: "進階招式", q: "「空頭吞噬」發生在哪個位置殺傷力最大？", options: ["底部區", "盤整區", "高檔噴出後", "起漲點"], ans: 2, expl: "高檔噴出後出現長黑吞噬長紅，代表主力高檔出貨，趨勢恐將反轉。" },
+            { id: 47, category: "進階招式", q: "當RSI指標大於80時，代表市場處於什麼狀態？", options: ["超賣（低檔）", "超買（過熱）", "盤整", "無意義"], ans: 1, expl: "RSI>80為超買區，隨時可能出現回檔修正，追價風險高。" },
+            { id: 48, category: "進階招式", q: "朱老師常提的「底底高」被破壞（跌破前低），代表？", options: ["多頭趨勢改變或結束", "買點浮現", "加碼機會", "洗盤"], ans: 0, expl: "多頭慣性就是底底高，一旦前低失守，多頭架構即被破壞，應保守對應。" },
+            { id: 49, category: "進階招式", q: "什麼是「凹洞量」？通常暗示什麼？", options: ["成交量巨大，暗示出貨", "成交量急縮如凹洞，暗示洗盤將結束", "融資大增", "法人賣超"], ans: 1, expl: "股價整理末端，成交量萎縮至極致，浮額清洗完畢，常是起漲前兆。" },
+            { id: 50, category: "進階招式", q: "「乖離率」過大（正乖離過大）時，股價容易發生？", options: ["繼續噴出", "向均線靠攏（拉回修正）", "盤整", "無反應"], ans: 1, expl: "股價漲離均線太遠（乖離過大），獲利賣壓會湧現，使股價拉回修正乖離。" },
+            { id: 51, category: "進階招式", q: "「頭肩頂」型態中，最重要的防守線是？", options: ["左肩高點", "頭部高點", "頸線", "季線"], ans: 2, expl: "頸線是多方最後防線，一旦跌破，頭部型態確立，跌幅滿足點開始計算。" },
+            { id: 52, category: "進階招式", q: "長黑K棒貫穿跌破季線，且季線下彎，視為？", options: ["假跌破", "中長空確認訊號", "買進訊號", "盤整訊號"], ans: 1, expl: "生命線（季線）失守且下彎，代表中期趨勢正式轉空，不宜做多。" },
+            { id: 53, category: "進階招式", q: "「吊人線」(Hanging Man) 出現在高檔，其特徵是？", options: ["實體長黑", "實體小，下影線長", "沒有下影線", "十字線"], ans: 1, expl: "高檔出現留長下影線的小紅或小黑，看似有支撐，實為主力誘多出貨，稱為吊人線。" },
+            { id: 54, category: "進階招式", q: "如何利用「均線」判斷強勢股的拉回買點？", options: ["跌破年線買進", "回測5日或10日線不破且量縮", "跌停板買進", "隨意買"], ans: 1, expl: "強勢股通常沿著5日或10日線上攻，回測這兩條均線是短線最佳切入點。" },
+            { id: 55, category: "進階招式", q: "「三角收斂」型態走到末端，表態方向通常由什麼決定？", options: ["基本面", "帶量的突破方向", "消息面", "散戶"], ans: 1, expl: "收斂末端必須觀察「帶量」往哪個方向突破，才是真正的變盤方向。" },
+            { id: 56, category: "進階招式", q: "高檔連續出現長上影線（避雷針），主力的意圖通常是？", options: ["測試壓力，準備上攻", "邊拉邊出，調節持股", "洗盤", "進貨"], ans: 1, expl: "高檔頻留上影線，代表買盤竭盡，主力利用盤中拉高出貨。" },
+            { id: 57, category: "進階招式", q: "當股價跌深後，出現「長紅吞噬」且爆大量，視為？", options: ["主力逃命", "止跌回升的第一道曙光（關鍵K線）", "騙線", "盤整"], ans: 1, expl: "低檔爆量長紅是主力進場承接的證據，常是底部的第一根表態。" },
+            { id: 58, category: "進階招式", q: "MACD 的 DIF 線與 MACD 線都在 0 軸之上，代表？", options: ["空頭市場", "多頭市場", "盤整市場", "崩盤前兆"], ans: 1, expl: "MACD雙線在0軸之上，屬於多頭掌控的強勢區域。" },
+            { id: 59, category: "進階招式", q: "「缺口理論」中，竭盡缺口通常出現在？", options: ["起漲初期", "盤整期", "趨勢的末端", "隨機出現"], ans: 2, expl: "竭盡缺口出現在行情末端，隨後通常很快被回補，代表趨勢即將結束。" },
+            { id: 60, category: "進階招式", q: "當主力要「鎖碼」一檔股票時，K線圖常出現什麼特徵？", options: ["上下影線很長", "無量一字漲停或紅K實體長且量能控制得宜", "成交量忽大忽小", "黑K多於紅K"], ans: 1, expl: "鎖碼股籌碼穩定，主力不需大量就能推升股價，常見無量飆漲。" },
+            { id: 61, category: "進階招式", q: "遇到突發利空導致股價跳空大跌，但收盤拉出長紅棒（假黑K），暗示？", options: ["空方勝出", "低檔有強力買盤承接", "明天會跌停", "主力出清"], ans: 1, expl: "利空測試下不跌反漲，顯示主力利用利空吃貨，是強勢表徵。" },
+            { id: 62, category: "進階招式", q: "「井字戰法」中的「切線」主要功能為何？", options: ["好看", "找出趨勢變化的轉折點（突破或跌破）", "計算EPS", "預測股利"], ans: 1, expl: "切線（趨勢線）能協助判斷趨勢是否延續或反轉，突破切線常是進場點。" },
+            { id: 63, category: "進階招式", q: "什麼情況下「均線」會失去支撐與壓力的參考價值？", options: ["多頭趨勢", "空頭趨勢", "均線糾結且橫盤整理時", "剛上市"], ans: 2, expl: "盤整期均線糾結且走平，股價會反覆穿越均線，此時均線無助漲助跌功能。" },
+            { id: 64, category: "進階招式", q: "外資與投信對作（土洋對作）時，操作上應偏向？", options: ["跟隨投信（較具波段與作帳動機）", "跟隨外資", "觀望", "反向操作"], ans: 0, expl: "在中小型股中，投信的作帳行情與爆發力通常優於外資，適合波段操作。" },
+            { id: 65, category: "進階招式", q: "大量長紅突破頸線後，若出現回測頸線，只要不跌破？", options: ["快點賣出", "是絕佳的「回後買上漲」加碼點", "代表突破失敗", "準備放空"], ans: 1, expl: "突破後的量縮回測是確認支撐，只要頸線不破，就是第二次上車機會。" },
+            { id: 66, category: "實戰心法", q: "「大賺小賠」的數學關鍵在於？", options: ["勝率100%", "盈虧比（賺賠比）的控制", "本金夠厚", "手續費低"], ans: 1, expl: "即使勝率只有40%，只要賺賠比達到3:1，長期依然能大賺。" },
+            { id: 67, category: "實戰心法", q: "連續虧損時，最危險的行為是？", options: ["停止交易", "檢討", "急著想翻本，放大槓桿", "閱讀書籍"], ans: 2, expl: "急著翻本會導致情緒失控，往往忽視風險，造成毀滅性虧損。" },
+            { id: 68, category: "實戰心法", q: "「不要與趨勢作對」這句話在實戰中意味著？", options: ["多頭不做空，空頭不做多", "隨便買隨便賺", "只買低價股", "只聽明牌"], ans: 0, expl: "順勢操作是生存法則，逆勢接刀或摸頭是散戶破產主因。" },
+            { id: 69, category: "實戰心法", q: "為什麼要寫「交易日記」或「走圖」？", options: ["老師規定的", "修正錯誤，複製成功模式", "給別人看", "消磨時間"], ans: 1, expl: "複盤是進步最快的途徑，透過紀錄才能發現自己的盲點。" },
+            { id: 70, category: "實戰心法", q: "當基本面與技術面出現衝突（例如獲利好但股價破底），應以何者為準？", options: ["基本面", "技術面（股價走勢）", "新聞報導", "分析師"], ans: 1, expl: "股價反應的是資金的真實動向，基本面可能有滯後或造假，技術面不會騙人。" },
+            { id: 71, category: "實戰心法", q: "「資金控管」中的 2% 法則通常是指？", options: ["每次賺2%就跑", "每筆交易虧損不超過總資金的2%", "只用2%資金買股票", "每天交易2次"], ans: 1, expl: "限制單筆風險在總資金2%以內，能確保你不會因為連續停損而畢業。" },
+            { id: 72, category: "實戰心法", q: "面對「踏空」（賣掉後大漲），成熟交易員的心態是？", options: ["懊悔不已，立刻追回", "祝福它，尋找下一個機會", "詛咒它跌", "不再交易"], ans: 1, expl: "市場機會無限，糾結於過去的踏空會影響下一次的判斷。" },
+            { id: 73, category: "實戰心法", q: "「不做」也是一種操作，適用於什麼時候？", options: ["盤勢看不懂或勝率低時", "心情好時", "錢太多的時候", "隨時"], ans: 0, expl: "空手觀望能避開高風險的盤整或空頭，保留實力等待勝率高的機會。" },
+            { id: 74, category: "實戰心法", q: "為什麼停損單要在進場前就設好？", options: ["因為券商規定", "避免盤中猶豫與凹單心理", "顯示專業", "怕忘記"], ans: 1, expl: "盤中情緒會干擾決策，事前設好停損並嚴格執行，才能保命。" },
+            { id: 75, category: "實戰心法", q: "真正的「紀律」是指？", options: ["每天看盤", "每天交易", "在恐懼與貪婪中，依然執行原定的交易計畫", "聽老師的話"], ans: 2, expl: "知行合一，不被情緒左右，機械化地執行訊號，才是紀律。" },
+            { id: 76, category: "實戰心法", q: "關於「加碼」，最正確的觀念是？", options: ["虧損時加碼攤平成本", "獲利時順勢加碼（金字塔式）", "隨意加碼", "跌停板加碼"], ans: 1, expl: "只有在做對方向（獲利）時才加碼，擴大戰果；虧損加碼是無底洞。" },
+            { id: 77, category: "實戰心法", q: "聽到內線消息說某檔股票會噴，你該？", options: ["馬上All-in", "借錢買", "打開K線圖，確認是否有技術面訊號佐證", "不理會"], ans: 2, expl: "消息面常是主力出貨工具，必須搭配技術面（量價、型態）確認真偽。" },
+            { id: 78, category: "實戰心法", q: "交易中最大的敵人通常是？", options: ["主力", "外資", "自己（情緒與心魔）", "政府"], ans: 2, expl: "貪婪、恐懼、希望、後悔，這些人性弱點才是導致虧損的主因。" },
+            { id: 79, category: "實戰心法", q: "長期贏家的「穩定性」來自於？", options: ["運氣", "高勝率的系統 + 嚴格的風控", "內線消息", "龐大的資金"], ans: 1, expl: "沒有聖杯，只有期望值為正的系統配合鐵一般的紀律，才能長期存活。" },
+            { id: 80, category: "實戰心法", q: "如果你發現自己交易時心跳加速、手心冒汗，代表？", options: ["很興奮", "部位過大（風險超出承受力）", "生病了", "運氣來了"], ans: 1, expl: "情緒波動過大意味著風險失控，應減少部位，回到能安心睡覺的倉位大小。" },
+
+            // Questions 81-100 (Previous Batch)
+            { id: 81, category: "進階招式", q: "艾略特波浪理論中，一個完整的週期包含幾個波？", options: ["5波", "3波", "8波（5升3降）", "10波"], ans: 2, expl: "完整的波浪週期包含5個驅動波(1,2,3,4,5)和3個修正波(A,B,C)，共8波。" },
+            { id: 82, category: "進階招式", q: "在多頭波浪中，第幾波通常被認為是「主升段」，漲幅最大且最猛？", options: ["第1波", "第2波", "第3波", "第5波"], ans: 2, expl: "第3波通常是主升段，成交量最大，漲勢最猛烈，且絕不會是三個推動波中最短的一波。" },
+            { id: 83, category: "進階招式", q: "「費波那契回撤」中，哪個比例被視為多頭回檔的強勢支撐（黃金切割率）？", options: ["0.382", "0.5", "0.618", "0.786"], ans: 2, expl: "0.618 是黃金分割率，在趨勢回調中常作為強力支撐或壓力的參考點。" },
+            { id: 84, category: "進階招式", q: "當KD指標與股價出現「高檔背離」，且伴隨RSI也背離，這被稱為？", options: ["雙重背離（強烈反轉訊號）", "指標失靈", "多頭續攻", "整理"], ans: 0, expl: "多個指標同時出現背離，反轉的可靠度與機率大幅提升。" },
+            { id: 85, category: "進階招式", q: "「貫穿線」(Piercing Line) 型態若出現在低檔，第二根長紅K實體必須收在哪裡？", options: ["第一根黑K實體的一半以上", "第一根黑K的高點之上", "第一根黑K的低點之下", "隨意"], ans: 0, expl: "貫穿線要求第二根紅K收盤價必須穿越前一根黑K實體的中點(50%)以上，才算多方強勢反擊。" },
+            { id: 86, category: "進階招式", q: "量價關係中，「價平量大」發生在低檔，通常代表？", options: ["主力在吃貨（吸籌）", "主力在出貨", "散戶在買", "無意義"], ans: 0, expl: "股價跌無可跌，但成交量放大，顯示有大戶在底部低接籌碼，為打底跡象。" },
+            { id: 87, category: "實戰心法", q: "什麼是「沉沒成本謬誤」(Sunk Cost Fallacy) 在交易中的表現？", options: ["因為已經賠了很多，所以捨不得停損，想凹單凹回來", "嚴格執行停損", "分批進場", "順勢操作"], ans: 0, expl: "不甘心已實現的虧損（沉沒成本），導致做出更不理性的決策（凹單），往往賠更多。" },
+            { id: 88, category: "進階招式", q: "多重時間週期分析(MTF)的核心原則是什麼？", options: ["小週期服從大週期", "大週期服從小週期", "只看5分K", "只看月線"], ans: 0, expl: "大週期（如週線）決定趨勢方向，小週期（如日線、60分K）尋找進場點。小趨勢受制於大趨勢。" },
+            { id: 89, category: "進階招式", q: "「ATR指標」(平均真實波幅) 主要用來衡量什麼？", options: ["趨勢方向", "市場波動率（Volatility）", "成交量", "超買超賣"], ans: 1, expl: "ATR用來計算價格波動的幅度，常用於設定動態停損點（例如 2倍ATR停損）。" },
+            { id: 90, category: "進階招式", q: "當支撐線被帶量跌破後，這條線的角色會轉變為？", options: ["無效線", "新的壓力線（支撐變壓力）", "還是支撐", "趨勢線"], ans: 1, expl: "支撐跌破後，原先買進的人全部套牢，反彈至此會遇解套賣壓，故轉為壓力。" },
+            { id: 91, category: "進階招式", q: "「杯柄型態」(Cup and Handle) 的最佳買點通常在？", options: ["杯底", "杯口突破（突破柄部高點）", "杯子左邊", "柄部下跌時"], ans: 1, expl: "杯柄型態完成整理後，突破杯口壓力區（柄部高點）時，是標準的趨勢發動買點。" },
+            { id: 92, category: "進階招式", q: "「三尊頭」（頭肩頂）型態中，右肩的高度通常？", options: ["比頭部高", "比頭部低", "一定要跟左肩一樣高", "不重要"], ans: 1, expl: "右肩反彈無力突破頭部高點，顯示多頭力竭，是型態完成的特徵之一。" },
+            { id: 93, category: "進階招式", q: "在葛蘭碧八大法則中，均線下彎且股價反彈至均線附近受阻再跌，是？", options: ["買進訊號", "賣出訊號（放空點）", "觀望", "加碼"], ans: 1, expl: "此為空頭架構下的壓力測試，反彈不過均線壓力，是順勢放空的絕佳點位。" },
+            { id: 94, category: "實戰心法", q: "「倒金字塔式」加碼（越漲買越多）的主要風險是？", options: ["賺太少", "成本墊高太快，一個回檔就可能轉盈為虧", "手續費高", "券商不准"], ans: 1, expl: "正確應為正金字塔加碼（底部買最多，越上去加碼越少），倒金字塔會導致平均成本過高，重心不穩。" },
+            { id: 95, category: "進階招式", q: "什麼是「假突破」的K線特徵？", options: ["長紅實體收最高", "突破壓力後收長上影線或黑K跌回壓力之下", "跳空漲停", "量縮上漲"], ans: 1, expl: "盤中突破但收盤站不穩，留長上影線或黑K，代表突破失敗，常伴隨誘多殺盤。" },
+            { id: 96, category: "實戰心法", q: "「報復性交易」通常發生在什麼時候？", options: ["大賺之後", "剛停損或大賠後，想急著證明自己或把錢贏回來", "開盤前", "放假時"], ans: 1, expl: "這是情緒失控的表現，為了「報復」市場而頻繁進出，通常會加速虧損。" },
+            { id: 97, category: "進階招式", q: "在箱型整理（矩形）中，成交量的特徵通常是？", options: ["持續放大", "不規則", "隨著波段起伏，但在突破前通常量縮", "一路上漲"], ans: 2, expl: "整理末端成交量會萎縮（浮額清洗），等待帶量突破方向。" },
+            { id: 98, category: "進階招式", q: "「光頭光腳」的長紅棒（Marubozu）代表？", options: ["多方勢力從開盤強勢到收盤，毫無懸念", "空方強勢", "多空平衡", "變盤"], ans: 0, expl: "沒有上下影線的長紅，代表多方從頭贏到尾，是最強勢的K線訊號。" },
+            { id: 99, category: "實戰心法", q: "當你手中的股票虧損擴大，但你卻開始研究該公司的基本面利多來安慰自己，這是？", options: ["理性分析", "確認偏差（Confirmation Bias）", "停損策略", "價值投資"], ans: 1, expl: "只尋找支持自己看法（不想賣）的證據，而忽略客觀的空頭訊號，是人性的心理陷阱。" },
+            { id: 100, category: "實戰心法", q: "「The Trend is your Friend」意味著交易者應該？", options: ["跟隨趨勢順勢操作，直到趨勢改變", "和朋友一起買股票", "逆勢操作", "創造趨勢"], ans: 0, expl: "這句名言強調順勢交易的重要性，趨勢一旦形成，往往會延續一段時間。" },
+            
+            // NEW HARD QUESTIONS (101-150)
+            { id: 101, category: "進階招式", q: "關於「菱形頂」(Diamond Top) 的特徵，下列何者正確？", options: ["通常發生在底部", "由擴散型態接收斂型態組成，是大跌前兆", "是看漲的中繼型態", "成交量會持續放大"], ans: 1, expl: "菱形頂是非常罕見且強烈的頭部反轉訊號，前半部高點更高低點更低(擴散)，後半部高點更低低點更高(收斂)。" },
+            { id: 102, category: "進階招式", q: "當MACD指標產生「柱狀體背離」（價格創新高，柱狀體紅棒卻變短），暗示？", options: ["多頭力道轉弱，是比DIF交叉更早的警訊", "多頭氣勢如虹", "空方完全棄守", "盤整"], ans: 0, expl: "柱狀體代表多空力道的加速度，柱狀體背離通常是趨勢力竭的最早期訊號。" },
+            { id: 103, category: "進階招式", q: "在費波那契擴展(Extension)中，哪一個數值常用來預測波段的「漲幅滿足點」？", options: ["0.618", "1.0", "1.618", "0.236"], ans: 2, expl: "1.618 是黃金螺旋擴展倍數，常被用來測量第三波或第五波的目標滿足價位。" },
+            { id: 104, category: "實戰心法", q: "什麼是「凱利公式」(Kelly Criterion) 在交易中的核心應用？", options: ["預測股價", "計算最佳資金下注比例以最大化長期增長", "計算停損點", "選股"], ans: 1, expl: "凱利公式根據勝率與賠率，計算出單筆交易應投入的最佳資金比例，避免破產並最大化複利。" },
+            { id: 105, category: "進階招式", q: "布林通道的「走樂隊」(Walking the Bands) 現象是指？", options: ["股價在通道內震盪", "股價沿著上軌(或下軌)持續上漲(或下跌)，是強烈趨勢盤", "通道變窄", "股價突破中軌"], ans: 1, expl: "當股價緊貼著上軌持續創新高，且不回破中軌，代表極強勢的多頭行情，不應輕易逆勢放空。" },
+            { id: 106, category: "進階招式", q: "「下降楔形」(Falling Wedge) 在多頭趨勢的回檔中出現，通常視為？", options: ["看跌型態", "看漲的中繼型態", "頭部型態", "盤整"], ans: 1, expl: "下降楔形雖然高點降低低點也降低，但收斂角度顯示空方力竭，突破上緣後往往伴隨大漲。" },
+            { id: 107, category: "實戰心法", q: "「處置效應」(Disposition Effect) 指的是投資人傾向？", options: ["太早賣出獲利股票，卻死抱虧損股票", "太晚賣出獲利股票", "太早停損", "不買股票"], ans: 0, expl: "人性厭惡實現虧損（不想承認錯誤），卻急於落袋為安（想要確定的獎勵），導致「截斷獲利，讓虧損奔跑」。" },
+            { id: 108, category: "進階招式", q: "量價結構中，「量縮價跌」在空頭跌勢的末端（急跌後）出現，可能暗示？", options: ["殺盤動力耗盡，有機會止跌", "跌勢剛開始", "主力出貨", "無量下跌"], ans: 0, expl: "急跌一段後量能急縮，代表想賣的人都賣光了，賣壓竭盡，有機會醞釀反彈。" },
+            { id: 109, category: "進階招式", q: "若股價跌破頸線後反彈測試頸線，量能放大但無法站回，這叫？", options: ["假跌破", "逃命波（確認壓力）", "回升波", "主升段"], ans: 1, expl: "反彈測頸線是最後的逃命機會，量大不漲回，確認頸線由支撐轉為實質壓力。" },
+            { id: 110, category: "實戰心法", q: "當你設定了「移動停利」(Trailing Stop) 後，最忌諱的行為是？", options: ["隨著獲利增加往上調高停利點", "當股價回檔接近停利點時，往下移動停利點", "嚴格執行", "忘記設定"], ans: 1, expl: "往下移動停利點等於是擴大潛在虧損並違背原先計畫，會讓獲利回吐甚至轉盈為虧。" },
+            { id: 111, category: "進階招式", q: "「RSI背離」發生在RSI指標的哪個區間最為有效？", options: ["50附近", "20以下或80以上（極端區）", "隨意", "交叉時"], ans: 1, expl: "背離訊號在超買區(>80)或超賣區(<20)出現時，反轉的可信度最高。" },
+            { id: 112, category: "進階招式", q: "「三鴉懸空」(Three Black Crows) 型態出現在高檔，其特徵為？", options: ["連續三根長紅", "連續三根開低走低收最低的黑K，且每天開盤在前一天實體內", "三根十字線", "量縮上漲"], ans: 1, expl: "這是極為惡劣的崩盤前兆，代表主力不計價連續殺盤，多頭潰敗。" },
+            { id: 113, category: "進階招式", q: "如何分辨「真突破」與「假突破」的量能差異？", options: ["真突破量縮，假突破量大", "真突破必須溫和放量，假突破常爆天量後無力", "兩者沒差", "看運氣"], ans: 1, expl: "真突破需要扎實的買盤推升（溫和放量），異常的爆天量常是籌碼混亂或主力對倒的假象。" },
+            { id: 114, category: "進階招式", q: "在威科夫操盤法(Wyckoff)中，底部的「Spring」(彈簧/震倉) 意指？", options: ["跌破支撐後迅速拉回，清洗浮額的假跌破", "突破壓力", "盤整", "出貨"], ans: 0, expl: "Spring是主力在拉抬前的最後一次洗盤，故意跌破支撐把不堅定的籌碼洗掉，隨後快速拉升。" },
+            { id: 115, category: "進階招式", q: "關於「跳空缺口」，若在除權息當日發生的缺口，技術分析上應如何看待？", options: ["視為強力支撐", "視為強力壓力", "應透過「還原權值」K線圖來判斷其實際多空意義", "忽略不計"], ans: 2, expl: "除權息造成的缺口是數學計算結果，非市場買賣力道造成，必須看還原圖才能判斷真實趨勢。" },
+            { id: 116, category: "實戰心法", q: "「過度交易」(Overtrading) 的主要成因通常不包括？", options: ["想快速致富", "無聊尋求刺激", "嚴格遵守交易計畫", "報復市場"], ans: 2, expl: "嚴格遵守計畫通常會減少交易頻率，過度交易多源於情緒或缺乏紀律。" },
+            { id: 117, category: "進階招式", q: "當週線KD黃金交叉，但日線KD高檔鈍化，應如何操作？", options: ["放空", "順勢做多，日線鈍化代表波段強勢", "出場觀望", "反向操作"], ans: 1, expl: "長線(週)保護短線(日)，週線轉多且日線鈍化，代表主升段行情，是獲利最豐厚的一段。" },
+            { id: 118, category: "進階招式", q: "「碟型底」(Rounding Bottom) 的形成時間通常？", options: ["很短", "很長，主力慢火燉煮", "一天", "不一定"], ans: 1, expl: "碟型底是長期的底部型態，主力透過長時間的緩跌緩漲慢慢吸籌，爆發力極強。" },
+            { id: 119, category: "進階招式", q: "「乖離率」(BIAS) 的交易策略中，逆勢操作(搶反彈)的風險在於？", options: ["指標鈍化（乖離可以更乖離）", "手續費", "看不懂", "量能不足"], ans: 0, expl: "在強烈趨勢中，股價可以連續噴出造成正乖離持續擴大(鈍化)，此時逆勢放空會被軋上天。" },
+            { id: 120, category: "進階招式", q: "「內困三日翻紅」(Three Inside Up) 是哪三根K線的組合？", options: ["長黑+長紅+長黑", "長黑+被包覆的小紅/十字+收盤突破長黑高點的長紅", "紅+黑+紅", "黑+黑+黑"], ans: 1, expl: "第一根長黑，第二根被包覆在長黑內(母子)，第三根長紅突破第一根高點，確認反轉。" },
+            { id: 121, category: "進階招式", q: "當股價突破下降趨勢線(切線)時，最安全的買點是？", options: ["突破瞬間", "突破後回測趨勢線不破，勾頭向上時", "突破前", "突破後爆量"], ans: 1, expl: "突破瞬間可能有假突破風險，等待回測確認支撐有效再進場，勝率最高。" },
+            { id: 122, category: "實戰心法", q: "交易系統中的「期望值」(Expectancy) 計算公式為？", options: ["(勝率 × 平均獲利) - (敗率 × 平均虧損)", "勝率 × 賠率", "獲利金額 - 虧損金額", "勝率 + 敗率"], ans: 0, expl: "期望值是正的，代表這套系統長期下來能賺錢；若是負的，交易越多賠越多。" },
+            { id: 123, category: "進階招式", q: "在均線扣抵觀念中，若扣抵值在未來一週將「由下往上」急劇升高，對目前均線的影響是？", options: ["助漲", "助跌（均線容易下彎壓力變大）", "沒影響", "盤整"], ans: 1, expl: "扣抵高價區代表舊的低價移出、新的可能較低價移入，平均成本難以上升，均線容易下彎形成蓋頭反壓。" },
+            { id: 124, category: "進階招式", q: "關於「V型反轉」(V-Reversal)，操作難度高的原因在於？", options: ["沒有打底過程，速度太快難以切入", "量能太小", "型態太醜", "主力不愛"], ans: 0, expl: "V轉通常發生在消息面劇變，缺乏底部的籌碼沉澱，往往來不及確認就噴出，追價風險高。" },
+            { id: 125, category: "進階招式", q: "「孕育線」(Harami) 若出現在漲勢末端，暗示？", options: ["趨勢加速", "多頭力道受阻，行情可能轉為盤整或反轉", "主力加碼", "無意義"], ans: 1, expl: "長紅棒後出現一根被包覆的小黑或小紅，代表多方動能突然消失，是變盤的前兆。" },
+            { id: 126, category: "進階招式", q: "在籌碼分析中，若「融資餘額」持續增加但股價卻持續下跌，代表？", options: ["散戶在接刀，籌碼凌亂（散戶套牢）", "主力在買", "反彈在即", "融資軋空"], ans: 0, expl: "融資通常代表散戶指標，股價跌融資增，代表散戶不死心沿路攤平，籌碼落入弱者手中，易跌難漲。" },
+            { id: 127, category: "實戰心法", q: "「倖存者偏差」(Survivorship Bias) 在選股研究中的誤區是？", options: ["只看到飆股的特徵，忽略了具備同樣特徵但失敗下市的股票", "只看基本面", "只看技術面", "只聽消息"], ans: 0, expl: "若只研究成功的飆股，會誤以為某種訊號必勝，卻忘了死在同樣訊號下的無數亡魂。" },
+            { id: 128, category: "進階招式", q: "當發生「多頭背離」(底背離) 時，股價與指標的關係是？", options: ["股價創新低，指標沒創新低（甚至墊高）", "股價創新高，指標沒創新高", "股價跟指標同步新低", "股價跟指標同步新高"], ans: 0, expl: "價格跌破前低，但指標(如KD/RSI)不再破低，顯示殺盤力道減弱，是底部反轉訊號。" },
+            { id: 129, category: "進階招式", q: "在波浪理論中，修正波的形態通常比驅動波更？", options: ["簡單", "複雜且耗時（如鋸齒、平台、三角整理）", "快速", "規則"], ans: 1, expl: "修正波(A-B-C)的變化多端，經常出現複合型態，是操作難度最高的階段。" },
+            { id: 130, category: "進階招式", q: "對於「除息」造成的缺口，若能在短時間內（例如3天）完全回補（填息），代表？", options: ["多頭氣勢極強", "空頭氣勢強", "主力出貨", "盤整"], ans: 0, expl: "快速填息代表市場對公司未來極度看好，不願讓股價停留在低檔，是強勢多頭特徵。" },
+            { id: 131, category: "進階招式", q: "「一字底」(Flat Base) 整理期通常需要多久以上才具備爆發力？", options: ["3天", "5週甚至更久", "10分鐘", "1年"], ans: 1, expl: "根據坎斯林(CAN SLIM)法則，穩固的底部整理至少需要數週，籌碼換手乾淨後，突破才有力。" },
+            { id: 132, category: "實戰心法", q: "在虧損時，為了「攤平成本」而加碼，這在專業交易中被視為？", options: ["高明的策略", "大忌（向下攤平是接刀子）", "必要的手段", "唯一的選擇"], ans: 1, expl: "華爾街名言：Losers Average Losers. 虧損代表你看錯，加碼只會讓錯誤放大，甚至導致斷頭。" },
+            { id: 133, category: "進階招式", q: "當股價在高檔出現「流星線」(Shooting Star)，且成交量爆大，確認反轉的關鍵是？", options: ["隔日開低或收破流星線低點", "隔日開高", "不用確認", "隔日漲停"], ans: 0, expl: "單一K線不足以確認，必須等隔日空方表態（跌破低點），才確認流星線的壓力有效。" },
+            { id: 134, category: "進階招式", q: "「OBV指標」(能量潮) 創新高，但股價尚未創新高，通常暗示？", options: ["量先價行，股價隨後可能跟進創新高", "主力出貨", "指標失靈", "看空"], ans: 0, expl: "OBV累計了買盤能量，先行創高代表資金已經進駐，股價落後補漲機率大。" },
+            { id: 135, category: "進階招式", q: "在上升通道中，股價跌破下軌道線，是？", options: ["買點", "趨勢轉弱或轉空的警訊", "加碼點", "正常回檔"], ans: 1, expl: "通道下軌是上升趨勢的支撐線，一旦跌破，代表上升慣性被打破，多頭應避險。" },
+            { id: 136, category: "實戰心法", q: "「黑天鵝效應」對交易者的啟示是？", options: ["黑天鵝不會發生", "永遠要為不可預測的極端風險預留後路（風控）", "預測黑天鵝", "忽視它"], ans: 1, expl: "極端事件無法預測但影響巨大，唯有嚴格的資金控管與停損，才能在黑天鵝來襲時存活。" },
+            { id: 137, category: "進階招式", q: "關於「支撐與壓力互換」原則，當壓力突破後，未來股價回測該價位時，它會變成？", options: ["壓力", "支撐", "無效", "阻力"], ans: 1, expl: "突破後的壓力線，因投資人解套獲利心態轉變及新買盤進駐，會轉變為支撐線。" },
+            { id: 138, category: "進階招式", q: "技術分析中的「2B法則」(反轉法則) 是指？", options: ["股價創新高後隨即跌回前波高點之下，暗示假突破與潛在反轉", "兩次買進", "兩個底部", "B波反彈"], ans: 0, expl: "2B法則專門用來捕捉假突破後的反轉行情，是勝率極高的逆勢操作技巧。" },
+            { id: 139, category: "進階招式", q: "當月線、季線、半年線、年線全部糾結在一起，且股價在其上，稱為？", options: ["四線合一，多頭共振", "空頭排列", "盤整", "乖離過大"], ans: 0, expl: "長短天期均線匯聚，代表長線短線成本一致且籌碼安定，一旦發動往往是大波段行情。" },
+            { id: 140, category: "實戰心法", q: "為什麼在重大利多公佈「前」股價往往已經大漲？", options: ["散戶先知先覺", "內線交易與聰明錢(Smart Money)早已卡位（Price discounts everything）", "運氣好", "巧合"], ans: 1, expl: "股價會提前反應未來預期，等到利多見報，聰明錢已經準備獲利了結（利多出盡）。" },
+            { id: 141, category: "進階招式", q: "CDP指標(逆勢操作系統)主要適用於哪種盤勢？", options: ["強趨勢盤", "無趨勢的盤整震盪盤", "崩盤", "飆漲盤"], ans: 1, expl: "CDP利用前一日高低收計算短線支撐壓力，適合在盤整盤中高出低進，趨勢盤則容易過早出場或逆勢受傷。" },
+            { id: 142, category: "進階招式", q: "在日線圖出現「並列紅黑K」(Side-by-side lines)，且發生在跳空缺口之後，通常代表？", options: ["趨勢延續", "反轉", "盤整", "主力出貨"], ans: 0, expl: "多頭趨勢中跳空後出現並列線，代表多方在高檔換手積極，缺口不補，趨勢將延續。" },
+            { id: 143, category: "進階招式", q: "「SAR指標」(拋物線指標) 的主要用途是？", options: ["預測高點", "移動停損(Trailling Stop)與趨勢跟隨", "看成交量", "看基本面"], ans: 1, expl: "SAR 的點位會隨著股價趨勢移動，一旦股價觸及SAR點位即反轉訊號，非常適合作為移動停利點。" },
+            { id: 144, category: "實戰心法", q: "當你發現你的交易系統在某段時間連續失效，你應該？", options: ["加倍下注", "放棄該系統", "暫停交易，檢視市場屬性是否改變（例如從趨勢盤變盤整盤）", "罵髒話"], ans: 2, expl: "沒有一套系統能適應所有盤勢，連續失效通常是因為盤勢特性改變（如趨勢策略遇到盤整盤），應暫停並調整。" },
+            { id: 145, category: "進階招式", q: "關於「主力吸籌」的量價特徵，下列何者錯誤？", options: ["量縮價穩", "利空不跌", "爆大量長黑破底後不反彈", "低檔出現紅K多於黑K"], ans: 2, expl: "爆大量長黑破底且不反彈，代表主力棄守或甚至主力也在賣，絕非吸籌。" },
+            { id: 146, category: "進階招式", q: "在K線型態中，「身懷六甲」(母子線) 的子線若突破母線高點，稱為？", options: ["母子變盤", "內困三日翻紅的確認", "假突破", "懷孕"], ans: 1, expl: "母子線本是盤整觀望訊號，一旦子線突破母線高點，即確認多方表態，轉為攻擊訊號。" },
+            { id: 147, category: "進階招式", q: "CCI指標在+100與-100之間波動時，通常被視為？", options: ["趨勢盤", "常態分佈區（盤整區）", "超買區", "超賣區"], ans: 1, expl: "CCI突破+100代表進入強勢趨勢區，跌破-100進入弱勢趨勢區，中間則為無趨勢震盪。" },
+            { id: 148, category: "實戰心法", q: "「機會成本」在交易中的應用是指？", options: ["資金卡在不會動的股票上，錯失了其他飆股的獲利機會", "手續費", "稅金", "時間成本"], ans: 0, expl: "死抱爛股不只會有帳面虧損，更嚴重的是看不見的機會成本，讓你無法參與其他強勢股的行情。" },
+            { id: 149, category: "進階招式", q: "當一檔股票的「周轉率」突然過高（例如單日>20%），且股價在高檔滯漲，暗示？", options: ["人氣匯集，還會漲", "主力換手給散戶（籌碼極度不穩）", "基本面大好", "無意義"], ans: 1, expl: "高檔周轉率過高代表籌碼極度混亂，通常是主力趁人氣沸騰時倒貨給散戶的跡象。" },
+            { id: 150, category: "進階招式", q: "技術分析的「碎形」(Fractal) 概念是指？", options: ["K線破掉", "不同時間週期（月/週/日/分）圖表存在相似的型態結構", "均線糾結", "指標背離"], ans: 1, expl: "市場具有碎形幾何特性，大週期的型態往往由小週期的相似型態組成，這也是多重週期分析的基礎。" }
+        ];
+
+        // State
+        let currentQuiz = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let wrongAnswers = [];
+
+        // DOM Elements
+        const views = {
+            home: document.getElementById('view-home'),
+            archive: document.getElementById('view-archive'),
+            simulation: document.getElementById('view-simulation'),
+            results: document.getElementById('view-results')
+        };
+        const archiveGrid = document.getElementById('archive-grid');
+        const quizCard = {
+            category: document.getElementById('quiz-category'),
+            question: document.getElementById('quiz-question'),
+            options: document.getElementById('quiz-options'),
+            feedback: document.getElementById('quiz-feedback'),
+            feedbackText: document.getElementById('quiz-feedback-text'),
+            progressText: document.getElementById('quiz-progress-text'),
+            scoreText: document.getElementById('quiz-score-text'),
+            progressBar: document.getElementById('quiz-progress-bar')
+        };
+
+        // Initialize Archive
+        function initArchive() {
+            archiveGrid.innerHTML = '';
+            questionsDB.forEach(q => {
+                const card = document.createElement('div');
+                card.className = "bg-slate-800/50 p-6 rounded-xl border border-slate-700 hover:border-sky-500 transition-all hover:bg-slate-800 neon-border card-hover";
+                
+                let tagColor = "text-sky-400 border-sky-800 bg-sky-900/30";
+                if(q.category === "進階招式") tagColor = "text-purple-400 border-purple-800 bg-purple-900/30";
+                if(q.category === "實戰心法") tagColor = "text-orange-400 border-orange-800 bg-orange-900/30";
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-xs font-mono px-2 py-1 rounded border ${tagColor}">${q.category}</span>
+                        <span class="text-slate-500 font-mono text-xs">NO.${String(q.id).padStart(3, '0')}</span>
+                    </div>
+                    <h3 class="font-bold text-white text-lg mb-4 min-h-[3.5rem]">${q.q}</h3>
+                    <div class="relative group">
+                        <div class="bg-slate-900 p-4 rounded text-sm text-slate-300 border border-slate-700">
+                            <span class="text-emerald-400 font-bold block mb-1">正確解答：${q.options[q.ans]}</span>
+                            <p class="text-slate-400 text-xs mt-2 border-t border-slate-700 pt-2">${q.expl}</p>
+                        </div>
+                    </div>
+                `;
+                archiveGrid.appendChild(card);
+            });
         }
 
-        if(selectedIndex === qData.a) {
-            btn.classList.add('correct');
-            score += 2; // 假設每題2分，或根據題目數調整
-            scoreDisplay.textContent = score;
-        } else {
-            btn.classList.add('wrong');
-            buttons[qData.a].classList.add('correct');
+        // Navigation
+        function switchView(viewName) {
+            Object.values(views).forEach(el => el.classList.add('hidden'));
+            views[viewName].classList.remove('hidden');
+            window.scrollTo(0, 0);
         }
 
-        // Show Explanation
-        explanationDiv.textContent = `💡 解析：${qData.explain}`;
-        explanationDiv.style.display = 'block';
-
-        nextBtn.style.display = 'block';
-    }
-
-    function nextQuestion() {
-        currentQuestion++;
-        if(currentQuestion < questionBank.length) {
+        // Quiz Logic
+        function startSimulation() {
+            // Randomly select 20 questions
+            const shuffled = [...questionsDB].sort(() => 0.5 - Math.random());
+            currentQuiz = shuffled.slice(0, 20);
+            currentQuestionIndex = 0;
+            score = 0;
+            wrongAnswers = [];
+            
             loadQuestion();
-        } else {
-            showResult();
+            switchView('simulation');
         }
-    }
 
-    function showResult() {
-        quizArea.style.display = 'none';
-        resultScreen.style.display = 'block';
-        finalScore.textContent = score;
-        
-        let msg = "";
-        if(score >= 90) msg = "太神啦！你是權證大師吧！";
-        else if(score >= 70) msg = "不錯喔！基本觀念很紮實。";
-        else if(score >= 50) msg = "還可以，建議多複習小哥的講義。";
-        else msg = "加油！建議先把小哥的6大原則再看一遍。";
-        
-        feedbackText.textContent = msg;
-    }
+        function loadQuestion() {
+            const q = currentQuiz[currentQuestionIndex];
+            
+            // Update UI
+            quizCard.category.textContent = q.category;
+            quizCard.question.textContent = q.q;
+            quizCard.feedback.classList.add('hidden');
+            quizCard.progressText.textContent = `QUESTION ${String(currentQuestionIndex + 1).padStart(2, '0')}/20`;
+            quizCard.scoreText.textContent = `SCORE: ${score}`;
+            quizCard.progressBar.style.width = `${((currentQuestionIndex) / 20) * 100}%`;
 
-    function restartQuiz() {
-        currentQuestion = 0;
-        score = 0;
-        scoreDisplay.textContent = 0;
-        resultScreen.style.display = 'none';
-        quizArea.style.display = 'block';
-        loadQuestion();
-    }
+            // Color code category
+            if(q.category === "進階招式") quizCard.category.className = "inline-block px-2 py-1 bg-slate-900 rounded text-xs text-purple-400 font-mono mb-3 border border-purple-900";
+            else if(q.category === "實戰心法") quizCard.category.className = "inline-block px-2 py-1 bg-slate-900 rounded text-xs text-orange-400 font-mono mb-3 border border-orange-900";
+            else quizCard.category.className = "inline-block px-2 py-1 bg-slate-900 rounded text-xs text-sky-400 font-mono mb-3 border border-sky-900";
 
-    // Start
-    loadQuestion();
 
-</script>
+            // Render Options
+            quizCard.options.innerHTML = '';
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left p-4 rounded-lg bg-slate-700/50 hover:bg-slate-700 border border-slate-600 hover:border-sky-400 transition-all text-slate-200 flex items-center group";
+                btn.innerHTML = `
+                    <span class="w-6 h-6 rounded-full border border-slate-500 group-hover:border-sky-400 mr-3 flex items-center justify-center text-xs font-mono text-slate-500 group-hover:text-sky-400">${String.fromCharCode(65+idx)}</span>
+                    ${opt}
+                `;
+                btn.onclick = () => checkAnswer(idx, btn);
+                quizCard.options.appendChild(btn);
+            });
+        }
 
+        function checkAnswer(selectedIdx, btnElement) {
+            // Disable all buttons
+            const buttons = quizCard.options.querySelectorAll('button');
+            buttons.forEach(b => b.disabled = true);
+
+            const q = currentQuiz[currentQuestionIndex];
+            const isCorrect = selectedIdx === q.ans;
+
+            if (isCorrect) {
+                // Adjust score to 5 points per question (20 questions * 5 = 100 max)
+                score += 5;
+                btnElement.classList.remove('bg-slate-700/50', 'border-slate-600');
+                btnElement.classList.add('bg-emerald-900/50', 'border-emerald-500');
+                btnElement.querySelector('span').classList.add('bg-emerald-500', 'text-white', 'border-emerald-500');
+            } else {
+                wrongAnswers.push({
+                    q: q.q,
+                    myAns: q.options[selectedIdx],
+                    correctAns: q.options[q.ans],
+                    expl: q.expl
+                });
+                btnElement.classList.remove('bg-slate-700/50', 'border-slate-600');
+                btnElement.classList.add('bg-red-900/50', 'border-red-500');
+                
+                // Highlight correct answer
+                buttons[q.ans].classList.add('bg-emerald-900/50', 'border-emerald-500');
+            }
+
+            // Show Feedback
+            quizCard.feedbackText.innerHTML = `<span class="font-bold ${isCorrect ? 'text-emerald-400' : 'text-red-400'}">${isCorrect ? '正解！' : '可惜了！'}</span> ${q.expl}`;
+            quizCard.feedback.classList.remove('hidden');
+            
+            // Update score display
+            quizCard.scoreText.textContent = `SCORE: ${score}`;
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < 20) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            switchView('results');
+            const scoreEl = document.getElementById('final-score');
+            const titleEl = document.getElementById('result-title');
+            const msgEl = document.getElementById('result-msg');
+            const listEl = document.getElementById('wrong-answers-list');
+
+            // Animation for score
+            let currentScore = 0;
+            const timer = setInterval(() => {
+                currentScore += 1;
+                scoreEl.textContent = currentScore;
+                if(currentScore >= score) clearInterval(timer);
+            }, 20);
+
+            // Rank logic
+            if(score === 100) {
+                titleEl.textContent = "傳說級操盤手";
+                titleEl.className = "text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-500";
+                msgEl.textContent = "完美的判斷力！市場就是你的提款機。";
+            } else if(score >= 80) {
+                titleEl.textContent = "專業級交易員";
+                titleEl.className = "text-3xl font-bold text-emerald-400";
+                msgEl.textContent = "表現優異，已具備穩定獲利的能力。";
+            } else if(score >= 60) {
+                titleEl.textContent = "合格散戶";
+                titleEl.className = "text-3xl font-bold text-sky-400";
+                msgEl.textContent = "勉強及格，但實戰中可能還會受傷，請多加強心法。";
+            } else {
+                titleEl.textContent = "新手村學員";
+                titleEl.className = "text-3xl font-bold text-slate-400";
+                msgEl.textContent = "建議重新研讀機密題庫，現在進場會變成韭菜。";
+            }
+
+            // Wrong Answers List
+            listEl.innerHTML = '';
+            if(wrongAnswers.length === 0) {
+                listEl.innerHTML = '<li class="text-emerald-400 text-center py-4">無錯題記錄，完美通關！</li>';
+            } else {
+                wrongAnswers.forEach(item => {
+                    const li = document.createElement('li');
+                    li.className = "bg-slate-900 p-4 rounded border border-slate-700";
+                    li.innerHTML = `
+                        <p class="font-bold text-white mb-1">${item.q}</p>
+                        <div class="flex flex-col sm:flex-row gap-2 text-xs">
+                            <span class="text-red-400">❌ 你的選擇: ${item.myAns}</span>
+                            <span class="text-emerald-400">⭕️ 正確解答: ${item.correctAns}</span>
+                        </div>
+                        <p class="text-slate-500 text-xs mt-2 italic">${item.expl}</p>
+                    `;
+                    listEl.appendChild(li);
+                });
+            }
+        }
+
+        // Init
+        initArchive();
+
+    </script>
 </body>
 </html>
