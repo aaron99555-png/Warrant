@@ -1,0 +1,1411 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>萊恩選股日誌</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- SheetJS for Excel Export/Import -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    
+    <!-- Import Map for React modules -->
+    <script type="importmap">
+    {
+        "imports": {
+            "react": "https://esm.sh/react@18.2.0",
+            "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+            "lucide-react": "https://esm.sh/lucide-react@0.263.1"
+        }
+    }
+    </script>
+
+    <style>
+        /* Custom Animations */
+        @keyframes fade-in-down {
+            from { opacity: 0; transform: translate(-50%, -20px); }
+            to { opacity: 1; transform: translate(-50%, 0); }
+        }
+        .animate-fade-in-down {
+            animation: fade-in-down 0.3s ease-out forwards;
+        }
+        
+        @keyframes bounce-in {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-bounce-in {
+            animation: bounce-in 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+        }
+        
+        /* Scrollbar styling for dark mode */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b; 
+        }
+        
+        /* Date Picker UX Improvement */
+        .date-input-wrapper {
+            position: relative;
+        }
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-50">
+    <div id="root"></div>
+
+    <script type="text/babel" data-type="module">
+        import React, { useState, useEffect, useMemo, useRef } from 'react';
+        import { createRoot } from 'react-dom/client';
+        import { 
+            TrendingUp, Rocket, Sprout, Clock, BarChart2, Activity, 
+            ArrowDownCircle, Trash2, Star, Copy, Search, Plus, 
+            Filter, X, PieChart, Target, AlertCircle, CheckCircle2, ArrowUpDown, RefreshCcw,
+            Download, Upload, AlertTriangle
+        } from 'lucide-react';
+
+        // --- 完整台股資料庫 ---
+        const STOCK_DB = {
+            '1101':{name:'台泥',industry:'水泥'},'1102':{name:'亞泥',industry:'水泥'},'1103':{name:'嘉泥',industry:'水泥'},'1104':{name:'環泥',industry:'水泥'},
+            '1108':{name:'幸福',industry:'水泥'},'1109':{name:'信大',industry:'水泥'},'1110':{name:'東泥',industry:'水泥'},'1201':{name:'味全',industry:'食品'},
+            '1203':{name:'味王',industry:'食品'},'1210':{name:'大成',industry:'食品'},'1213':{name:'大飲',industry:'食品'},'1215':{name:'卜蜂',industry:'食品'},
+            '1216':{name:'統一',industry:'食品'},'1217':{name:'愛之味',industry:'食品'},'1218':{name:'泰山',industry:'食品'},'1219':{name:'福壽',industry:'食品'},
+            '1220':{name:'台榮',industry:'食品'},'1225':{name:'福懋油',industry:'食品'},'1227':{name:'佳格',industry:'食品'},'1229':{name:'聯華',industry:'食品'},
+            '1231':{name:'聯華食',industry:'食品'},'1232':{name:'大統益',industry:'食品'},'1233':{name:'天仁',industry:'食品'},'1234':{name:'黑松',industry:'食品'},
+            '1235':{name:'興泰',industry:'食品'},'1236':{name:'宏亞',industry:'食品'},'1240':{name:'茂生農經',industry:'農業科技'},'1256':{name:'鮮活果汁-KY',industry:'食品'},
+            '1259':{name:'安心',industry:'觀光餐旅'},'1264':{name:'德麥',industry:'食品'},'1268':{name:'漢來美食',industry:'觀光餐旅'},'1294':{name:'漢田生技',industry:'食品'},
+            '1301':{name:'台塑',industry:'塑膠'},'1303':{name:'南亞',industry:'塑膠'},'1304':{name:'台聚',industry:'塑膠'},'1305':{name:'華夏',industry:'塑膠'},
+            '1307':{name:'三芳',industry:'塑膠'},'1308':{name:'亞聚',industry:'塑膠'},'1309':{name:'台達化',industry:'塑膠'},'1310':{name:'台苯',industry:'塑膠'},
+            '1312':{name:'國喬',industry:'塑膠'},'1313':{name:'聯成',industry:'塑膠'},'1314':{name:'中石化',industry:'塑膠'},'1315':{name:'達新',industry:'塑膠'},
+            '1316':{name:'上曜',industry:'建材營造'},'1319':{name:'東陽',industry:'汽車'},'1321':{name:'大洋',industry:'塑膠'},'1323':{name:'永裕',industry:'塑膠'},
+            '1324':{name:'地球',industry:'塑膠'},'1325':{name:'恆大',industry:'塑膠'},'1326':{name:'台化',industry:'塑膠'},'1336':{name:'台翰',industry:'電子零件'},
+            '1337':{name:'再生-KY',industry:'塑膠'},'1338':{name:'廣華-KY',industry:'汽車'},'1339':{name:'昭輝',industry:'汽車'},'1340':{name:'勝悅-KY',industry:'塑膠'},
+            '1341':{name:'富林-KY',industry:'塑膠'},'1342':{name:'八貫',industry:'其他'},'1402':{name:'遠東新',industry:'紡織纖維'},'1409':{name:'新纖',industry:'紡織纖維'},
+            '1410':{name:'南染',industry:'紡織纖維'},'1413':{name:'宏洲',industry:'紡織纖維'},'1414':{name:'東和',industry:'紡織纖維'},'1416':{name:'廣豐',industry:'其他'},
+            '1417':{name:'嘉裕',industry:'紡織纖維'},'1418':{name:'東華',industry:'紡織纖維'},'1419':{name:'新紡',industry:'紡織纖維'},'1423':{name:'利華',industry:'紡織纖維'},
+            '1432':{name:'大魯閣',industry:'運動休閒'},'1434':{name:'福懋',industry:'紡織纖維'},'1435':{name:'中福',industry:'其他'},'1436':{name:'華友聯',industry:'建材營造'},
+            '1437':{name:'勤益控',industry:'其他'},'1438':{name:'三地開發',industry:'建材營造'},'1439':{name:'中和',industry:'建材營造'},'1440':{name:'南紡',industry:'紡織纖維'},
+            '1441':{name:'大東',industry:'紡織纖維'},'1442':{name:'名軒',industry:'建材營造'},'1443':{name:'立益',industry:'其他'},'1444':{name:'力麗',industry:'紡織纖維'},
+            '1445':{name:'大宇',industry:'紡織纖維'},'1446':{name:'宏和',industry:'紡織纖維'},'1447':{name:'力鵬',industry:'紡織纖維'},'1449':{name:'佳和',industry:'紡織纖維'},
+            '1451':{name:'年興',industry:'紡織纖維'},'1452':{name:'宏益',industry:'紡織纖維'},'1453':{name:'大將',industry:'建材營造'},'1454':{name:'台富',industry:'紡織纖維'},
+            '1455':{name:'集盛',industry:'紡織纖維'},'1456':{name:'怡華',industry:'建材營造'},'1457':{name:'宜進',industry:'紡織纖維'},'1459':{name:'聯發',industry:'紡織纖維'},
+            '1460':{name:'宏遠',industry:'紡織纖維'},'1463':{name:'強盛',industry:'紡織纖維'},'1464':{name:'得力',industry:'紡織纖維'},'1465':{name:'偉全',industry:'紡織纖維'},
+            '1466':{name:'聚隆',industry:'紡織纖維'},'1467':{name:'南緯',industry:'紡織纖維'},'1468':{name:'昶和',industry:'紡織纖維'},'1470':{name:'大統新創',industry:'紡織纖維'},
+            '1471':{name:'首利',industry:'電子零件'},'1472':{name:'三洋紡',industry:'建材營造'},'1473':{name:'台南',industry:'紡織纖維'},'1474':{name:'弘裕',industry:'紡織纖維'},
+            '1475':{name:'業旺',industry:'紡織纖維'},'1476':{name:'儒鴻',industry:'紡織纖維'},'1477':{name:'聚陽',industry:'紡織纖維'},'1503':{name:'士電',industry:'電機機械'},
+            '1504':{name:'東元',industry:'電機機械'},'1506':{name:'正道',industry:'電機機械'},'1512':{name:'瑞利',industry:'汽車'},'1513':{name:'中興電',industry:'電機機械'},
+            '1514':{name:'亞力',industry:'電機機械'},'1515':{name:'力山',industry:'電機機械'},'1516':{name:'川飛',industry:'其他'},'1517':{name:'利奇',industry:'電機機械'},
+            '1519':{name:'華城',industry:'電機機械'},'1521':{name:'大億',industry:'汽車'},'1522':{name:'堤維西',industry:'汽車'},'1524':{name:'耿鼎',industry:'汽車'},
+            '1525':{name:'江申',industry:'汽車'},'1526':{name:'日馳',industry:'電機機械'},'1527':{name:'鑽全',industry:'電機機械'},'1528':{name:'恩德',industry:'電機機械'},
+            '1529':{name:'樂士',industry:'電機機械'},'1530':{name:'亞崴',industry:'電機機械'},'1531':{name:'高林股',industry:'電機機械'},'1532':{name:'勤美',industry:'電機機械'},
+            '1533':{name:'車王電',industry:'汽車'},'1535':{name:'中宇',industry:'電機機械'},'1536':{name:'和大',industry:'汽車'},'1537':{name:'廣隆',industry:'電機機械'},
+            '1538':{name:'正峰',industry:'電機機械'},'1539':{name:'巨庭',industry:'電機機械'},'1540':{name:'喬福',industry:'電機機械'},'1541':{name:'錩泰',industry:'電機機械'},
+            '1558':{name:'伸興',industry:'電機機械'},'1560':{name:'中砂',industry:'電機機械'},'1563':{name:'巧新',industry:'汽車'},'1565':{name:'精華',industry:'生技醫療'},
+            '1568':{name:'倉佑',industry:'汽車'},'1569':{name:'濱川',industry:'電腦週邊'},'1570':{name:'力肯',industry:'電機機械'},'1580':{name:'新麥',industry:'電機機械'},
+            '1582':{name:'信錦',industry:'電子零件'},'1583':{name:'程泰',industry:'電機機械'},'1584':{name:'精剛',industry:'其他'},'1586':{name:'和勤',industry:'電機機械'},
+            '1587':{name:'吉茂',industry:'汽車'},'1589':{name:'永冠-KY',industry:'電機機械'},'1590':{name:'亞德客-KY',industry:'電機機械'},'1591':{name:'駿吉-KY',industry:'電機機械'},
+            '1593':{name:'祺驊',industry:'運動休閒'},'1595':{name:'川寶',industry:'電子零件'},'1597':{name:'直得',industry:'電機機械'},'1598':{name:'岱宇',industry:'運動休閒'},
+            '1599':{name:'宏佳騰',industry:'電機機械'},'1603':{name:'華電',industry:'電器電纜'},'1604':{name:'聲寶',industry:'電器電纜'},'1605':{name:'華新',industry:'電器電纜'},
+            '1608':{name:'華榮',industry:'電器電纜'},'1609':{name:'大亞',industry:'電器電纜'},'1611':{name:'中電',industry:'電器電纜'},'1612':{name:'宏泰',industry:'電器電纜'},
+            '1614':{name:'三洋電',industry:'電器電纜'},'1615':{name:'大山',industry:'電器電纜'},'1616':{name:'億泰',industry:'電器電纜'},'1617':{name:'榮星',industry:'電器電纜'},
+            '1618':{name:'合機',industry:'電器電纜'},'1626':{name:'艾美特-KY',industry:'電器電纜'},'1702':{name:'南僑',industry:'食品'},'1707':{name:'葡萄王',industry:'生技醫療'},
+            '1708':{name:'東鹼',industry:'化學'},'1709':{name:'和益',industry:'化學'},'1710':{name:'東聯',industry:'化學'},'1711':{name:'永光',industry:'化學'},
+            '1712':{name:'興農',industry:'化學'},'1713':{name:'國化',industry:'化學'},'1714':{name:'和桐',industry:'化學'},'1717':{name:'長興',industry:'化學'},
+            '1718':{name:'中纖',industry:'化學'},'1720':{name:'生達',industry:'生技醫療'},'1721':{name:'三晃',industry:'化學'},'1722':{name:'台肥',industry:'化學'},
+            '1723':{name:'中碳',industry:'化學'},'1725':{name:'元禎',industry:'化學'},'1726':{name:'永記',industry:'化學'},'1727':{name:'中華化',industry:'化學'},
+            '1730':{name:'花仙子',industry:'化學'},'1731':{name:'美吾華',industry:'生技醫療'},'1732':{name:'毛寶',industry:'化學'},'1733':{name:'五鼎',industry:'生技醫療'},
+            '1734':{name:'杏輝',industry:'生技醫療'},'1735':{name:'日勝化',industry:'化學'},'1736':{name:'喬山',industry:'運動休閒'},'1737':{name:'臺鹽',industry:'食品'},
+            '1742':{name:'台蠟',industry:'化學'},'1752':{name:'南光',industry:'生技醫療'},'1760':{name:'寶齡富錦',industry:'生技醫療'},'1762':{name:'中化生',industry:'生技醫療'},
+            '1773':{name:'勝一',industry:'化學'},'1776':{name:'展宇',industry:'化學'},'1777':{name:'生泰',industry:'生技醫療'},'1781':{name:'合世',industry:'生技醫療'},
+            '1783':{name:'和康生',industry:'生技醫療'},'1784':{name:'訊聯',industry:'生技醫療'},'1785':{name:'光洋科',industry:'其他電子'},'1786':{name:'科妍',industry:'生技醫療'},
+            '1788':{name:'杏昌',industry:'生技醫療'},'1789':{name:'神隆',industry:'生技醫療'},'1795':{name:'美時',industry:'生技醫療'},'1796':{name:'金穎生技',industry:'食品'},
+            '1799':{name:'易威',industry:'生技醫療'},'1802':{name:'台玻',industry:'玻璃陶瓷'},'1805':{name:'寶徠',industry:'建材營造'},'1806':{name:'冠軍',industry:'玻璃陶瓷'},
+            '1808':{name:'潤隆',industry:'建材營造'},'1809':{name:'中釉',industry:'玻璃陶瓷'},'1810':{name:'和成',industry:'玻璃陶瓷'},'1813':{name:'寶利徠',industry:'生技醫療'},
+            '1815':{name:'富喬',industry:'電子零件'},'1817':{name:'凱撒衛',industry:'玻璃陶瓷'},'1903':{name:'士紙',industry:'造紙'},'1904':{name:'正隆',industry:'造紙'},
+            '1905':{name:'華紙',industry:'造紙'},'1906':{name:'寶隆',industry:'造紙'},'1907':{name:'永豐餘',industry:'造紙'},'1909':{name:'榮成',industry:'造紙'},
+            '2002':{name:'中鋼',industry:'鋼鐵'},'2006':{name:'東和鋼鐵',industry:'鋼鐵'},'2007':{name:'燁興',industry:'鋼鐵'},'2008':{name:'高興昌',industry:'鋼鐵'},
+            '2009':{name:'第一銅',industry:'鋼鐵'},'2010':{name:'春源',industry:'鋼鐵'},'2012':{name:'春雨',industry:'鋼鐵'},'2013':{name:'中鋼構',industry:'鋼鐵'},
+            '2014':{name:'中鴻',industry:'鋼鐵'},'2015':{name:'豐興',industry:'鋼鐵'},'2017':{name:'官田鋼',industry:'鋼鐵'},'2020':{name:'美亞',industry:'鋼鐵'},
+            '2022':{name:'聚亨',industry:'鋼鐵'},'2023':{name:'燁輝',industry:'鋼鐵'},'2024':{name:'志聯',industry:'鋼鐵'},'2025':{name:'千興',industry:'鋼鐵'},
+            '2027':{name:'大成鋼',industry:'鋼鐵'},'2028':{name:'威致',industry:'鋼鐵'},'2029':{name:'盛餘',industry:'鋼鐵'},'2030':{name:'彰源',industry:'鋼鐵'},
+            '2031':{name:'新光鋼',industry:'鋼鐵'},'2032':{name:'新鋼',industry:'鋼鐵'},'2033':{name:'佳大',industry:'鋼鐵'},'2034':{name:'允強',industry:'鋼鐵'},
+            '2035':{name:'唐榮公司',industry:'鋼鐵'},'2038':{name:'海光',industry:'鋼鐵'},'2049':{name:'上銀',industry:'電機機械'},'2059':{name:'川湖',industry:'電子零件'},
+            '2061':{name:'風青',industry:'電器電纜'},'2062':{name:'橋椿',industry:'居家生活'},'2063':{name:'世鎧',industry:'鋼鐵'},'2064':{name:'晉椿',industry:'鋼鐵'},
+            '2065':{name:'世豐',industry:'鋼鐵'},'2066':{name:'世德',industry:'電機機械'},'2067':{name:'嘉鋼',industry:'電機機械'},'2069':{name:'運錩',industry:'鋼鐵'},
+            '2070':{name:'精湛',industry:'電機機械'},'2073':{name:'雄順',industry:'鋼鐵'},'2101':{name:'南港',industry:'橡膠'},'2102':{name:'泰豐',industry:'橡膠'},
+            '2103':{name:'台橡',industry:'橡膠'},'2104':{name:'國際中橡',industry:'橡膠'},'2105':{name:'正新',industry:'橡膠'},'2106':{name:'建大',industry:'橡膠'},
+            '2107':{name:'厚生',industry:'橡膠'},'2108':{name:'南帝',industry:'橡膠'},'2109':{name:'華豐',industry:'橡膠'},'2114':{name:'鑫永銓',industry:'橡膠'},
+            '2115':{name:'六暉-KY',industry:'汽車'},'2201':{name:'裕隆',industry:'汽車'},'2204':{name:'中華',industry:'汽車'},'2206':{name:'三陽工業',industry:'汽車'},
+            '2207':{name:'和泰車',industry:'汽車'},'2208':{name:'台船',industry:'航運'},'2211':{name:'長榮鋼',industry:'鋼鐵'},'2221':{name:'大甲',industry:'其他'},
+            '2227':{name:'裕日車',industry:'汽車'},'2228':{name:'劍麟',industry:'汽車'},'2230':{name:'泰茂',industry:'電機機械'},'2231':{name:'為升',industry:'汽車'},
+            '2233':{name:'宇隆',industry:'汽車'},'2235':{name:'謚源',industry:'電機機械'},'2236':{name:'百達-KY',industry:'汽車'},'2239':{name:'英利-KY',industry:'汽車'},
+            '2241':{name:'艾姆勒',industry:'汽車'},'2243':{name:'宏旭-KY',industry:'汽車'},'2247':{name:'汎德永業',industry:'汽車'},'2250':{name:'IKKA-KY',industry:'汽車'},
+            '2254':{name:'巨鎧精密-創',industry:'汽車'},'2258':{name:'鴻華先進-創',industry:'汽車'},'2301':{name:'光寶科',industry:'電腦週邊'},'2302':{name:'麗正',industry:'半導體'},
+            '2303':{name:'聯電',industry:'半導體'},'2305':{name:'全友',industry:'電腦週邊'},'2308':{name:'台達電',industry:'電子零件'},'2312':{name:'金寶',industry:'其他電子'},
+            '2313':{name:'華通',industry:'電子零件'},'2314':{name:'台揚',industry:'通信網路'},'2316':{name:'楠梓電',industry:'電子零件'},'2317':{name:'鴻海',industry:'其他電子'},
+            '2321':{name:'東訊',industry:'通信網路'},'2323':{name:'中環',industry:'光電'},'2324':{name:'仁寶',industry:'電腦週邊'},'2327':{name:'國巨',industry:'電子零件'},
+            '2328':{name:'廣宇',industry:'電子零件'},'2329':{name:'華泰',industry:'半導體'},'2330':{name:'台積電',industry:'半導體'},'2331':{name:'精英',industry:'電腦週邊'},
+            '2332':{name:'友訊',industry:'通信網路'},'2337':{name:'旺宏',industry:'半導體'},'2338':{name:'光罩',industry:'半導體'},'2340':{name:'台亞',industry:'半導體'},
+            '2342':{name:'茂矽',industry:'半導體'},'2344':{name:'華邦電',industry:'半導體'},'2345':{name:'智邦',industry:'通信網路'},'2347':{name:'聯強',industry:'電子通路'},
+            '2348':{name:'海悅',industry:'其他'},'2349':{name:'錸德',industry:'光電'},'2351':{name:'順德',industry:'半導體'},'2352':{name:'佳世達',industry:'電腦週邊'},
+            '2353':{name:'宏碁',industry:'電腦週邊'},'2354':{name:'鴻準',industry:'其他電子'},'2355':{name:'敬鵬',industry:'電子零件'},'2356':{name:'英業達',industry:'電腦週邊'},
+            '2357':{name:'華碩',industry:'電腦週邊'},'2358':{name:'廷鑫',industry:'其他'},'2359':{name:'所羅門',industry:'其他電子'},'2360':{name:'致茂',industry:'其他電子'},
+            '2362':{name:'藍天',industry:'電腦週邊'},'2363':{name:'矽統',industry:'半導體'},'2364':{name:'倫飛',industry:'電腦週邊'},'2365':{name:'昆盈',industry:'電腦週邊'},
+            '2367':{name:'燿華',industry:'電子零件'},'2368':{name:'金像電',industry:'電子零件'},'2369':{name:'菱生',industry:'半導體'},'2371':{name:'大同',industry:'電機機械'},
+            '2373':{name:'震旦行',industry:'其他電子'},'2374':{name:'佳能',industry:'光電'},'2375':{name:'凱美',industry:'電子零件'},'2376':{name:'技嘉',industry:'電腦週邊'},
+            '2377':{name:'微星',industry:'電腦週邊'},'2379':{name:'瑞昱',industry:'半導體'},'2380':{name:'虹光',industry:'電腦週邊'},'2382':{name:'廣達',industry:'電腦週邊'},
+            '2383':{name:'台光電',industry:'電子零件'},'2385':{name:'群光',industry:'電子零件'},'2387':{name:'精元',industry:'電腦週邊'},'2388':{name:'威盛',industry:'半導體'},
+            '2390':{name:'云辰',industry:'其他電子'},'2392':{name:'正崴',industry:'電子零件'},'2393':{name:'億光',industry:'光電'},'2395':{name:'研華',industry:'電腦週邊'},
+            '2397':{name:'友通',industry:'電腦週邊'},'2399':{name:'映泰',industry:'電腦週邊'},'2401':{name:'凌陽',industry:'半導體'},'2402':{name:'毅嘉',industry:'電子零件'},
+            '2404':{name:'漢唐',industry:'其他電子'},'2405':{name:'輔信',industry:'電腦週邊'},'2406':{name:'國碩',industry:'光電'},'2408':{name:'南亞科',industry:'半導體'},
+            '2409':{name:'友達',industry:'光電'},'2412':{name:'中華電',industry:'通信網路'},'2413':{name:'環科',industry:'電子零件'},'2414':{name:'精技',industry:'電子通路'},
+            '2415':{name:'錩新',industry:'電子零件'},'2417':{name:'圓剛',industry:'電腦週邊'},'2419':{name:'仲琦',industry:'通信網路'},'2420':{name:'新巨',industry:'電子零件'},
+            '2421':{name:'建碁',industry:'電腦週邊'},'2423':{name:'固緯',industry:'其他電子'},'2424':{name:'隴華',industry:'通信網路'},'2425':{name:'承啟',industry:'電腦週邊'},
+            '2426':{name:'鼎元',industry:'光電'},'2427':{name:'三商電',industry:'資訊服務'},'2428':{name:'興勤',industry:'電子零件'},'2429':{name:'銘旺科',industry:'光電'},
+            '2430':{name:'燦坤',industry:'電子通路'},'2431':{name:'聯昌',industry:'電子零件'},'2432':{name:'倚天酷碁-創',industry:'電腦週邊'},'2433':{name:'互盛電',industry:'其他電子'},
+            '2434':{name:'統懋',industry:'半導體'},'2436':{name:'偉詮電',industry:'半導體'},'2438':{name:'翔耀',industry:'光電'},'2439':{name:'美律',industry:'通信網路'},
+            '2440':{name:'太空梭',industry:'電子零件'},'2441':{name:'超豐',industry:'半導體'},'2442':{name:'新美齊',industry:'建材營造'},'2443':{name:'億麗',industry:'其他'},
+            '2444':{name:'兆勁',industry:'通信網路'},'2449':{name:'京元電子',industry:'半導體'},'2450':{name:'神腦',industry:'通信網路'},'2451':{name:'創見',industry:'半導體'},
+            '2453':{name:'凌群',industry:'資訊服務'},'2454':{name:'聯發科',industry:'半導體'},'2455':{name:'全新',industry:'通信網路'},'2457':{name:'飛宏',industry:'電子零件'},
+            '2458':{name:'義隆',industry:'半導體'},'2459':{name:'敦吉',industry:'其他電子'},'2460':{name:'建通',industry:'電子零件'},'2461':{name:'光群雷',industry:'其他電子'},
+            '2462':{name:'良得電',industry:'電子零件'},'2464':{name:'盟立',industry:'其他電子'},'2465':{name:'麗臺',industry:'電腦週邊'},'2466':{name:'冠西電',industry:'光電'},
+            '2467':{name:'志聖',industry:'電子零件'},'2468':{name:'華經',industry:'資訊服務'},'2471':{name:'資通',industry:'資訊服務'},'2472':{name:'立隆電',industry:'電子零件'},
+            '2474':{name:'可成',industry:'其他電子'},'2476':{name:'鉅祥',industry:'電子零件'},'2477':{name:'美隆電',industry:'其他電子'},'2478':{name:'大毅',industry:'電子零件'},
+            '2480':{name:'敦陽科',industry:'資訊服務'},'2481':{name:'強茂',industry:'半導體'},'2482':{name:'連宇',industry:'其他電子'},'2483':{name:'百容',industry:'電子零件'},
+            '2484':{name:'希華',industry:'電子零件'},'2485':{name:'兆赫',industry:'通信網路'},'2486':{name:'一詮',industry:'光電'},'2488':{name:'漢平',industry:'其他電子'},
+            '2489':{name:'瑞軒',industry:'光電'},'2491':{name:'吉祥全',industry:'光電'},'2492':{name:'華新科',industry:'電子零件'},'2493':{name:'揚博',industry:'電子零件'},
+            '2495':{name:'普安',industry:'電腦週邊'},'2496':{name:'卓越',industry:'其他'},'2497':{name:'怡利電',industry:'汽車'},'2498':{name:'宏達電',industry:'通信網路'},
+            '2501':{name:'國建',industry:'建材營造'},'2504':{name:'國產',industry:'建材營造'},'2505':{name:'國揚',industry:'建材營造'},'2506':{name:'太設',industry:'建材營造'},
+            '2509':{name:'全坤建',industry:'建材營造'},'2511':{name:'太子',industry:'建材營造'},'2514':{name:'龍邦',industry:'其他'},'2515':{name:'中工',industry:'建材營造'},
+            '2516':{name:'新建',industry:'建材營造'},'2520':{name:'冠德',industry:'建材營造'},'2524':{name:'京城',industry:'建材營造'},'2527':{name:'宏璟',industry:'建材營造'},
+            '2528':{name:'皇普',industry:'建材營造'},'2530':{name:'華建',industry:'建材營造'},'2534':{name:'宏盛',industry:'建材營造'},'2535':{name:'達欣工',industry:'建材營造'},
+            '2536':{name:'宏普',industry:'建材營造'},'2537':{name:'聯上發',industry:'建材營造'},'2538':{name:'基泰',industry:'建材營造'},'2539':{name:'櫻花建',industry:'建材營造'},
+            '2540':{name:'愛山林',industry:'建材營造'},'2542':{name:'興富發',industry:'建材營造'},'2543':{name:'皇昌',industry:'建材營造'},'2545':{name:'皇翔',industry:'建材營造'},
+            '2546':{name:'根基',industry:'建材營造'},'2547':{name:'日勝生',industry:'建材營造'},'2548':{name:'華固',industry:'建材營造'},'2596':{name:'綠意',industry:'建材營造'},
+            '2597':{name:'潤弘',industry:'建材營造'},'2601':{name:'益航',industry:'貿易百貨'},'2603':{name:'長榮',industry:'航運'},'2605':{name:'新興',industry:'航運'},
+            '2606':{name:'裕民',industry:'航運'},'2607':{name:'榮運',industry:'航運'},'2608':{name:'嘉里大榮',industry:'航運'},'2609':{name:'陽明',industry:'航運'},
+            '2610':{name:'華航',industry:'航運'},'2611':{name:'志信',industry:'航運'},'2612':{name:'中航',industry:'航運'},'2613':{name:'中櫃',industry:'航運'},
+            '2614':{name:'東森',industry:'其他'},'2615':{name:'萬海',industry:'航運'},'2616':{name:'山隆',industry:'油電燃氣'},'2617':{name:'台航',industry:'航運'},
+            '2618':{name:'長榮航',industry:'航運'},'2630':{name:'亞航',industry:'航運'},'2633':{name:'台灣高鐵',industry:'航運'},'2634':{name:'漢翔',industry:'航運'},
+            '2636':{name:'台驊投控',industry:'航運'},'2637':{name:'慧洋-KY',industry:'航運'},'2640':{name:'大車隊',industry:'數位雲端'},'2641':{name:'正德',industry:'航運'},
+            '2642':{name:'宅配通',industry:'航運'},'2643':{name:'捷迅',industry:'航運'},'2645':{name:'長榮航太',industry:'航運'},'2701':{name:'萬企',industry:'觀光餐旅'},
+            '2702':{name:'華園',industry:'觀光餐旅'},'2704':{name:'國賓',industry:'觀光餐旅'},'2705':{name:'六福',industry:'觀光餐旅'},'2706':{name:'第一店',industry:'觀光餐旅'},
+            '2707':{name:'晶華',industry:'觀光餐旅'},'2712':{name:'遠雄來',industry:'觀光餐旅'},'2718':{name:'晶悅',industry:'建材營造'},'2719':{name:'燦星旅',industry:'觀光餐旅'},
+            '2722':{name:'夏都',industry:'觀光餐旅'},'2723':{name:'美食-KY',industry:'觀光餐旅'},'2724':{name:'富驛-KY',industry:'觀光餐旅'},'2726':{name:'雅茗-KY',industry:'觀光餐旅'},
+            '2727':{name:'王品',industry:'觀光餐旅'},'2729':{name:'瓦城',industry:'觀光餐旅'},'2731':{name:'雄獅',industry:'觀光餐旅'},'2732':{name:'六角',industry:'觀光餐旅'},
+            '2734':{name:'易飛網',industry:'觀光餐旅'},'2736':{name:'高野',industry:'觀光餐旅'},'2739':{name:'寒舍',industry:'觀光餐旅'},'2740':{name:'天蔥',industry:'觀光餐旅'},
+            '2743':{name:'山富',industry:'觀光餐旅'},'2745':{name:'五福',industry:'觀光餐旅'},'2748':{name:'雲品',industry:'觀光餐旅'},'2752':{name:'豆府',industry:'觀光餐旅'},
+            '2753':{name:'八方雲集',industry:'觀光餐旅'},'2754':{name:'亞洲藏壽司',industry:'觀光餐旅'},'2755':{name:'揚秦',industry:'觀光餐旅'},'2756':{name:'聯發國際',industry:'觀光餐旅'},
+            '2762':{name:'世界健身-KY',industry:'運動休閒'},'2801':{name:'彰銀',industry:'金融保險'},'2809':{name:'京城銀',industry:'金融保險'},'2812':{name:'台中銀',industry:'金融保險'},
+            '2816':{name:'旺旺保',industry:'金融保險'},'2820':{name:'華票',industry:'金融保險'},'2832':{name:'台產',industry:'金融保險'},'2834':{name:'臺企銀',industry:'金融保險'},
+            '2836':{name:'高雄銀',industry:'金融保險'},'2838':{name:'聯邦銀',industry:'金融保險'},'2845':{name:'遠東銀',industry:'金融保險'},'2849':{name:'安泰銀',industry:'金融保險'},
+            '2850':{name:'新產',industry:'金融保險'},'2851':{name:'中再保',industry:'金融保險'},'2852':{name:'第一保',industry:'金融保險'},'2855':{name:'統一證',industry:'金融保險'},
+            '2867':{name:'三商壽',industry:'金融保險'},'2880':{name:'華南金',industry:'金融保險'},'2881':{name:'富邦金',industry:'金融保險'},'2882':{name:'國泰金',industry:'金融保險'},
+            '2883':{name:'開發金',industry:'金融保險'},'2884':{name:'玉山金',industry:'金融保險'},'2885':{name:'元大金',industry:'金融保險'},'2886':{name:'兆豐金',industry:'金融保險'},
+            '2887':{name:'台新金',industry:'金融保險'},'2888':{name:'新光金',industry:'金融保險'},'2889':{name:'國票金',industry:'金融保險'},'2890':{name:'永豐金',industry:'金融保險'},
+            '2891':{name:'中信金',industry:'金融保險'},'2892':{name:'第一金',industry:'金融保險'},'2897':{name:'王道銀行',industry:'金融保險'},'2901':{name:'欣欣',industry:'貿易百貨'},
+            '2903':{name:'遠百',industry:'貿易百貨'},'2904':{name:'匯僑',industry:'其他'},'2905':{name:'三商',industry:'貿易百貨'},'2906':{name:'高林',industry:'貿易百貨'},
+            '2908':{name:'特力',industry:'貿易百貨'},'2910':{name:'統領',industry:'貿易百貨'},'2911':{name:'麗嬰房',industry:'貿易百貨'},'2912':{name:'統一超',industry:'貿易百貨'},
+            '2913':{name:'農林',industry:'貿易百貨'},'2915':{name:'潤泰全',industry:'貿易百貨'},'2916':{name:'滿心',industry:'居家生活'},'2923':{name:'鼎固-KY',industry:'建材營造'},
+            '2924':{name:'東凌-KY',industry:'居家生活'},'2926':{name:'誠品生活',industry:'文化創意'},'2929':{name:'淘帝-KY',industry:'貿易百貨'},'2937':{name:'集雅社',industry:'居家生活'},
+            '2939':{name:'凱羿-KY',industry:'貿易百貨'},'2941':{name:'米斯特',industry:'居家生活'},'2945':{name:'三商家購',industry:'貿易百貨'},'2947':{name:'振宇五金',industry:'居家生活'},
+            '2948':{name:'寶陞',industry:'居家生活'},'2949':{name:'欣新網',industry:'數位雲端'},'3002':{name:'歐格',industry:'電腦週邊'},'3003':{name:'健和興',industry:'電子零件'},
+            '3004':{name:'豐達科',industry:'鋼鐵'},'3005':{name:'神基',industry:'電腦週邊'},'3006':{name:'晶豪科',industry:'半導體'},'3008':{name:'大立光',industry:'光電'},
+            '3010':{name:'華立',industry:'電子通路'},'3011':{name:'今皓',industry:'電子零件'},'3013':{name:'晟銘電',industry:'電腦週邊'},'3014':{name:'聯陽',industry:'半導體'},
+            '3015':{name:'全漢',industry:'電子零件'},'3016':{name:'嘉晶',industry:'半導體'},'3017':{name:'奇鋐',industry:'電腦週邊'},'3018':{name:'同開',industry:'其他電子'},
+            '3019':{name:'亞光',industry:'光電'},'3021':{name:'鴻名',industry:'電子零件'},'3022':{name:'威強電',industry:'電腦週邊'},'3023':{name:'信邦',industry:'電子零件'},
+            '3024':{name:'憶聲',industry:'光電'},'3025':{name:'星通',industry:'通信網路'},'3026':{name:'禾伸堂',industry:'電子零件'},'3027':{name:'盛達',industry:'通信網路'},
+            '3028':{name:'增你強',industry:'電子通路'},'3029':{name:'零壹',industry:'資訊服務'},'3030':{name:'德律',industry:'其他電子'},'3031':{name:'佰鴻',industry:'光電'},
+            '3032':{name:'偉訓',industry:'電子零件'},'3033':{name:'威健',industry:'電子通路'},'3034':{name:'聯詠',industry:'半導體'},'3035':{name:'智原',industry:'半導體'},
+            '3036':{name:'文曄',industry:'電子通路'},'3037':{name:'欣興',industry:'電子零件'},'3038':{name:'全台',industry:'光電'},'3040':{name:'遠見',industry:'其他'},
+            '3041':{name:'揚智',industry:'半導體'},'3042':{name:'晶技',industry:'電子零件'},'3043':{name:'科風',industry:'其他電子'},'3044':{name:'健鼎',industry:'電子零件'},
+            '3045':{name:'台灣大',industry:'通信網路'},'3046':{name:'建碁',industry:'電腦週邊'},'3047':{name:'訊舟',industry:'通信網路'},'3048':{name:'益登',industry:'電子通路'},
+            '3049':{name:'和鑫',industry:'光電'},'3050':{name:'鈺德',industry:'光電'},'3051':{name:'力特',industry:'光電'},'3052':{name:'夆典',industry:'建材營造'},
+            '3054':{name:'立萬利',industry:'食品'},'3055':{name:'蔚華科',industry:'電子通路'},'3056':{name:'總太',industry:'建材營造'},'3057':{name:'喬鼎',industry:'電腦週邊'},
+            '3058':{name:'立德',industry:'電子零件'},'3059':{name:'華晶科',industry:'光電'},'3060':{name:'銘異',industry:'電腦週邊'},'3062':{name:'建漢',industry:'通信網路'},
+            '3064':{name:'泰偉',industry:'文化創意'},'3066':{name:'李洲',industry:'光電'},'3067':{name:'全域',industry:'其他電子'},'3071':{name:'協禧',industry:'電腦週邊'},
+            '3073':{name:'天方能源',industry:'綠能環保'},'3078':{name:'僑威',industry:'電子零件'},'3081':{name:'聯亞',industry:'通信網路'},'3083':{name:'網龍',industry:'文化創意'},
+            '3085':{name:'新零售',industry:'數位雲端'},'3086':{name:'華義',industry:'文化創意'},'3088':{name:'艾訊',industry:'電腦週邊'},'3090':{name:'日電貿',industry:'電子零件'},
+            '3092':{name:'鴻碩',industry:'電子零件'},'3093':{name:'港建',industry:'其他電子'},'3094':{name:'聯傑',industry:'半導體'},'3095':{name:'及成',industry:'通信網路'},
+            '3105':{name:'穩懋',industry:'半導體'},'3114':{name:'好德',industry:'電子零件'},'3115':{name:'寶島極',industry:'電子零件'},'3118':{name:'進階',industry:'生技醫療'},
+            '3122':{name:'笙泉',industry:'半導體'},'3128':{name:'昇銳',industry:'光電'},'3130':{name:'一零四',industry:'數位雲端'},'3131':{name:'弘塑',industry:'其他電子'},
+            '3138':{name:'耀登',industry:'通信網路'},'3141':{name:'晶宏',industry:'半導體'},'3147':{name:'大綜',industry:'資訊服務'},'3149':{name:'正達',industry:'光電'},
+            '3150':{name:'鈺寶-創',industry:'半導體'},'3152':{name:'璟德',industry:'通信網路'},'3162':{name:'精確',industry:'電機機械'},'3163':{name:'波若威',industry:'通信網路'},
+            '3164':{name:'景岳',industry:'生技醫療'},'3167':{name:'大量',industry:'電機機械'},'3168':{name:'眾福科',industry:'光電'},'3169':{name:'亞信',industry:'半導體'},
+            '3171':{name:'新洲',industry:'居家生活'},'3176':{name:'基亞',industry:'生技醫療'},'3178':{name:'公準',industry:'半導體'},'3188':{name:'鑫龍騰',industry:'建材營造'},
+            '3189':{name:'景碩',industry:'半導體'},'3191':{name:'和進',industry:'電子零件'},'3202':{name:'樺晟',industry:'電子零件'},'3205':{name:'佰研',industry:'生技醫療'},
+            '3206':{name:'志豐',industry:'電子零件'},'3207':{name:'耀勝',industry:'電子零件'},'3209':{name:'全科',industry:'電子通路'},'3211':{name:'順達',industry:'電腦週邊'},
+            '3213':{name:'茂訊',industry:'電腦週邊'},'3217':{name:'優群',industry:'電子零件'},'3218':{name:'大學光',industry:'生技醫療'},'3219':{name:'倚強',industry:'其他電子'},
+            '3221':{name:'台嘉碩',industry:'通信網路'},'3224':{name:'三顧',industry:'電子通路'},'3226':{name:'至寶電',industry:'電機機械'},'3227':{name:'原相',industry:'半導體'},
+            '3228':{name:'金麗科',industry:'半導體'},'3229':{name:'晟鈦',industry:'電子零件'},'3230':{name:'錦明',industry:'光電'},'3231':{name:'緯創',industry:'電腦週邊'},
+            '3232':{name:'昱捷',industry:'電子通路'},'3234':{name:'光環',industry:'通信網路'},'3236':{name:'千如',industry:'電子零件'},'3252':{name:'海灣',industry:'觀光餐旅'},
+            '3257':{name:'虹冠電',industry:'半導體'},'3259':{name:'鑫創',industry:'半導體'},'3260':{name:'威剛',industry:'半導體'},'3264':{name:'欣銓',industry:'半導體'},
+            '3265':{name:'台星科',industry:'半導體'},'3266':{name:'昇陽',industry:'建材營造'},'3268':{name:'海德威',industry:'半導體'},'3272':{name:'東碩',industry:'電腦週邊'},
+            '3276':{name:'宇環',industry:'電子零件'},'3284':{name:'太普高',industry:'其他'},'3285':{name:'微端',industry:'其他電子'},'3287':{name:'廣寰科',industry:'電腦週邊'},
+            '3288':{name:'點晶',industry:'電子零件'},'3289':{name:'宜特',industry:'其他電子'},'3290':{name:'東浦',industry:'電子零件'},'3293':{name:'鈊象',industry:'文化創意'},
+            '3294':{name:'英濟',industry:'電子零件'},'3296':{name:'勝德',industry:'電子零件'},'3297':{name:'杭特',industry:'光電'},'3303':{name:'岱稜',industry:'其他電子'},
+            '3305':{name:'昇貿',industry:'其他電子'},'3306':{name:'鼎天',industry:'通信網路'},'3308':{name:'聯德',industry:'電子零件'},'3310':{name:'佳穎',industry:'電子零件'},
+            '3311':{name:'閎暉',industry:'通信網路'},'3312':{name:'弘憶股',industry:'電子通路'},'3313':{name:'斐成',industry:'其他'},'3317':{name:'尼克森',industry:'半導體'},
+            '3321':{name:'同泰',industry:'電子零件'},'3322':{name:'建舜電',industry:'電子零件'},'3323':{name:'加百裕',industry:'電腦週邊'},'3324':{name:'雙鴻',industry:'其他電子'},
+            '3325':{name:'旭品',industry:'電腦週邊'},'3332':{name:'幸康',industry:'電子零件'},'3338':{name:'泰碩',industry:'電子零件'},'3339':{name:'泰谷',industry:'光電'},
+            '3346':{name:'麗清',industry:'汽車'},'3349':{name:'寶德',industry:'電腦週邊'},'3354':{name:'律勝',industry:'電子零件'},'3356':{name:'奇偶',industry:'光電'},
+            '3357':{name:'臺慶科',industry:'電子零件'},'3360':{name:'尚立',industry:'電子通路'},'3362':{name:'先進光',industry:'光電'},'3363':{name:'上詮',industry:'通信網路'},
+            '3372':{name:'典範',industry:'半導體'},'3373':{name:'熱映',industry:'其他電子'},'3374':{name:'精材',industry:'半導體'},'3376':{name:'新日興',industry:'電子零件'},
+            '3379':{name:'彬台',industry:'電機機械'},'3380':{name:'明泰',industry:'通信網路'},'3388':{name:'崇越電',industry:'電子零件'},'3390':{name:'旭軟',industry:'電子零件'},
+            '3402':{name:'漢科',industry:'其他電子'},'3406':{name:'玉晶光',industry:'光電'},'3413':{name:'京鼎',industry:'半導體'},'3416':{name:'融程電',industry:'電腦週邊'},
+            '3419':{name:'譁裕',industry:'通信網路'},'3426':{name:'台興',industry:'電機機械'},'3430':{name:'奇鈦科',industry:'化學'},'3432':{name:'台端',industry:'電子零件'},
+            '3434':{name:'哲固',industry:'光電'},'3437':{name:'榮創',industry:'光電'},'3438':{name:'類比科',industry:'半導體'},'3441':{name:'聯一光',industry:'光電'},
+            '3443':{name:'創意',industry:'半導體'},'3444':{name:'利機',industry:'電子通路'},'3447':{name:'展達',industry:'通信網路'},'3450':{name:'聯鈞',industry:'半導體'},
+            '3454':{name:'晶睿',industry:'光電'},'3455':{name:'由田',industry:'光電'},'3465':{name:'進泰電子',industry:'其他電子'},'3466':{name:'致振',industry:'通信網路'},
+            '3479':{name:'安勤',industry:'電腦週邊'},'3481':{name:'群創',industry:'光電'},'3483':{name:'力致',industry:'電腦週邊'},'3484':{name:'崧騰',industry:'電子零件'},
+            '3489':{name:'森寶',industry:'建材營造'},'3490':{name:'單井',industry:'光電'},'3491':{name:'昇達科',industry:'通信網路'},'3492':{name:'長盛',industry:'電子零件'},
+            '3494':{name:'誠研',industry:'電腦週邊'},'3498':{name:'陽程',industry:'其他電子'},'3499':{name:'環天科',industry:'通信網路'},'3501':{name:'維熹',industry:'電子零件'},
+            '3504':{name:'揚明光',industry:'光電'},'3508':{name:'位速',industry:'其他電子'},'3511':{name:'矽瑪',industry:'電子零件'},'3512':{name:'皇龍',industry:'建材營造'},
+            '3515':{name:'華擎',industry:'電腦週邊'},'3516':{name:'亞帝歐',industry:'光電'},'3518':{name:'柏騰',industry:'其他電子'},'3520':{name:'華盈',industry:'電子零件'},
+            '3521':{name:'鴻翊',industry:'電腦週邊'},'3522':{name:'御頂',industry:'觀光餐旅'},'3523':{name:'迎輝',industry:'光電'},'3526':{name:'凡甲',industry:'電子零件'},
+            '3527':{name:'聚積',industry:'半導體'},'3528':{name:'安馳',industry:'電子通路'},'3529':{name:'力旺',industry:'半導體'},'3530':{name:'晶相光',industry:'半導體'},
+            '3531':{name:'先益',industry:'光電'},'3532':{name:'台勝科',industry:'半導體'},'3533':{name:'嘉澤',industry:'電子零件'},'3535':{name:'晶彩科',industry:'光電'},
+            '3537':{name:'堡達',industry:'電子零件'},'3540':{name:'曜越',industry:'電腦週邊'},'3541':{name:'西柏',industry:'其他電子'},'3543':{name:'州巧',industry:'光電'},
+            '3545':{name:'敦泰',industry:'半導體'},'3546':{name:'宇峻',industry:'文化創意'},'3548':{name:'兆利',industry:'電子零件'},'3550':{name:'聯穎',industry:'電子零件'},
+            '3551':{name:'世禾',industry:'綠能環保'},'3552':{name:'同致',industry:'其他電子'},'3555':{name:'重鵬',industry:'半導體'},'3556':{name:'禾瑞亞',industry:'半導體'},
+            '3557':{name:'嘉威',industry:'居家生活'},'3558':{name:'神準',industry:'通信網路'},'3563':{name:'牧德',industry:'光電'},'3564':{name:'其陽',industry:'通信網路'},
+            '3567':{name:'逸昌',industry:'半導體'},'3570':{name:'大塚',industry:'資訊服務'},'3576':{name:'聯合再生',industry:'光電'},'3577':{name:'泓格',industry:'電腦週邊'},
+            '3580':{name:'友威科',industry:'其他電子'},'3581':{name:'博磊',industry:'半導體'},'3583':{name:'辛耘',industry:'半導體'},'3587':{name:'閎康',industry:'其他電子'},
+            '3588':{name:'通嘉',industry:'半導體'},'3591':{name:'艾笛森',industry:'光電'},'3592':{name:'瑞鼎',industry:'半導體'},'3593':{name:'力銘',industry:'電子零件'},
+            '3594':{name:'磐儀',industry:'電腦週邊'},'3596':{name:'智易',industry:'通信網路'},'3597':{name:'映興',industry:'電子零件'},'3605':{name:'宏致',industry:'電子零件'},
+            '3607':{name:'谷崧',industry:'電子零件'},'3609':{name:'東林',industry:'電子零件'},'3611':{name:'鼎翰',industry:'電腦週邊'},'3615':{name:'安可',industry:'光電'},
+            '3617':{name:'碩天',industry:'其他電子'},'3622':{name:'洋華',industry:'光電'},'3623':{name:'富晶通',industry:'光電'},'3624':{name:'光頡',industry:'電子零件'},
+            '3625':{name:'西勝',industry:'電腦週邊'},'3628':{name:'盈正',industry:'其他電子'},'3629':{name:'地心引力',industry:'文化創意'},'3630':{name:'新鉅科',industry:'光電'},
+            '3631':{name:'晟楠',industry:'電子零件'},'3632':{name:'研勤',industry:'通信網路'},'3645':{name:'達邁',industry:'電子零件'},'3646':{name:'艾恩特',industry:'電子零件'},
+            '3652':{name:'精聯',industry:'電腦週邊'},'3653':{name:'健策',industry:'電子零件'},'3661':{name:'世芯-KY',industry:'半導體'},'3663':{name:'鑫科',industry:'其他電子'},
+            '3664':{name:'安瑞-KY',industry:'通信網路'},'3665':{name:'貿聯-KY',industry:'其他電子'},'3666':{name:'光耀',industry:'光電'},'3669':{name:'圓展',industry:'通信網路'},
+            '3672':{name:'康聯訊',industry:'通信網路'},'3673':{name:'TPK-KY',industry:'光電'},'3675':{name:'德微',industry:'半導體'},'3679':{name:'新至陞',industry:'電子零件'},
+            '3680':{name:'家登',industry:'半導體'},'3684':{name:'榮昌',industry:'通信網路'},'3685':{name:'元創精密',industry:'電機機械'},'3686':{name:'達能',industry:'半導體'},
+            '3687':{name:'歐買尬',industry:'數位雲端'},'3689':{name:'湧德',industry:'電子零件'},'3691':{name:'碩禾',industry:'光電'},'3693':{name:'營邦',industry:'電腦週邊'},
+            '3694':{name:'海華',industry:'通信網路'},'3701':{name:'大眾控',industry:'電腦週邊'},'3702':{name:'大聯大',industry:'電子通路'},'3703':{name:'欣陸',industry:'建材營造'},
+            '3704':{name:'合勤控',industry:'通信網路'},'3705':{name:'永信',industry:'生技醫療'},'3706':{name:'神達',industry:'電腦週邊'},'3707':{name:'漢磊',industry:'半導體'},
+            '3708':{name:'上緯投控',industry:'綠能環保'},'3709':{name:'鑫聯大投控',industry:'電腦週邊'},'3710':{name:'連展投控',industry:'電子零件'},'3711':{name:'日月光投控',industry:'半導體'},
+            '3712':{name:'永崴投控',industry:'電腦週邊'},'3713':{name:'新晶投控',industry:'綠能環保'},'3714':{name:'富采',industry:'光電'},'3715':{name:'定穎投控',industry:'電子零件'},
+            '3716':{name:'中化控股',industry:'生技醫療'},'4102':{name:'永日',industry:'生技醫療'},'4104':{name:'佳醫',industry:'生技醫療'},'4105':{name:'東洋',industry:'生技醫療'},
+            '4106':{name:'雃博',industry:'生技醫療'},'4107':{name:'邦特',industry:'生技醫療'},'4108':{name:'懷特',industry:'生技醫療'},'4109':{name:'加捷生醫',industry:'生技醫療'},
+            '4111':{name:'濟生',industry:'生技醫療'},'4113':{name:'聯上',industry:'建材營造'},'4114':{name:'健喬',industry:'生技醫療'},'4116':{name:'明基醫',industry:'生技醫療'},
+            '4119':{name:'旭富',industry:'生技醫療'},'4120':{name:'友華',industry:'生技醫療'},'4121':{name:'優盛',industry:'生技醫療'},'4123':{name:'晟德',industry:'生技醫療'},
+            '4126':{name:'太醫',industry:'生技醫療'},'4127':{name:'天良',industry:'生技醫療'},'4128':{name:'中天',industry:'生技醫療'},'4129':{name:'聯合',industry:'生技醫療'},
+            '4130':{name:'健亞',industry:'生技醫療'},'4131':{name:'晶宇',industry:'生技醫療'},'4133':{name:'亞諾法',industry:'生技醫療'},'4137':{name:'麗豐-KY',industry:'生技醫療'},
+            '4138':{name:'曜亞',industry:'生技醫療'},'4139':{name:'馬光-KY',industry:'生技醫療'},'4142':{name:'國光生',industry:'生技醫療'},'4147':{name:'中裕',industry:'生技醫療'},
+            '4148':{name:'全宇生技-KY',industry:'生技醫療'},'4153':{name:'鈺緯',industry:'生技醫療'},'4154':{name:'康樂-KY',industry:'其他'},'4155':{name:'訊映',industry:'生技醫療'},
+            '4157':{name:'太景*-KY',industry:'生技醫療'},'4160':{name:'創源',industry:'生技醫療'},'4161':{name:'聿新科',industry:'生技醫療'},'4162':{name:'智擎',industry:'生技醫療'},
+            '4163':{name:'鐿鈦',industry:'生技醫療'},'4164':{name:'承業醫',industry:'生技醫療'},'4167':{name:'松瑞藥',industry:'生技醫療'},'4168':{name:'醣聯',industry:'生技醫療'},
+            '4171':{name:'瑞基',industry:'農業科技'},'4173':{name:'久裕',industry:'生技醫療'},'4174':{name:'浩鼎',industry:'生技醫療'},'4175':{name:'杏一',industry:'生技醫療'},
+            '4183':{name:'福永生技',industry:'生技醫療'},'4188':{name:'安克',industry:'生技醫療'},'4190':{name:'佐登-KY',industry:'生技醫療'},'4192':{name:'杏國',industry:'生技醫療'},
+            '4198':{name:'欣大健康',industry:'生技醫療'},'4205':{name:'中華食',industry:'食品'},'4207':{name:'環泰',industry:'食品'},'4303':{name:'信立',industry:'塑膠'},
+            '4304':{name:'勝昱',industry:'塑膠'},'4305':{name:'世坤',industry:'塑膠'},'4306':{name:'炎洲',industry:'塑膠'},'4401':{name:'東隆興',industry:'紡織纖維'},
+            '4402':{name:'福大',industry:'紡織纖維'},'4406':{name:'新昕纖',industry:'紡織纖維'},'4413':{name:'飛寶企業',industry:'紡織纖維'},'4414':{name:'如興',industry:'紡織纖維'},
+            '4416':{name:'三圓',industry:'建材營造'},'4417':{name:'金洲',industry:'紡織纖維'},'4419':{name:'元勝',industry:'觀光餐旅'},'4420':{name:'光明',industry:'紡織纖維'},
+            '4426':{name:'利勤',industry:'紡織纖維'},'4430':{name:'耀億',industry:'其他'},'4432':{name:'銘旺實',industry:'紡織纖維'},'4433':{name:'興采',industry:'紡織纖維'},
+            '4438':{name:'廣越',industry:'紡織纖維'},'4439':{name:'冠星-KY',industry:'紡織纖維'},'4440':{name:'宜新實業',industry:'紡織纖維'},'4442':{name:'竣邦-KY',industry:'紡織纖維'},
+            '4502':{name:'健信',industry:'電機機械'},'4503':{name:'金雨',industry:'電機機械'},'4506':{name:'崇友',industry:'電機機械'},'4510':{name:'高鋒',industry:'電機機械'},
+            '4513':{name:'福裕',industry:'電機機械'},'4523':{name:'永彰',industry:'電機機械'},'4526':{name:'東台',industry:'電機機械'},'4527':{name:'方土霖',industry:'電機機械'},
+            '4528':{name:'江興鍛',industry:'電機機械'},'4529':{name:'淳紳',industry:'其他'},'4530':{name:'宏易',industry:'觀光餐旅'},'4532':{name:'瑞智',industry:'電機機械'},
+            '4533':{name:'協易機',industry:'電機機械'},'4534':{name:'慶騰',industry:'電機機械'},'4535':{name:'至興',industry:'電機機械'},'4536':{name:'拓凱',industry:'運動休閒'},
+            '4538':{name:'大詠城',industry:'電機機械'},'4540':{name:'全球傳動',industry:'電機機械'},'4541':{name:'晟田',industry:'其他'},'4542':{name:'科嶠',industry:'電子零件'},
+            '4543':{name:'萬在',industry:'電機機械'},'4545':{name:'銘鈺',industry:'電子零件'},'4549':{name:'桓達',industry:'電機機械'},'4550':{name:'長佳',industry:'電機機械'},
+            '4551':{name:'智伸科',industry:'汽車'},'4552':{name:'力達-KY',industry:'電機機械'},'4554':{name:'橙的',industry:'其他電子'},'4555':{name:'氣立',industry:'電機機械'},
+            '4556':{name:'旭然',industry:'其他'},'4557':{name:'永新-KY',industry:'汽車'},'4558':{name:'寶緯',industry:'電機機械'},'4560':{name:'強信-KY',industry:'電機機械'},
+            '4561':{name:'健椿',industry:'電機機械'},'4562':{name:'穎漢',industry:'電機機械'},'4563':{name:'百德',industry:'電機機械'},'4564':{name:'元翎',industry:'電機機械'},
+            '4566':{name:'時碩工業',industry:'電機機械'},'4568':{name:'科際精密',industry:'電機機械'},'4569':{name:'六方科-KY',industry:'汽車'},'4571':{name:'鈞興-KY',industry:'電機機械'},
+            '4572':{name:'駐龍',industry:'電機機械'},'4576':{name:'大銀微系統',industry:'電機機械'},'4577':{name:'達航科技',industry:'其他電子'},'4580':{name:'捷流閥業',industry:'電機機械'},
+            '4581':{name:'光隆精密-KY',industry:'汽車'},'4583':{name:'台灣精銳',industry:'電機機械'},'4584':{name:'君帆',industry:'電機機械'},'4588':{name:'玖鼎電力',industry:'其他電子'},
+            '4609':{name:'唐鋒',industry:'居家生活'},'4702':{name:'中美實',industry:'居家生活'},'4706':{name:'大恭',industry:'化學'},'4707':{name:'磐亞',industry:'化學'},
+            '4711':{name:'永純',industry:'化學'},'4714':{name:'永捷',industry:'化學'},'4716':{name:'大立',industry:'化學'},'4720':{name:'德淵',industry:'化學'},
+            '4721':{name:'美琪瑪',industry:'化學'},'4722':{name:'國精化',industry:'化學'},'4726':{name:'永昕',industry:'生技醫療'},'4728':{name:'雙美',industry:'生技醫療'},
+            '4729':{name:'熒茂',industry:'光電'},'4735':{name:'豪展',industry:'生技醫療'},'4736':{name:'泰博',industry:'生技醫療'},'4737':{name:'華廣',industry:'生技醫療'},
+            '4739':{name:'康普',industry:'化學'},'4741':{name:'泓瀚',industry:'化學'},'4743':{name:'合一',industry:'生技醫療'},'4744':{name:'皇將',industry:'生技醫療'},
+            '4745':{name:'合富-KY',industry:'生技醫療'},'4746':{name:'台耀',industry:'生技醫療'},'4747':{name:'強生',industry:'生技醫療'},'4754':{name:'國碳科',industry:'化學'},
+            '4755':{name:'三福化',industry:'化學'},'4760':{name:'勤凱科技',industry:'其他電子'},'4763':{name:'材料-KY',industry:'化學'},'4764':{name:'雙鍵',industry:'化學'},
+            '4766':{name:'南寶',industry:'化學'},'4767':{name:'誠泰科技',industry:'化學'},'4768':{name:'晶呈科技',industry:'化學'},'4770':{name:'上品',industry:'化學'},
+            '4771':{name:'望隼',industry:'生技醫療'},'4772':{name:'台特化',industry:'化學'},'4806':{name:'昇華',industry:'文化創意'},'4807':{name:'日成-KY',industry:'貿易百貨'},
+            '4903':{name:'聯光通',industry:'通信網路'},'4904':{name:'遠傳',industry:'通信網路'},'4905':{name:'台聯電',industry:'通信網路'},'4906':{name:'正文',industry:'通信網路'},
+            '4907':{name:'富宇',industry:'建材營造'},'4908':{name:'前鼎',industry:'通信網路'},'4909':{name:'新復興',industry:'通信網路'},'4911':{name:'德英',industry:'生技醫療'},
+            '4912':{name:'聯德控股-KY',industry:'電子零件'},'4915':{name:'致伸',industry:'電子零件'},'4916':{name:'事欣科',industry:'電腦週邊'},'4919':{name:'新唐',industry:'半導體'},
+            '4923':{name:'力士',industry:'半導體'},'4924':{name:'欣厚-KY',industry:'電腦週邊'},'4927':{name:'泰鼎-KY',industry:'電子零件'},'4930':{name:'燦星網',industry:'電器電纜'},
+            '4931':{name:'新盛力',industry:'電腦週邊'},'4933':{name:'友輝',industry:'光電'},'4934':{name:'太極',industry:'光電'},'4935':{name:'茂林-KY',industry:'光電'},
+            '4938':{name:'和碩',industry:'電腦週邊'},'4939':{name:'亞電',industry:'電子零件'},'4942':{name:'嘉彰',industry:'光電'},'4943':{name:'康控-KY',industry:'電子零件'},
+            '4945':{name:'陞達科技',industry:'半導體'},'4946':{name:'辣椒',industry:'文化創意'},'4949':{name:'有成精密',industry:'光電'},'4951':{name:'精拓科',industry:'半導體'},
+            '4952':{name:'凌通',industry:'半導體'},'4953':{name:'緯軟',industry:'資訊服務'},'4956':{name:'光鋐',industry:'光電'},'4958':{name:'臻鼎-KY',industry:'電子零件'},
+            '4960':{name:'誠美材',industry:'光電'},'4961':{name:'天鈺',industry:'半導體'},'4966':{name:'譜瑞-KY',industry:'半導體'},'4967':{name:'十銓',industry:'半導體'},
+            '4968':{name:'立積',industry:'半導體'},'4971':{name:'IET-KY',industry:'半導體'},'4972':{name:'湯石照明',industry:'光電'},'4973':{name:'廣穎',industry:'半導體'},
+            '4974':{name:'亞泰',industry:'電子零件'},'4976':{name:'佳凌',industry:'光電'},'4977':{name:'眾達-KY',industry:'通信網路'},'4979':{name:'華星光',industry:'通信網路'},
+            '4987':{name:'科誠',industry:'電腦週邊'},'4989':{name:'榮科',industry:'電子零件'},'4991':{name:'環宇-KY',industry:'半導體'},'4994':{name:'傳奇',industry:'資訊服務'},
+            '4995':{name:'晶達',industry:'光電'},'4999':{name:'鑫禾',industry:'電子零件'},'5007':{name:'三星',industry:'鋼鐵'},'5009':{name:'榮剛',industry:'鋼鐵'},
+            '5011':{name:'久陽',industry:'鋼鐵'},'5013':{name:'強新',industry:'鋼鐵'},'5014':{name:'建錩',industry:'鋼鐵'},'5015':{name:'華祺',industry:'鋼鐵'},
+            '5016':{name:'松和',industry:'鋼鐵'},'5201':{name:'凱衛',industry:'資訊服務'},'5202':{name:'力新',industry:'資訊服務'},'5203':{name:'訊連',industry:'資訊服務'},
+            '5205':{name:'中茂',industry:'綠能環保'},'5206':{name:'坤悅',industry:'建材營造'},'5209':{name:'新鼎',industry:'其他'},'5210':{name:'寶碩',industry:'資訊服務'},
+            '5211':{name:'蒙恬',industry:'資訊服務'},'5212':{name:'凌網',industry:'資訊服務'},'5213':{name:'亞昕',industry:'建材營造'},'5215':{name:'科嘉-KY',industry:'電腦週邊'},
+            '5220':{name:'萬達光電',industry:'光電'},'5222':{name:'全訊',industry:'半導體'},'5223':{name:'安力-KY',industry:'電腦週邊'},'5225':{name:'東科-KY',industry:'其他電子'},
+            '5227':{name:'立凱-KY',industry:'電子零件'},'5228':{name:'鈺鎧',industry:'電子零件'},'5230':{name:'雷笛克光學',industry:'光電'},'5234':{name:'達興材料',industry:'光電'},
+            '5236':{name:'凌陽創新',industry:'半導體'},'5243':{name:'乙盛-KY',industry:'光電'},'5244':{name:'弘凱',industry:'光電'},'5245':{name:'智晶',industry:'光電'},
+            '5251':{name:'天鉞電',industry:'光電'},'5258':{name:'虹堡',industry:'電腦週邊'},'5263':{name:'智崴',industry:'文化創意'},'5269':{name:'祥碩',industry:'半導體'},
+            '5272':{name:'笙科',industry:'半導體'},'5274':{name:'信驊',industry:'半導體'},'5276':{name:'達輝-KY',industry:'其他'},'5278':{name:'尚凡',industry:'數位雲端'},
+            '5283':{name:'禾聯碩',industry:'電器電纜'},'5284':{name:'jpp-KY',industry:'其他'},'5285':{name:'界霖',industry:'半導體'},'5287':{name:'數字',industry:'數位雲端'},
+            '5288':{name:'豐祥-KY',industry:'電機機械'},'5289':{name:'宜鼎',industry:'電腦週邊'},'5291':{name:'邑昇',industry:'電子零件'},'5292':{name:'華懋',industry:'綠能環保'},
+            '5299':{name:'杰力',industry:'半導體'},'5301':{name:'寶得利',industry:'觀光餐旅'},'5302':{name:'太欣',industry:'半導體'},'5306':{name:'桂盟',industry:'運動休閒'},
+            '5309':{name:'系統電',industry:'電子零件'},'5310':{name:'天剛',industry:'資訊服務'},'5312':{name:'寶島科',industry:'生技醫療'},'5314':{name:'世紀',industry:'半導體'},
+            '5315':{name:'光聯',industry:'光電'},'5321':{name:'友銓',industry:'數位雲端'},'5324':{name:'士開',industry:'建材營造'},'5328':{name:'華容',industry:'電子零件'},
+            '5340':{name:'建榮',industry:'電子零件'},'5344':{name:'立衛',industry:'半導體'},'5345':{name:'天揚',industry:'其他'},'5347':{name:'世界',industry:'半導體'},
+            '5348':{name:'系通',industry:'通信網路'},'5351':{name:'鈺創',industry:'半導體'},'5353':{name:'台林',industry:'通信網路'},'5355':{name:'佳總',industry:'電子零件'},
+            '5356':{name:'協益',industry:'電腦週邊'},'5364':{name:'力麗店',industry:'觀光餐旅'},'5371':{name:'中光電',industry:'光電'},'5381':{name:'合正',industry:'電子零件'},
+            '5386':{name:'青雲',industry:'電腦週邊'},'5388':{name:'中磊',industry:'通信網路'},'5392':{name:'能率',industry:'光電'},'5398':{name:'慕康生醫',industry:'其他'},
+            '5403':{name:'中菲',industry:'資訊服務'},'5410':{name:'國眾',industry:'資訊服務'},'5425':{name:'台半',industry:'半導體'},'5426':{name:'振發',industry:'電腦週邊'},
+            '5432':{name:'達威',industry:'綠能環保'},'5434':{name:'崇越',industry:'電子通路'},'5438':{name:'東友',industry:'電腦週邊'},'5439':{name:'高技',industry:'電子零件'},
+            '5443':{name:'均豪',industry:'光電'},'5450':{name:'南良',industry:'其他'},'5452':{name:'佶優',industry:'其他電子'},'5455':{name:'昇益',industry:'建材營造'},
+            '5457':{name:'宣德',industry:'電子零件'},'5460':{name:'同協',industry:'電子零件'},'5464':{name:'霖宏',industry:'電子零件'},'5465':{name:'富驊',industry:'電腦週邊'},
+            '5468':{name:'凱鈺',industry:'半導體'},'5469':{name:'瀚宇博',industry:'電子零件'},'5471':{name:'松翰',industry:'半導體'},'5474':{name:'聰泰',industry:'電腦週邊'},
+            '5475':{name:'德宏',industry:'電子零件'},'5478':{name:'智冠',industry:'文化創意'},'5481':{name:'新華',industry:'其他'},'5483':{name:'中美晶',industry:'半導體'},
+            '5484':{name:'慧友',industry:'光電'},'5487':{name:'通泰',industry:'半導體'},'5488':{name:'松普',industry:'電子零件'},'5489':{name:'彩富',industry:'其他電子'},
+            '5490':{name:'同亨',industry:'電腦週邊'},'5493':{name:'三聯',industry:'其他電子'},'5498':{name:'凱崴',industry:'電子零件'},'5508':{name:'永信建',industry:'建材營造'},
+            '5511':{name:'德昌',industry:'建材營造'},'5512':{name:'力麒',industry:'建材營造'},'5514':{name:'三豐',industry:'建材營造'},'5515':{name:'建國',industry:'建材營造'},
+            '5516':{name:'雙喜',industry:'建材營造'},'5519':{name:'隆大',industry:'建材營造'},'5520':{name:'力泰',industry:'建材營造'},'5521':{name:'工信',industry:'建材營造'},
+            '5522':{name:'遠雄',industry:'建材營造'},'5523':{name:'豐謙',industry:'建材營造'},'5525':{name:'順天',industry:'建材營造'},'5529':{name:'志嘉',industry:'建材營造'},
+            '5530':{name:'龍巖',industry:'其他'},'5531':{name:'鄉林',industry:'建材營造'},'5533':{name:'皇鼎',industry:'建材營造'},'5534':{name:'長虹',industry:'建材營造'},
+            '5536':{name:'聖暉',industry:'其他電子'},'5538':{name:'東明-KY',industry:'鋼鐵'},'5543':{name:'桓鼎-KY',industry:'建材營造'},'5546':{name:'永固-KY',industry:'建材營造'},
+            '5548':{name:'安倉',industry:'建材營造'},'5601':{name:'台聯櫃',industry:'航運'},'5603':{name:'陸海',industry:'航運'},'5604':{name:'中連貨',industry:'其他'},
+            '5607':{name:'遠雄港',industry:'航運'},'5608':{name:'四維航',industry:'航運'},'5609':{name:'中菲行',industry:'航運'},'5701':{name:'劍湖山',industry:'觀光餐旅'},
+            '5703':{name:'亞都',industry:'觀光餐旅'},'5704':{name:'老爺知',industry:'觀光餐旅'},'5706':{name:'鳳凰',industry:'觀光餐旅'},'5864':{name:'致和證',industry:'金融'},
+            '5871':{name:'中租-KY',industry:'其他'},'5876':{name:'上海商銀',industry:'金融保險'},'5878':{name:'台名',industry:'金融'},'5880':{name:'合庫金',industry:'金融保險'},
+            '5902':{name:'德記',industry:'居家生活'},'5903':{name:'全家',industry:'居家生活'},'5904':{name:'寶雅',industry:'居家生活'},'5905':{name:'南仁湖',industry:'觀光餐旅'},
+            '5906':{name:'台南-KY',industry:'貿易百貨'},'5907':{name:'大洋-KY',industry:'貿易百貨'},'6005':{name:'群益證',industry:'金融保險'},'6015':{name:'宏遠證',industry:'金融'},
+            '6016':{name:'康和證',industry:'金融'},'6020':{name:'大展證',industry:'金融'},'6021':{name:'大慶證',industry:'金融'},'6023':{name:'元大期貨',industry:'金融'},
+            '6024':{name:'群益期',industry:'金融保險'},'6026':{name:'福邦證',industry:'金融'},'6101':{name:'寬魚國際',industry:'文化創意'},'6103':{name:'合邦',industry:'半導體'},
+            '6104':{name:'創惟',industry:'半導體'},'6108':{name:'競國',industry:'電子零件'},'6109':{name:'亞元',industry:'通信網路'},'6111':{name:'大宇資',industry:'文化創意'},
+            '6112':{name:'聚碩',industry:'資訊服務'},'6113':{name:'亞矽',industry:'電子通路'},'6114':{name:'久威',industry:'電子零件'},'6115':{name:'鎰勝',industry:'電子零件'},
+            '6116':{name:'彩晶',industry:'光電'},'6117':{name:'迎廣',industry:'電腦週邊'},'6118':{name:'建達',industry:'電子通路'},'6120':{name:'達運',industry:'光電'},
+            '6121':{name:'新普',industry:'電腦週邊'},'6122':{name:'擎邦',industry:'電機機械'},'6123':{name:'上奇',industry:'資訊服務'},'6124':{name:'業強',industry:'電子零件'},
+            '6125':{name:'廣運',industry:'光電'},'6126':{name:'信音',industry:'電子零件'},'6127':{name:'九豪',industry:'電子零件'},'6128':{name:'上福',industry:'電腦週邊'},
+            '6129':{name:'普誠',industry:'半導體'},'6130':{name:'星寶國際',industry:'生技醫療'},'6133':{name:'金橋',industry:'電子零件'},'6134':{name:'萬旭',industry:'電子零件'},
+            '6136':{name:'富爾特',industry:'通信網路'},'6138':{name:'茂達',industry:'半導體'},'6139':{name:'亞翔',industry:'其他電子'},'6140':{name:'訊達電腦',industry:'資訊服務'},
+            '6141':{name:'柏承',industry:'電子零件'},'6142':{name:'友勁',industry:'通信網路'},'6143':{name:'振曜',industry:'通信網路'},'6144':{name:'得利影',industry:'文化創意'},
+            '6146':{name:'耕興',industry:'其他電子'},'6147':{name:'頎邦',industry:'半導體'},'6148':{name:'驊宏資',industry:'資訊服務'},'6150':{name:'撼訊',industry:'電腦週邊'},
+            '6151':{name:'晉倫',industry:'其他電子'},'6152':{name:'百一',industry:'通信網路'},'6153':{name:'嘉聯益',industry:'電子零件'},'6154':{name:'順發',industry:'電子通路'},
+            '6155':{name:'鈞寶',industry:'電子零件'},'6156':{name:'松上',industry:'電子零件'},'6158':{name:'禾昌',industry:'電子零件'},'6160':{name:'欣技',industry:'電腦週邊'},
+            '6161':{name:'捷波',industry:'電腦週邊'},'6163':{name:'華電網',industry:'通信網路'},'6164':{name:'華興',industry:'光電'},'6165':{name:'捷泰',industry:'數位雲端'},
+            '6166':{name:'凌華',industry:'電腦週邊'},'6167':{name:'久正',industry:'光電'},'6168':{name:'宏齊',industry:'光電'},'6169':{name:'昱泉',industry:'文化創意'},
+            '6170':{name:'統振',industry:'通信網路'},'6171':{name:'亞銳士',industry:'建材營造'},'6173':{name:'信昌電',industry:'電子零件'},'6174':{name:'安碁',industry:'電子零件'},
+            '6175':{name:'立敦',industry:'電子零件'},'6176':{name:'瑞儀',industry:'光電'},'6177':{name:'達麗',industry:'建材營造'},'6179':{name:'亞通',industry:'其他'},
+            '6180':{name:'橘子',industry:'文化創意'},'6182':{name:'合晶',industry:'半導體'},'6183':{name:'關貿',industry:'資訊服務'},'6184':{name:'大豐電',industry:'其他'},
+            '6185':{name:'幃翔',industry:'電子零件'},'6186':{name:'新潤',industry:'建材營造'},'6187':{name:'萬潤',industry:'其他電子'},'6188':{name:'廣明',industry:'電腦週邊'},
+            '6189':{name:'豐藝',industry:'電子通路'},'6190':{name:'萬泰科',industry:'通信網路'},'6191':{name:'精成科',industry:'電子零件'},'6192':{name:'巨路',industry:'其他電子'},
+            '6194':{name:'育富',industry:'電子零件'},'6195':{name:'詩肯',industry:'居家生活'},'6196':{name:'帆宣',industry:'其他電子'},'6197':{name:'佳必琪',industry:'電子零件'},
+            '6198':{name:'凌泰',industry:'建材營造'},'6199':{name:'天品',industry:'其他'},'6201':{name:'亞弘電',industry:'其他電子'},'6202':{name:'盛群',industry:'半導體'},
+            '6203':{name:'海韻電',industry:'電子零件'},'6204':{name:'艾華',industry:'電子零件'},'6205':{name:'詮欣',industry:'電子零件'},'6206':{name:'飛捷',industry:'電腦週邊'},
+            '6207':{name:'雷科',industry:'電子零件'},'6208':{name:'日揚',industry:'電子零件'},'6209':{name:'今國光',industry:'光電'},'6210':{name:'慶生',industry:'電子零件'},
+            '6212':{name:'理銘',industry:'建材營造'},'6213':{name:'聯茂',industry:'電子零件'},'6214':{name:'精誠',industry:'資訊服務'},'6215':{name:'和椿',industry:'其他電子'},
+            '6216':{name:'居易',industry:'通信網路'},'6217':{name:'中探針',industry:'電子零件'},'6218':{name:'豪勉',industry:'通信網路'},'6219':{name:'富旺',industry:'建材營造'},
+            '6220':{name:'岳豐',industry:'電子零件'},'6221':{name:'晉泰',industry:'資訊服務'},'6222':{name:'上揚',industry:'光電'},'6223':{name:'旺矽',industry:'半導體'},
+            '6224':{name:'聚鼎',industry:'電子零件'},'6225':{name:'天瀚',industry:'光電'},'6226':{name:'光鼎',industry:'光電'},'6227':{name:'茂綸',industry:'電子通路'},
+            '6228':{name:'全譜',industry:'電腦週邊'},'6229':{name:'研通',industry:'半導體'},'6230':{name:'超眾',industry:'電腦週邊'},'6231':{name:'系微',industry:'資訊服務'},
+            '6233':{name:'旺玖',industry:'半導體'},'6234':{name:'高僑',industry:'光電'},'6235':{name:'華孚',industry:'電腦週邊'},'6236':{name:'康呈',industry:'其他'},
+            '6237':{name:'驊訊',industry:'半導體'},'6239':{name:'力成',industry:'半導體'},'6240':{name:'松崗',industry:'其他'},'6241':{name:'易通展',industry:'通信網路'},
+            '6242':{name:'立康',industry:'生技醫療'},'6243':{name:'迅杰',industry:'半導體'},'6244':{name:'茂迪',industry:'光電'},'6245':{name:'立端',industry:'通信網路'},
+            '6246':{name:'臺龍',industry:'光電'},'6248':{name:'沛波',industry:'鋼鐵'},'6257':{name:'矽格',industry:'半導體'},'6259':{name:'百徽',industry:'電子零件'},
+            '6261':{name:'久元',industry:'半導體'},'6263':{name:'普萊德',industry:'通信網路'},'6264':{name:'富裔',industry:'建材營造'},'6265':{name:'方土昶',industry:'電子通路'},
+            '6266':{name:'泰詠',industry:'電子零件'},'6269':{name:'台郡',industry:'電子零件'},'6270':{name:'倍微',industry:'電子通路'},'6271':{name:'同欣電',industry:'半導體'},
+            '6274':{name:'台燿',industry:'電子零件'},'6275':{name:'元山',industry:'電子零件'},'6276':{name:'安鈦克',industry:'電腦週邊'},'6277':{name:'宏正',industry:'電腦週邊'},
+            '6278':{name:'台表科',industry:'光電'},'6279':{name:'胡連',industry:'電子零件'},'6281':{name:'全國電',industry:'電子通路'},'6282':{name:'康舒',industry:'電子零件'},
+            '6283':{name:'淳安',industry:'其他電子'},'6284':{name:'佳邦',industry:'電子零件'},'6285':{name:'啟碁',industry:'通信網路'},'6287':{name:'元隆',industry:'半導體'},
+            '6288':{name:'聯嘉',industry:'汽車'},'6290':{name:'良維',industry:'電子零件'},'6291':{name:'沛亨',industry:'半導體'},'6292':{name:'迅德',industry:'電子零件'},
+            '6294':{name:'智基',industry:'文化創意'},'6405':{name:'悅城',industry:'光電'},'6409':{name:'旭隼',industry:'其他電子'},'6411':{name:'晶焱',industry:'半導體'},
+            '6412':{name:'群電',industry:'電子零件'},'6414':{name:'樺漢',industry:'電腦週邊'},'6415':{name:'矽力-KY',industry:'半導體'},'6416':{name:'瑞祺電通',industry:'通信網路'},
+            '6417':{name:'韋僑',industry:'通信網路'},'6418':{name:'詠昇',industry:'電子零件'},'6419':{name:'京晨科',industry:'光電'},'6423':{name:'億而得-創',industry:'半導體'},
+            '6425':{name:'易發',industry:'電機機械'},'6426':{name:'統新',industry:'通信網路'},'6431':{name:'光麗-KY',industry:'生技醫療'},'6432':{name:'今展科',industry:'電子零件'},
+            '6435':{name:'大中',industry:'半導體'},'6438':{name:'迅得',industry:'其他電子'},'6441':{name:'廣錠',industry:'電腦週邊'},'6442':{name:'光聖',industry:'通信網路'},
+            '6443':{name:'元晶',industry:'光電'},'6446':{name:'藥華藥',industry:'生技醫療'},'6449':{name:'鈺邦',industry:'電子零件'},'6451':{name:'訊芯-KY',industry:'半導體'},
+            '6456':{name:'GIS-KY',industry:'光電'},'6457':{name:'紘康',industry:'半導體'},'6461':{name:'益得',industry:'生技醫療'},'6462':{name:'神盾',industry:'半導體'},
+            '6464':{name:'台數科',industry:'其他'},'6465':{name:'威潤',industry:'通信網路'},'6469':{name:'大樹',industry:'生技醫療'},'6470':{name:'宇智',industry:'通信網路'},
+            '6472':{name:'保瑞',industry:'生技醫療'},'6477':{name:'安集',industry:'光電'},'6482':{name:'弘煜科',industry:'文化創意'},'6485':{name:'點序',industry:'半導體'},
+            '6486':{name:'互動',industry:'通信網路'},'6488':{name:'環球晶',industry:'半導體'},'6491':{name:'晶碩',industry:'生技醫療'},'6492':{name:'生華科',industry:'生技醫療'},
+            '6494':{name:'九齊',industry:'半導體'},'6496':{name:'科懋',industry:'生技醫療'},'6499':{name:'益安',industry:'生技醫療'},'6504':{name:'南六',industry:'其他'},
+            '6505':{name:'台塑化',industry:'油電燃氣'},'6506':{name:'雙邦',industry:'紡織纖維'},'6508':{name:'惠光',industry:'農業科技'},'6509':{name:'聚和',industry:'化學'},
+            '6510':{name:'精測',industry:'半導體'},'6512':{name:'啟發電',industry:'其他電子'},'6514':{name:'芮特-KY',industry:'通信網路'},'6515':{name:'穎崴',industry:'半導體'},
+            '6516':{name:'勤崴國際',industry:'資訊服務'},'6517':{name:'保勝光學',industry:'光電'},'6523':{name:'達爾膚',industry:'生技醫療'},'6525':{name:'捷敏-KY',industry:'半導體'},
+            '6526':{name:'達發',industry:'半導體'},'6527':{name:'明達醫',industry:'生技醫療'},'6530':{name:'創威',industry:'通信網路'},'6531':{name:'愛普',industry:'半導體'},
+            '6532':{name:'瑞耘',industry:'半導體'},'6533':{name:'晶心科',industry:'半導體'},'6534':{name:'正瀚-創',industry:'生技醫療'},'6535':{name:'順藥',industry:'生技醫療'},
+            '6538':{name:'倉和',industry:'電子零件'},'6541':{name:'泰福-KY',industry:'生技醫療'},'6542':{name:'隆中',industry:'文化創意'},'6546':{name:'正基',industry:'通信網路'},
+            '6547':{name:'高端疫苗',industry:'生技醫療'},'6548':{name:'長科*',industry:'半導體'},'6550':{name:'北極星藥業-KY',industry:'生技醫療'},'6552':{name:'易華電',industry:'半導體'},
+            '6556':{name:'勝品',industry:'光電'},'6558':{name:'興能高',industry:'其他電子'},'6560':{name:'欣普羅',industry:'光電'},'6561':{name:'是方',industry:'通信網路'},
+            '6568':{name:'宏觀',industry:'半導體'},'6569':{name:'醫揚',industry:'生技醫療'},'6570':{name:'維田',industry:'電腦週邊'},'6573':{name:'虹揚-KY',industry:'半導體'},
+            '6574':{name:'霈方',industry:'生技醫療'},'6576':{name:'逸達',industry:'生技醫療'},'6577':{name:'勁豐',industry:'電腦週邊'},'6578':{name:'達邦蛋白',industry:'農業科技'},
+            '6579':{name:'研揚',industry:'電腦週邊'},'6581':{name:'鋼聯',industry:'綠能環保'},'6582':{name:'申豐',industry:'橡膠'},'6584':{name:'南俊國際',industry:'電子零件'},
+            '6585':{name:'鼎基',industry:'其他'},'6588':{name:'東典',industry:'通信網路'},'6589':{name:'台康生技',industry:'生技醫療'},'6590':{name:'普鴻',industry:'資訊服務'},
+            '6591':{name:'動力-KY',industry:'電腦週邊'},'6592':{name:'和潤企業',industry:'其他'},'6593':{name:'台灣銘板',industry:'資訊服務'},'6596':{name:'寬宏藝術',industry:'文化創意'},
+            '6598':{name:'ABC-KY',industry:'生技醫療'},'6603':{name:'富強鑫',industry:'電機機械'},'6605':{name:'帝寶',industry:'汽車'},'6606':{name:'建德工業',industry:'電機機械'},
+            '6609':{name:'瀧澤科',industry:'電機機械'},'6612':{name:'奈米醫材',industry:'生技醫療'},'6613':{name:'朋億',industry:'其他電子'},'6615':{name:'慧智',industry:'生技醫療'},
+            '6616':{name:'特昇-KY',industry:'居家生活'},'6617':{name:'共信-KY',industry:'生技醫療'},'6624':{name:'萬年清',industry:'綠能環保'},'6625':{name:'必應',industry:'其他'},
+            '6629':{name:'泰金-KY',industry:'居家生活'},'6637':{name:'醫影',industry:'生技醫療'},'6640':{name:'均華',industry:'半導體'},'6641':{name:'基士德-KY',industry:'綠能環保'},
+            '6642':{name:'富致',industry:'電子零件'},'6643':{name:'M31',industry:'半導體'},'6645':{name:'金萬林-創',industry:'生技醫療'},'6649':{name:'台生材',industry:'生技醫療'},
+            '6651':{name:'全宇昕',industry:'半導體'},'6654':{name:'天正國際',industry:'其他電子'},'6655':{name:'科定',industry:'其他'},'6657':{name:'華安',industry:'生技醫療'},
+            '6658':{name:'聯策',industry:'其他電子'},'6661':{name:'威健生技',industry:'生技醫療'},'6662':{name:'樂斯科',industry:'生技醫療'},'6664':{name:'群翊',industry:'電子零件'},
+            '6666':{name:'羅麗芬-KY',industry:'生技醫療'},'6667':{name:'信紘科',industry:'其他電子'},'6668':{name:'中揚光',industry:'光電'},'6669':{name:'緯穎',industry:'電腦週邊'},
+            '6670':{name:'復盛應用',industry:'運動休閒'},'6671':{name:'三能-KY',industry:'居家生活'},'6672':{name:'騰輝電子-KY',industry:'電子零件'},'6674':{name:'鋐寶科技',industry:'通信網路'},
+            '6679':{name:'鈺太',industry:'半導體'},'6680':{name:'鑫創電子',industry:'電腦週邊'},'6683':{name:'雍智科技',industry:'半導體'},'6684':{name:'安格',industry:'半導體'},
+            '6689':{name:'伊雲谷',industry:'數位雲端'},'6690':{name:'安碁資訊',industry:'數位雲端'},'6691':{name:'洋基工程',industry:'其他電子'},'6692':{name:'進能服',industry:'綠能環保'},
+            '6693':{name:'廣閎科',industry:'半導體'},'6695':{name:'芯鼎',industry:'半導體'},'6697':{name:'東捷資訊',industry:'資訊服務'},'6698':{name:'旭暉應材',industry:'其他電子'},
+            '6703':{name:'軒郁',industry:'生技醫療'},'6706':{name:'惠特',industry:'光電'},'6708':{name:'天擎',industry:'半導體'},'6712':{name:'長聖',industry:'生技醫療'},
+            '6715':{name:'嘉基',industry:'電子零件'},'6716':{name:'應廣',industry:'半導體'},'6719':{name:'力智',industry:'半導體'},'6721':{name:'信實',industry:'其他'},
+            '6727':{name:'亞泰金屬',industry:'電子零件'},'6728':{name:'上洋',industry:'居家生活'},'6732':{name:'昇佳電子',industry:'半導體'},'6733':{name:'博晟生醫',industry:'生技醫療'},
+            '6735':{name:'美達科技',industry:'其他電子'},'6739':{name:'竹陞科技',industry:'其他電子'},'6741':{name:'91APP*-KY',industry:'數位雲端'},'6742':{name:'澤米',industry:'光電'},
+            '6743':{name:'安普新',industry:'其他電子'},'6747':{name:'亨泰光',industry:'生技醫療'},'6751':{name:'智聯服務',industry:'資訊服務'},'6752':{name:'叡揚',industry:'資訊服務'},
+            '6753':{name:'龍德造船',industry:'航運'},'6754':{name:'匯僑設計',industry:'居家生活'},'6756':{name:'威鋒電子',industry:'半導體'},'6757':{name:'台灣虎航-創',industry:'航運'},
+            '6761':{name:'穩得',industry:'電子零件'},'6762':{name:'達亞',industry:'生技醫療'},'6763':{name:'綠界科技',industry:'數位雲端'},'6767':{name:'台微醫',industry:'生技醫療'},
+            '6768':{name:'志強-KY',industry:'運動休閒'},'6770':{name:'力積電',industry:'半導體'},'6771':{name:'平和環保-創',industry:'綠能環保'},'6776':{name:'展碁國際',industry:'電子通路'},
+            '6781':{name:'AES-KY',industry:'電子零件'},'6782':{name:'視陽',industry:'生技醫療'},'6785':{name:'昱展新藥',industry:'生技醫療'},'6788':{name:'華景電',industry:'半導體'},
+            '6789':{name:'采鈺',industry:'半導體'},'6790':{name:'永豐實',industry:'造紙'},'6791':{name:'虎門科技',industry:'資訊服務'},'6792':{name:'詠業',industry:'通信網路'},
+            '6794':{name:'向榮生技-創',industry:'生技醫療'},'6796':{name:'晉弘',industry:'生技醫療'},'6799':{name:'來頡',industry:'半導體'},'6803':{name:'崑鼎',industry:'綠能環保'},
+            '6804':{name:'明係',industry:'運動休閒'},'6805':{name:'富世達',industry:'電子零件'},'6806':{name:'森崴能源',industry:'綠能環保'},'6807':{name:'峰源-KY',industry:'居家生活'},
+            '6811':{name:'宏碁資訊',industry:'數位雲端'},'6821':{name:'聯寶',industry:'電子零件'},'6823':{name:'濾能',industry:'半導體'},'6829':{name:'千附精密',industry:'電機機械'},
+            '6830':{name:'汎銓',industry:'其他電子'},'6834':{name:'天二科技',industry:'電子零件'},'6835':{name:'圓裕',industry:'電子零件'},'6838':{name:'台新藥',industry:'生技醫療'},
+            '6840':{name:'東研信超',industry:'其他電子'},'6841':{name:'長佳智能',industry:'生技醫療'},'6843':{name:'進典',industry:'電機機械'},'6844':{name:'諾貝兒',industry:'生技醫療'},
+            '6846':{name:'綠茵',industry:'食品'},'6854':{name:'錼創科技-KY創',industry:'半導體'},'6855':{name:'數泓科',industry:'其他電子'},'6856':{name:'鑫傳',industry:'文化創意'},
+            '6859':{name:'伯特光',industry:'光電'},'6861':{name:'睿生光電',industry:'生技醫療'},'6863':{name:'永道-KY',industry:'通信網路'},'6865':{name:'偉康科技',industry:'數位雲端'},
+            '6869':{name:'雲豹能源-創',industry:'綠能環保'},'6870':{name:'騰雲',industry:'數位雲端'},'6873':{name:'泓德能源-創',industry:'綠能環保'},'6874':{name:'倍力',industry:'資訊服務'},
+            '6875':{name:'國邑*',industry:'生技醫療'},'6877':{name:'鏵友益',industry:'其他電子'},'6881':{name:'潤德',industry:'其他'},'6890':{name:'來億-KY',industry:'運動休閒'},
+            '6894':{name:'衛司特',industry:'綠能環保'},'6895':{name:'宏碩系統',industry:'半導體'},'6899':{name:'創為精密',industry:'光電'},'6901':{name:'鑽石投資',industry:'其他'},
+            '6902':{name:'走著瞧-創',industry:'數位雲端'},'6903':{name:'巨漢',industry:'其他電子'},'6904':{name:'伯鑫',industry:'其他'},'6906':{name:'現觀科',industry:'數位雲端'},
+            '6913':{name:'鴻呈',industry:''},'6914':{name:'阜爾運通',industry:'其他'},'6916':{name:'華凌',industry:'光電'},'6919':{name:'康霈*',industry:''},
+            '6922':{name:'宸曜',industry:'電腦週邊'},'6923':{name:'中台',industry:'綠能環保'},'6928':{name:'攸泰科技',industry:'電腦週邊'},'6929':{name:'佑全',industry:'生技醫療'},
+            '6933':{name:'AMAX-KY',industry:'電腦週邊'},'6937':{name:'天虹',industry:'半導體'},'6949':{name:'沛爾生醫-創',industry:'生技醫療'},'6951':{name:'青新-創',industry:'綠能環保'},
+            '6952':{name:'大武山',industry:'其他'},'6953':{name:'家碩',industry:'半導體'},'6957':{name:'裕慶-KY',industry:'其他'},'6958':{name:'日盛台駿',industry:'其他'},
+            '6967':{name:'汎瑋材料',industry:'電子零件'},'6968':{name:'萬達寵物',industry:'居家生活'},'6969':{name:'成信實業*-創',industry:'綠能環保'},'7402':{name:'邑錡',industry:'光電'},
+            '7556':{name:'意德士科技',industry:'半導體'},'7584':{name:'樂意',industry:'文化創意'},'8011':{name:'台通',industry:'通信網路'},'8016':{name:'矽創',industry:'半導體'},
+            '8021':{name:'尖點',industry:'其他電子'},'8024':{name:'佑華',industry:'半導體'},'8027':{name:'鈦昇',industry:'電機機械'},'8028':{name:'昇陽半導體',industry:'半導體'},
+            '8032':{name:'光菱',industry:'電子通路'},'8033':{name:'雷虎',industry:'其他'},'8034':{name:'榮群',industry:'通信網路'},'8038':{name:'長園科',industry:'電子零件'},
+            '8039':{name:'台虹',industry:'電子零件'},'8040':{name:'九暘',industry:'半導體'},'8042':{name:'金山電',industry:'電子零件'},'8043':{name:'蜜望實',industry:'電子零件'},
+            '8044':{name:'網家',industry:'數位雲端'},'8046':{name:'南電',industry:'電子零件'},'8047':{name:'星雲',industry:'其他電子'},'8048':{name:'德勝',industry:'通信網路'},
+            '8049':{name:'晶采',industry:'光電'},'8050':{name:'廣積',industry:'電腦週邊'},'8054':{name:'安國',industry:'半導體'},'8059':{name:'凱碩',industry:'通信網路'},
+            '8064':{name:'東捷',industry:'光電'},'8066':{name:'來思達',industry:'居家生活'},'8067':{name:'志旭',industry:'電子通路'},'8068':{name:'全達',industry:'電子通路'},
+            '8069':{name:'元太',industry:'光電'},'8070':{name:'長華*',industry:'電子通路'},'8071':{name:'能率網通',industry:'電子零件'},'8072':{name:'陞泰',industry:'電子通路'},
+            '8074':{name:'鉅橡',industry:'電子零件'},'8076':{name:'伍豐',industry:'電腦週邊'},'8077':{name:'洛碁',industry:'觀光餐旅'},'8080':{name:'永利聯合',industry:'建材營造'},
+            '8081':{name:'致新',industry:'半導體'},'8083':{name:'瑞穎',industry:'電機機械'},'8084':{name:'巨虹',industry:'電子通路'},'8085':{name:'福華',industry:'其他電子'},
+            '8086':{name:'宏捷科',industry:'半導體'},'8087':{name:'華鎂鑫',industry:'綠能環保'},'8088':{name:'品安',industry:'半導體'},'8089':{name:'康全電訊',industry:'通信網路'},
+            '8091':{name:'翔名',industry:'半導體'},'8092':{name:'建暐',industry:'其他電子'},'8093':{name:'保銳',industry:'電子零件'},'8096':{name:'擎亞',industry:'電子通路'},
+            '8097':{name:'常珵',industry:'通信網路'},'8099':{name:'大世科',industry:'資訊服務'},'8103':{name:'瀚荃',industry:'電子零件'},'8104':{name:'錸寶',industry:'光電'},
+            '8105':{name:'凌巨',industry:'光電'},'8107':{name:'大億金茂',industry:'電機機械'},'8109':{name:'博大',industry:'電子零件'},'8110':{name:'華東',industry:'半導體'},
+            '8111':{name:'立碁',industry:'光電'},'8112':{name:'至上',industry:'電子通路'},'8114':{name:'振樺電',industry:'電腦週邊'},'8121':{name:'越峰',industry:'電子零件'},
+            '8131':{name:'福懋科',industry:'半導體'},'8147':{name:'正淩',industry:'電子零件'},'8150':{name:'南茂',industry:'半導體'},'8155':{name:'博智',industry:'電子零件'},
+            '8162':{name:'微矽電子-創',industry:'半導體'},'8163':{name:'達方',industry:'電腦週邊'},'8171':{name:'天宇',industry:'綠能環保'},'8176':{name:'智捷',industry:'通信網路'},
+            '8182':{name:'加高',industry:'電子零件'},'8183':{name:'精星',industry:'其他電子'},'8201':{name:'無敵',industry:'其他電子'},'8210':{name:'勤誠',industry:'電腦週邊'},
+            '8213':{name:'志超',industry:'電子零件'},'8215':{name:'明基材',industry:'光電'},'8222':{name:'寶一',industry:'電機機械'},'8227':{name:'巨有科技',industry:'半導體'},
+            '8234':{name:'新漢',industry:'電腦週邊'},'8240':{name:'華宏',industry:'光電'},'8249':{name:'菱光',industry:'電子零件'},'8255':{name:'朋程',industry:'電機機械'},
+            '8261':{name:'富鼎',industry:'半導體'},'8271':{name:'宇瞻',industry:'半導體'},'8277':{name:'商丞',industry:'半導體'},'8279':{name:'生展',industry:'生技醫療'},
+            '8284':{name:'三竹',industry:'資訊服務'},'8289':{name:'泰藝',industry:'電子零件'},'8291':{name:'尚茂',industry:'電子零件'},'8299':{name:'群聯',industry:'半導體'},
+            '8341':{name:'日友',industry:'綠能環保'},'8342':{name:'益張',industry:'其他'},'8349':{name:'恒耀國際',industry:'鋼鐵'},'8354':{name:'冠好',industry:'其他'},
+            '8358':{name:'金居',industry:'電子零件'},'8367':{name:'建新國際',industry:'航運'},'8374':{name:'羅昇',industry:'電機機械'},'8383':{name:'千附',industry:'其他電子'},
+            '8390':{name:'金益鼎',industry:'綠能環保'},'8401':{name:'白紗科',industry:'其他'},'8403':{name:'盛弘',industry:'生技醫療'},'8404':{name:'百和興業-KY',industry:'其他'},
+            '8409':{name:'商之器',industry:'生技醫療'},'8410':{name:'森田',industry:'電腦週邊'},'8411':{name:'福貞-KY',industry:'其他'},'8415':{name:'大國鋼',industry:'鋼鐵'},
+            '8416':{name:'實威',industry:'資訊服務'},'8420':{name:'明揚',industry:'運動休閒'},'8421':{name:'旭源',industry:'其他'},'8422':{name:'可寧衛',industry:'綠能環保'},
+            '8423':{name:'保綠-KY',industry:'綠能環保'},'8424':{name:'惠普',industry:'建材營造'},'8426':{name:'紅木-KY',industry:'其他'},'8429':{name:'金麗-KY',industry:'貿易百貨'},
+            '8431':{name:'匯鑽科',industry:'其他電子'},'8432':{name:'東生華',industry:'生技醫療'},'8433':{name:'弘帆',industry:'居家生活'},'8435':{name:'鉅邁',industry:'其他'},
+            '8436':{name:'大江',industry:'生技醫療'},'8437':{name:'大地-KY',industry:'其他'},'8438':{name:'昶昕',industry:'綠能環保'},'8440':{name:'綠電',industry:'綠能環保'},
+            '8442':{name:'威宏-KY',industry:'其他'},'8443':{name:'阿瘦',industry:'貿易百貨'},'8444':{name:'綠河-KY',industry:'其他'},'8446':{name:'華研',industry:'文化創意'},
+            '8450':{name:'霹靂',industry:'文化創意'},'8454':{name:'富邦媒',industry:'數位雲端'},'8455':{name:'大拓-KY',industry:'其他電子'},'8462':{name:'柏文',industry:'運動休閒'},
+            '8463':{name:'潤泰材',industry:'其他'},'8464':{name:'億豐',industry:'居家生活'},'8466':{name:'美吉吉-KY',industry:'其他'},'8467':{name:'波力-KY',industry:'運動休閒'},
+            '8472':{name:'夠麻吉',industry:'數位雲端'},'8473':{name:'山林水',industry:'綠能環保'},'8476':{name:'台境',industry:'綠能環保'},'8477':{name:'創業家',industry:'數位雲端'},
+            '8478':{name:'東哥遊艇',industry:'運動休閒'},'8481':{name:'政伸',industry:'其他'},'8482':{name:'商億-KY',industry:'居家生活'},'8487':{name:'愛爾達-創',industry:'數位雲端'},
+            '8488':{name:'吉源-KY',industry:'其他'},'8489':{name:'三貝德',industry:'其他'},'8499':{name:'鼎炫-KY',industry:'其他電子'},'8905':{name:'裕國',industry:'其他'},
+            '8906':{name:'花王',industry:'其他'},'8908':{name:'欣雄',industry:'油電燃氣'},'8916':{name:'光隆',industry:'其他'},'8917':{name:'欣泰',industry:'油電燃氣'},
+            '8921':{name:'沈氏',industry:'其他'},'8923':{name:'時報',industry:'文化創意'},'8924':{name:'大田',industry:'運動休閒'},'8926':{name:'台汽電',industry:'油電燃氣'},
+            '8927':{name:'北基',industry:'油電燃氣'},'8928':{name:'鉅明',industry:'運動休閒'},'8929':{name:'富堡',industry:'其他'},'8930':{name:'青鋼',industry:'鋼鐵'},
+            '8931':{name:'大汽電',industry:'油電燃氣'},'8932':{name:'宏大',industry:'其他'},'8933':{name:'愛地雅',industry:'運動休閒'},'8935':{name:'邦泰',industry:'其他'},
+            '8936':{name:'國統',industry:'其他'},'8937':{name:'合騏',industry:'其他'},'8938':{name:'明安',industry:'運動休閒'},'8940':{name:'新天地',industry:'觀光餐旅'},
+            '8941':{name:'關中',industry:'居家生活'},'8942':{name:'森鉅',industry:'其他'},'8996':{name:'高力',industry:'電機機械'},'9103':{name:'美德醫療-DR',industry:'存託憑證'},
+            '9105':{name:'泰金寶-DR',industry:'存託憑證'},'9110':{name:'越南控-DR',industry:'存託憑證'},'9136':{name:'巨騰-DR',industry:'存託憑證'},'9802':{name:'鈺齊-KY',industry:'運動休閒'},
+            '9902':{name:'台火',industry:'其他'},'9904':{name:'寶成',industry:'運動休閒'},'9905':{name:'大華',industry:'其他'},'9906':{name:'欣巴巴',industry:'建材營造'},
+            '9907':{name:'統一實',industry:'其他'},'9908':{name:'大台北',industry:'油電燃氣'},'9910':{name:'豐泰',industry:'運動休閒'},'9911':{name:'櫻花',industry:'居家生活'},
+            '9912':{name:'偉聯',industry:'電腦週邊'},'9914':{name:'美利達',industry:'運動休閒'},'9917':{name:'中保科',industry:'其他'},'9918':{name:'欣天然',industry:'油電燃氣'},
+            '9919':{name:'康那香',industry:'其他'},'9921':{name:'巨大',industry:'運動休閒'},'9924':{name:'福興',industry:'居家生活'},'9925':{name:'新保',industry:'其他'},
+            '9926':{name:'新海',industry:'油電燃氣'},'9927':{name:'泰銘',industry:'其他'},'9928':{name:'中視',industry:'其他'},'9929':{name:'秋雨',industry:'其他'},
+            '9930':{name:'中聯資源',industry:'綠能環保'},'9931':{name:'欣高',industry:'油電燃氣'},'9933':{name:'中鼎',industry:'其他'},'9934':{name:'成霖',industry:'居家生活'},
+            '9935':{name:'慶豐富',industry:'居家生活'},'9937':{name:'全國',industry:'油電燃氣'},'9938':{name:'百和',industry:'其他'},'9939':{name:'宏全',industry:'其他'},
+            '9940':{name:'信義',industry:'其他'},'9941':{name:'裕融',industry:'其他'},'9942':{name:'茂順',industry:'其他'},'9943':{name:'好樂迪',industry:'觀光餐旅'},
+            '9944':{name:'新麗',industry:'其他'},'9945':{name:'潤泰新',industry:'其他'},'9946':{name:'三發地產',industry:'建材營造'},'9949':{name:'琉園',industry:'文化創意'},
+            '9950':{name:'萬國通',industry:'塑膠'},'9951':{name:'皇田',industry:'電機機械'},'9955':{name:'佳龍',industry:'綠能環保'},'9958':{name:'世紀鋼',industry:'鋼鐵'},
+            '9960':{name:'邁達康',industry:'運動休閒'},'9962':{name:'有益',industry:'鋼鐵'},'910322':{name:'康師傅-DR',industry:'存託憑證'},'910861':{name:'神州-DR',industry:'存託憑證'},
+            '911608':{name:'明輝-DR',industry:'存託憑證'},'911622':{name:'泰聚亨-DR',industry:'存託憑證'},'911868':{name:'同方友友-DR',industry:'存託憑證'},'912000':{name:'晨訊科-DR',industry:'存託憑證'},
+        };
+        
+        // --- 策略定義 ---
+        const STRATEGIES = [
+            { id: 'monthly_up', label: '月來越好', icon: TrendingUp, color: 'bg-red-900/30 text-red-400 border-red-500 shadow-[0_0_10px_rgba(239,68,68,0.4)]' },
+            { id: 'quarterly_gold', label: '季不可失', icon: Rocket, color: 'bg-orange-900/30 text-orange-400 border-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.4)]' },
+            { id: 'twist_flower', label: '麻花捲開花', icon: Sprout, color: 'bg-pink-900/30 text-pink-400 border-pink-500 shadow-[0_0_10px_rgba(236,72,153,0.4)]' },
+            { id: 'wait_monthly', label: '等待月線', icon: Clock, color: 'bg-blue-900/30 text-blue-400 border-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.4)]' },
+            { id: 'wait_quarterly', label: '等待季線', icon: Activity, color: 'bg-indigo-900/30 text-indigo-400 border-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.4)]' },
+            { id: 'bull_obv', label: '多頭OBV', icon: BarChart2, color: 'bg-emerald-900/30 text-emerald-400 border-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)]' },
+            { id: 'bear_trend', label: '空方趨勢', icon: ArrowDownCircle, color: 'bg-slate-800 text-slate-300 border-slate-500 shadow-[0_0_10px_rgba(148,163,184,0.4)]' },
+        ];
+        
+        function RyanStockJournal() {
+            // --- State ---
+            const [logs, setLogs] = useState(() => {
+                const saved = localStorage.getItem('ryan_stock_logs');
+                return saved ? JSON.parse(saved) : [];
+            });
+            const [filterStrategy, setFilterStrategy] = useState(null);
+
+            const today = new Date().toISOString().split('T')[0];
+            const fileInputRef = useRef(null);
+
+            // Input Form State
+            const [inputDate, setInputDate] = useState(today);
+            const [inputCode, setInputCode] = useState('');
+            const [inputName, setInputName] = useState('');
+            const [inputIndustry, setInputIndustry] = useState('');
+            const [selectedStrategy, setSelectedStrategy] = useState(STRATEGIES[0]);
+            
+            // Filter & Sort State
+            const [filterStartDate, setFilterStartDate] = useState(today);
+            const [filterEndDate, setFilterEndDate] = useState(today);
+            const [showTrackedOnly, setShowTrackedOnly] = useState(false);
+            const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' });
+
+            // Toast & Modal State
+            const [toast, setToast] = useState(null);
+            const [confirmModal, setConfirmModal] = useState({ show: false, title: '', message: '', onConfirm: () => {} });
+
+            // --- Effects ---
+            useEffect(() => {
+                localStorage.setItem('ryan_stock_logs', JSON.stringify(logs));
+            }, [logs]);
+
+            useEffect(() => {
+                if (toast) {
+                    const timer = setTimeout(() => setToast(null), 3000);
+                    return () => clearTimeout(timer);
+                }
+            }, [toast]);
+
+            useEffect(() => {
+                if (STOCK_DB[inputCode]) {
+                    setInputName(STOCK_DB[inputCode].name);
+                    setInputIndustry(STOCK_DB[inputCode].industry);
+                } else if (inputCode.length >= 4) {
+                    setInputName('無該檔股票資訊');
+                    setInputIndustry('');
+                } else {
+                    setInputName('');
+                    setInputIndustry('');
+                }
+            }, [inputCode]);
+            
+            // Modal Keyboard Support
+            useEffect(() => {
+                if (confirmModal.show) {
+                    const handleKeyDown = (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            confirmModal.onConfirm();
+                        } else if (e.key === 'Escape') {
+                            setConfirmModal(prev => ({ ...prev, show: false }));
+                        }
+                    };
+                    window.addEventListener('keydown', handleKeyDown);
+                    return () => window.removeEventListener('keydown', handleKeyDown);
+                }
+            }, [confirmModal]);
+
+            // --- Handlers ---
+            const showToast = (type, message) => {
+                setToast({ type, message });
+            };
+
+            const handleAddStock = (e) => {
+                if (e) e.preventDefault();
+                
+                if (inputName === '無該檔股票資訊') {
+                    showToast('error', "請輸入正確的股票名稱，或手動修改名稱欄位。");
+                    return;
+                }
+
+                if (!inputCode || !inputName || !selectedStrategy) {
+                    return; 
+                }
+
+                const exists = logs.some(log => 
+                    log.date === inputDate && 
+                    log.code === inputCode && 
+                    log.strategyId === selectedStrategy.id
+                );
+
+                if (exists) {
+                    showToast('error', "此策略已存在於該日期的紀錄中");
+                    setInputCode('');
+                    setInputName('');
+                    setInputIndustry('');
+                    return;
+                }
+
+                const newLog = {
+                    id: Date.now(),
+                    date: inputDate,
+                    code: inputCode,
+                    name: inputName,
+                    industry: inputIndustry,
+                    strategyId: selectedStrategy.id,
+                    strategyLabel: selectedStrategy.label,
+                    isTracked: false,
+                };
+
+                setLogs([newLog, ...logs]);
+                showToast('success', `已新增 ${inputName} - ${selectedStrategy.label}`);
+                
+                // Reset inputs
+                setInputCode('');
+                setInputName('');
+                setInputIndustry('');
+                document.getElementById('stock-code-input').focus();
+            };
+
+            const handleDeleteLog = (id) => {
+                setLogs(currentLogs => currentLogs.filter(log => log.id !== id));
+            };
+
+            const handleDeleteGroup = (date, code) => {
+                setConfirmModal({
+                    show: true,
+                    title: '確認刪除',
+                    message: `確定要刪除 ${date} ${code} 的所有紀錄嗎？`,
+                    onConfirm: () => {
+                        setLogs(currentLogs => currentLogs.filter(log => !(log.date === date && log.code === code)));
+                        showToast('success', '已刪除紀錄');
+                        setConfirmModal({ show: false });
+                    }
+                });
+            };
+
+            const handleToggleTrackGroup = (date, code, currentStatus) => {
+                setLogs(logs.map(log => {
+                    if (log.date === date && log.code === code) {
+                        return { ...log, isTracked: !currentStatus };
+                    }
+                    return log;
+                }));
+            };
+
+            const handleSort = (key) => {
+                let direction = 'asc';
+                if (sortConfig.key === key && sortConfig.direction === 'asc') {
+                    direction = 'desc';
+                }
+                setSortConfig({ key, direction });
+            };
+
+            const handleExport = () => {
+                try {
+                    const ws = XLSX.utils.json_to_sheet(logs);
+                    const wb = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(wb, ws, "StockLogs");
+                    XLSX.writeFile(wb, `RyansStockJournal_${today}.xlsx`);
+                    showToast('success', '匯出成功');
+                } catch (error) {
+                    console.error("Export failed:", error);
+                    showToast('error', '匯出失敗');
+                }
+            };
+
+            const handleImportClick = () => {
+                // If logs exist, confirm overwrite
+                if (logs.length > 0) {
+                     setConfirmModal({
+                        show: true,
+                        title: '確認匯入',
+                        message: `確定要匯入嗎？這將覆蓋目前的 ${logs.length} 筆紀錄。建議先匯出備份。`,
+                        onConfirm: () => {
+                            setConfirmModal({ show: false });
+                            fileInputRef.current.click();
+                        }
+                    });
+                } else {
+                    fileInputRef.current.click();
+                }
+            };
+
+            const handleImport = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    try {
+                        const bstr = evt.target.result;
+                        const wb = XLSX.read(bstr, { type: 'binary' });
+                        const wsname = wb.SheetNames[0];
+                        const ws = wb.Sheets[wsname];
+                        const data = XLSX.utils.sheet_to_json(ws);
+                        
+                        const newLogs = data.map(row => ({
+                            ...row,
+                            strategyId: row.strategyId || STRATEGIES.find(s => s.label === row.strategyLabel)?.id || 'monthly_up',
+                            id: row.id || Date.now() + Math.random() 
+                        }));
+
+                        if (newLogs.length > 0) {
+                            setLogs(newLogs);
+                            showToast('success', `匯入成功，共 ${newLogs.length} 筆紀錄`);
+                        } else {
+                            showToast('error', '匯入檔案無資料');
+                        }
+                    } catch (error) {
+                        console.error("Import failed:", error);
+                        showToast('error', '匯入失敗，格式錯誤');
+                    }
+                };
+                reader.readAsBinaryString(file);
+                e.target.value = ''; 
+            };
+
+            // --- Derived State ---
+            const baseLogs = useMemo(() => {
+                return logs.filter(log => {
+                    const dateMatch = log.date >= filterStartDate && log.date <= filterEndDate;
+                    const trackMatch = showTrackedOnly ? log.isTracked : true;
+                    return dateMatch && trackMatch;
+                });
+            }, [logs, filterStartDate, filterEndDate, showTrackedOnly]);
+
+            const groupedRawLogs = useMemo(() => {
+                const groups = {};
+                
+                baseLogs.forEach(log => {
+                    const key = `${log.date}-${log.code}`;
+                    if (!groups[key]) {
+                        groups[key] = {
+                            date: log.date,
+                            code: log.code,
+                            name: log.name,
+                            industry: log.industry,
+                            isTracked: log.isTracked,
+                            strategies: []
+                        };
+                    }
+                    groups[key].strategies.push({
+                        id: log.id,
+                        strategyId: log.strategyId,
+                        strategyLabel: log.strategyLabel
+                    });
+                });
+                return Object.values(groups);
+            }, [baseLogs]);
+
+            const displayLogs = useMemo(() => {
+                let result = groupedRawLogs;
+
+                if (filterStrategy) {
+                    result = result.filter(group => 
+                        group.strategies.some(s => s.strategyLabel === filterStrategy)
+                    );
+                }
+
+                result.sort((a, b) => {
+                    let valA = a[sortConfig.key];
+                    let valB = b[sortConfig.key];
+
+                    if (sortConfig.key === 'code') {
+                        valA = parseInt(valA) || valA;
+                        valB = parseInt(valB) || valB;
+                    }
+
+                    if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
+                    if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
+                    return 0;
+                });
+
+                return result;
+            }, [groupedRawLogs, filterStrategy, sortConfig]);
+
+            const summaryStats = useMemo(() => {
+                const stats = {};
+                STRATEGIES.forEach(s => stats[s.label] = 0);
+                baseLogs.forEach(log => {
+                    if (stats[log.strategyLabel] !== undefined) {
+                        stats[log.strategyLabel]++;
+                    }
+                });
+                return stats;
+            }, [baseLogs]);
+
+            const trackedCount = useMemo(() => {
+                return displayLogs.filter(g => g.isTracked).length;
+            }, [displayLogs]);
+
+            // --- Copy Logic ---
+            const handleCopy = () => {
+                const groupedByStrategy = {};
+                
+                displayLogs.forEach(group => {
+                    group.strategies.forEach(strat => {
+                        if (!groupedByStrategy[strat.strategyLabel]) {
+                            groupedByStrategy[strat.strategyLabel] = [];
+                        }
+                        const entry = `${group.code} ${group.name}`;
+                        if (!groupedByStrategy[strat.strategyLabel].includes(entry)) {
+                            groupedByStrategy[strat.strategyLabel].push(entry);
+                        }
+                    });
+                });
+
+                const getIcon = (label) => {
+                    const s = STRATEGIES.find(st => st.label === label);
+                    if (label === '月來越好') return '📈';
+                    if (label === '季不可失') return '🚀';
+                    if (label === '麻花捲開花') return '🌀';
+                    if (label.includes('等待')) return '⏰';
+                    if (label === '多頭OBV') return '📊';
+                    if (label === '空方趨勢') return '📉';
+                    return '📌';
+                };
+
+                let text = `【${filterEndDate} 技術面突破即時觀察】\n\n`;
+
+                STRATEGIES.forEach(strat => {
+                    if (groupedByStrategy[strat.label] && groupedByStrategy[strat.label].length > 0) {
+                        text += `${getIcon(strat.label)} ${strat.label}:\n`;
+                        text += groupedByStrategy[strat.label].join('、');
+                        text += '\n\n';
+                    }
+                });
+
+                const copyToClipboard = (str) => {
+                    if (navigator.clipboard && window.isSecureContext) {
+                        navigator.clipboard.writeText(str)
+                        .then(() => showToast('success', '日誌內容已複製到剪貼簿'))
+                        .catch(() => fallbackCopy(str));
+                    } else {
+                        fallbackCopy(str);
+                    }
+                };
+                
+                const fallbackCopy = (str) => {
+                    const textArea = document.createElement("textarea");
+                    textArea.value = str;
+                    textArea.style.position = "fixed";
+                    textArea.style.left = "-9999px";
+                    document.body.appendChild(textArea);
+                    textArea.focus();
+                    textArea.select();
+                    try {
+                        document.execCommand('copy');
+                        showToast('success', '日誌內容已複製到剪貼簿');
+                    } catch (err) {
+                        showToast('error', '複製失敗，請手動選取');
+                    }
+                    document.body.removeChild(textArea);
+                };
+
+                copyToClipboard(text);
+            };
+
+            const adjustDate = (setter, current, days) => {
+                const date = new Date(current);
+                date.setDate(date.getDate() + days);
+                setter(date.toISOString().split('T')[0]);
+            };
+
+            return (
+                <div className="min-h-screen bg-slate-950 text-slate-200 font-sans pb-20 selection:bg-blue-500/30 relative">
+                    
+                    {/* Confirm Modal */}
+                    {confirmModal.show && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                            <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6 w-full max-w-sm shadow-2xl space-y-4 animate-bounce-in">
+                                <div className="flex items-center gap-3 text-amber-500 mb-2">
+                                    <AlertTriangle size={28} />
+                                    <h3 className="text-xl font-bold text-white">{confirmModal.title}</h3>
+                                </div>
+                                <p className="text-slate-300 leading-relaxed">{confirmModal.message}</p>
+                                <div className="flex gap-3 justify-end pt-4">
+                                    <button 
+                                        onClick={() => setConfirmModal({ ...confirmModal, show: false })} 
+                                        className="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition-colors"
+                                    >
+                                        取消
+                                    </button>
+                                    <button 
+                                        onClick={confirmModal.onConfirm} 
+                                        className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-500 transition-colors font-bold shadow-lg shadow-red-900/20"
+                                    >
+                                        確認執行
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {toast && (
+                        <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-xl shadow-2xl backdrop-blur-md border flex items-center gap-3 animate-fade-in-down transition-all
+                        ${toast.type === 'success' ? 'bg-emerald-900/80 border-emerald-500/50 text-emerald-200' : 'bg-red-900/80 border-red-500/50 text-red-200'}`}>
+                        {toast.type === 'success' ? <CheckCircle2 size={20} /> : <AlertCircle size={20} />}
+                        <span className="font-medium">{toast.message}</span>
+                        </div>
+                    )}
+
+                    <header className="bg-slate-900/80 border-b border-slate-800 backdrop-blur-md sticky top-0 z-30">
+                        <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+                        <div className="flex items-center gap-3">
+                            <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-2.5 rounded-xl shadow-lg shadow-blue-900/40">
+                            <Activity size={24} className="text-white" />
+                            </div>
+                            <h1 className="text-2xl font-bold tracking-wider text-white bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-slate-400">
+                            萊恩選股日誌
+                            </h1>
+                        </div>
+                        <div className="flex items-center gap-4 text-sm">
+                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700">
+                                <Target size={14} className="text-blue-400"/>
+                                <span className="text-slate-400">筆數:</span>
+                                <span className="text-white font-mono">{displayLogs.length}</span>
+                            </div>
+                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700">
+                                <Star size={14} className="text-amber-400"/>
+                                <span className="text-slate-400">追蹤:</span>
+                                <span className="text-amber-400 font-mono font-bold">{trackedCount}</span>
+                            </div>
+                        </div>
+                        </div>
+                    </header>
+
+                    <main className="max-w-7xl mx-auto p-4 md:p-6 space-y-8">
+                        
+                        <section className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        
+                        <div className="lg:col-span-8 bg-slate-900 rounded-2xl shadow-xl border border-slate-800 p-6 relative overflow-hidden group/panel">
+                            <div className="absolute top-0 right-0 p-10 opacity-[0.03] group-hover/panel:opacity-[0.05] transition-opacity duration-700 pointer-events-none">
+                            <TrendingUp size={200} />
+                            </div>
+                            
+                            <h2 className="text-lg font-semibold mb-6 flex items-center gap-2 text-white relative z-10">
+                            <div className="w-1 h-6 bg-blue-500 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
+                            新增觀察個股
+                            </h2>
+                            
+                            <div className="space-y-6 relative z-10">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-medium text-slate-400 mb-1.5 ml-1">日期</label>
+                                    <div className="date-input-wrapper">
+                                        <input 
+                                            type="date" 
+                                            value={inputDate}
+                                            onChange={(e) => setInputDate(e.target.value)}
+                                            className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-slate-200 text-sm transition-all shadow-inner cursor-pointer"
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-medium text-slate-400 mb-1.5 ml-1">股票代碼 (Enter新增)</label>
+                                    <div className="relative">
+                                        <input 
+                                            id="stock-code-input"
+                                            type="text" 
+                                            placeholder="輸入代碼 例如 2330"
+                                            value={inputCode}
+                                            onChange={(e) => setInputCode(e.target.value)}
+                                            onKeyDown={(e) => e.key === 'Enter' && handleAddStock()}
+                                            className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-slate-200 text-sm font-mono tracking-wide placeholder:text-slate-600 shadow-inner"
+                                        />
+                                        {inputName && inputName !== '無該檔股票資訊' && (
+                                            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs px-2 py-1 bg-blue-900/40 text-blue-300 rounded border border-blue-700/30">
+                                                {inputName}
+                                            </div>
+                                        )}
+                                        {inputName === '無該檔股票資訊' && (
+                                            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs px-2 py-1 bg-red-900/40 text-red-300 rounded border border-red-700/30 animate-pulse">
+                                                無資訊
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="relative group">
+                                    <label className="block text-xs font-medium text-slate-500 mb-1.5 ml-1">名稱</label>
+                                    <input 
+                                        type="text" 
+                                        value={inputName}
+                                        onChange={(e) => setInputName(e.target.value)}
+                                        placeholder="--"
+                                        className={`w-full px-4 py-2.5 bg-slate-900/50 border rounded-xl text-sm focus:bg-slate-950 outline-none transition-colors shadow-inner
+                                        ${inputName === '無該檔股票資訊' 
+                                            ? 'text-red-400 border-red-900/50 focus:border-red-500/50' 
+                                            : 'text-slate-400 border-slate-800/50 focus:border-blue-500/50 focus:text-slate-200'
+                                        }`}
+                                    />
+                                </div>
+                                <div className="relative group">
+                                    <label className="block text-xs font-medium text-slate-500 mb-1.5 ml-1">產業</label>
+                                    <input 
+                                        type="text" 
+                                        value={inputIndustry}
+                                        onChange={(e) => setInputIndustry(e.target.value)}
+                                        placeholder="--"
+                                        className="w-full px-4 py-2.5 bg-slate-900/50 border border-slate-800/50 rounded-xl text-slate-400 text-sm focus:bg-slate-950 focus:border-blue-500/50 focus:text-slate-200 transition-colors outline-none shadow-inner"
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-medium text-slate-400 mb-2 ml-1">選擇策略 (必選)</label>
+                                <div className="flex flex-wrap gap-2.5">
+                                    {STRATEGIES.map((strat) => {
+                                    const Icon = strat.icon;
+                                    const isSelected = selectedStrategy.id === strat.id;
+                                    return (
+                                        <button
+                                        key={strat.id}
+                                        onClick={() => setSelectedStrategy(strat)}
+                                        className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm border transition-all duration-300 relative overflow-hidden
+                                            ${isSelected 
+                                            ? `${strat.color} ring-1 ring-white/10 font-bold shadow-[0_0_20px_rgba(0,0,0,0.3)] scale-105 z-10` 
+                                            : 'bg-slate-950 border-slate-800 text-slate-500 hover:bg-slate-800 hover:text-slate-300'
+                                            }`}
+                                        >
+                                        {isSelected && <div className={`absolute inset-0 opacity-20 ${strat.color.split(' ')[0]}`}></div>}
+                                        <Icon size={16} className="relative z-10"/>
+                                        <span className="relative z-10">{strat.label}</span>
+                                        </button>
+                                    );
+                                    })}
+                                </div>
+                            </div>
+                            
+                            <button 
+                                onClick={handleAddStock}
+                                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-3.5 rounded-xl shadow-[0_4px_20px_rgba(37,99,235,0.2)] hover:shadow-[0_4px_25px_rgba(37,99,235,0.4)] transition-all active:scale-[0.99] flex items-center justify-center gap-2 border border-blue-500/20"
+                            >
+                                <Plus size={20} />
+                                加入日誌
+                            </button>
+                            </div>
+                        </div>
+
+                        <div className="lg:col-span-4 space-y-6">
+                            
+                            <div className="bg-slate-900 rounded-2xl shadow-xl border border-slate-800 p-5">
+                            <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4 flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <PieChart size={16} />
+                                    本期策略統計
+                                </div>
+                                {filterStrategy && (
+                                    <button 
+                                        onClick={() => setFilterStrategy(null)}
+                                        className="flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 transition-colors animate-fade-in-down"
+                                    >
+                                        <RefreshCcw size={12} />
+                                        清除篩選
+                                    </button>
+                                )}
+                            </h3>
+                            <div className="grid grid-cols-2 gap-3">
+                                {STRATEGIES.map(strat => {
+                                    const count = summaryStats[strat.label];
+                                    const isFilterActive = filterStrategy === strat.label;
+                                    
+                                    if (count === 0 && !isFilterActive) return null;
+                                    
+                                    return (
+                                        <div 
+                                            key={strat.id} 
+                                            onClick={() => setFilterStrategy(isFilterActive ? null : strat.label)}
+                                            className={`flex items-center justify-between p-3 rounded-lg border transition-all cursor-pointer relative overflow-hidden group ${
+                                                isFilterActive 
+                                                ? 'bg-blue-900/30 border-blue-500 ring-1 ring-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.3)]' 
+                                                : 'bg-slate-950 border-slate-800/50 hover:bg-slate-900 hover:border-slate-700'
+                                            }`}
+                                        >
+                                            <div className={`flex items-center gap-2 text-xs transition-colors ${isFilterActive ? 'text-blue-200' : 'text-slate-400 group-hover:text-slate-300'}`}>
+                                                <div className={`w-2 h-2 rounded-full shadow-[0_0_5px] ${strat.color.split(' ')[0].replace('/20', '')} ${strat.color.split(' ')[2].replace('/50', '')}`}></div>
+                                                {strat.label}
+                                            </div>
+                                            <span className={`font-mono font-bold transition-all ${isFilterActive ? 'text-blue-300 scale-110' : 'text-white'}`}>{count}</span>
+                                            
+                                            {isFilterActive && (
+                                                <div className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-500 shadow-[0_0_10px_#3b82f6]"></div>
+                                            )}
+                                        </div>
+                                    )
+                                })}
+                                {Object.values(summaryStats).every(v => v === 0) && (
+                                    <div className="col-span-2 text-center text-slate-600 text-xs py-4 border border-dashed border-slate-800 rounded-lg">無數據</div>
+                                )}
+                            </div>
+                            </div>
+
+                            <div className="bg-slate-900 rounded-2xl shadow-xl border border-slate-800 p-5">
+                                <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                                <Filter size={16} />
+                                顯示設定
+                            </h3>
+                            
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between bg-slate-950 p-1.5 rounded-xl border border-slate-800">
+                                        <button onClick={() => adjustDate(setFilterStartDate, filterStartDate, -1)} className="p-2 hover:bg-slate-800 rounded-lg text-slate-500 hover:text-white transition-colors"><ArrowDownCircle size={16} className="rotate-90" /></button>
+                                        <div className="date-input-wrapper">
+                                            <input 
+                                                type="date" 
+                                                value={filterStartDate}
+                                                onChange={(e) => setFilterStartDate(e.target.value)}
+                                                className="bg-transparent border-none text-xs text-center text-slate-300 w-24 focus:ring-0 cursor-pointer"
+                                            />
+                                        </div>
+                                        <span className="text-slate-600 text-xs">至</span>
+                                        <div className="date-input-wrapper">
+                                            <input 
+                                                type="date" 
+                                                value={filterEndDate}
+                                                onChange={(e) => setFilterEndDate(e.target.value)}
+                                                className="bg-transparent border-none text-xs text-center text-slate-300 w-24 focus:ring-0 cursor-pointer"
+                                            />
+                                        </div>
+                                        <button onClick={() => adjustDate(setFilterEndDate, filterEndDate, 1)} className="p-2 hover:bg-slate-800 rounded-lg text-slate-500 hover:text-white transition-colors"><ArrowDownCircle size={16} className="-rotate-90" /></button>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                        <button
+                                            onClick={() => setShowTrackedOnly(!showTrackedOnly)}
+                                            className={`flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-all border ${
+                                                showTrackedOnly 
+                                                ? 'bg-amber-500/10 border-amber-500/50 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.2)]' 
+                                                : 'bg-slate-950 border-slate-800 text-slate-400 hover:bg-slate-800 hover:text-white'
+                                            }`}
+                                        >
+                                            <Star size={16} fill={showTrackedOnly ? "currentColor" : "none"} />
+                                            只看追蹤
+                                        </button>
+
+                                        <button
+                                            onClick={handleCopy}
+                                            className="flex items-center justify-center gap-2 py-3 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 hover:border-emerald-500/50 rounded-xl text-sm font-medium transition-all"
+                                        >
+                                            <Copy size={16} />
+                                            複製結果
+                                        </button>
+                                </div>
+                                <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-800">
+                                    <button 
+                                        onClick={handleExport}
+                                        className="flex items-center justify-center gap-2 py-3 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border border-blue-500/30 hover:border-blue-500/50 rounded-xl text-sm font-medium transition-all"
+                                    >
+                                        <Download size={16} />
+                                        匯出紀錄
+                                    </button>
+                                    <button 
+                                        onClick={handleImportClick}
+                                        className="flex items-center justify-center gap-2 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-600 hover:border-slate-500 rounded-xl text-sm font-medium transition-all"
+                                    >
+                                        <Upload size={16} />
+                                        匯入紀錄
+                                    </button>
+                                    <input 
+                                        type="file" 
+                                        ref={fileInputRef} 
+                                        onChange={handleImport} 
+                                        accept=".xlsx, .xls"
+                                        className="hidden" 
+                                    />
+                                </div>
+                            </div>
+                            </div>
+
+                        </div>
+                        </section>
+
+                        <section className="bg-slate-900 rounded-2xl shadow-xl border border-slate-800 overflow-hidden min-h-[400px]">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="bg-slate-950 text-slate-400 text-xs uppercase tracking-wider border-b border-slate-800">
+                                <th 
+                                    className="py-4 px-6 w-32 cursor-pointer hover:text-blue-400 transition-colors select-none"
+                                    onClick={() => handleSort('date')}
+                                >
+                                    <div className="flex items-center gap-1">
+                                    日期
+                                    {sortConfig.key === 'date' && <ArrowUpDown size={12} className="text-blue-500" />}
+                                    </div>
+                                </th>
+                                <th 
+                                    className="py-4 px-6 w-24 cursor-pointer hover:text-blue-400 transition-colors select-none"
+                                    onClick={() => handleSort('code')}
+                                >
+                                    <div className="flex items-center gap-1">
+                                    代號
+                                    {sortConfig.key === 'code' && <ArrowUpDown size={12} className="text-blue-500" />}
+                                    </div>
+                                </th>
+                                <th 
+                                    className="py-4 px-6 w-32 cursor-pointer hover:text-blue-400 transition-colors select-none"
+                                    onClick={() => handleSort('name')}
+                                >
+                                    <div className="flex items-center gap-1">
+                                    名稱
+                                    {sortConfig.key === 'name' && <ArrowUpDown size={12} className="text-blue-500" />}
+                                    </div>
+                                </th>
+                                <th className="py-4 px-6">符合策略</th>
+                                <th className="py-4 px-6 w-32 hidden md:table-cell">產業</th>
+                                <th className="py-4 px-6 w-28 text-right">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-800/50">
+                                {displayLogs.length === 0 ? (
+                                <tr>
+                                    <td colSpan="6" className="py-20 text-center text-slate-600">
+                                    <div className="flex flex-col items-center gap-4">
+                                        <div className="bg-slate-800/50 p-6 rounded-full border border-slate-700/50">
+                                        <Search size={40} className="text-slate-700" />
+                                        </div>
+                                        <p className="font-light">
+                                            {filterStrategy 
+                                                ? `沒有符合「${filterStrategy}」的股票` 
+                                                : '目前沒有資料，請調整日期或新增策略'
+                                            }
+                                        </p>
+                                        {filterStrategy && (
+                                            <button 
+                                                onClick={() => setFilterStrategy(null)}
+                                                className="text-blue-400 text-sm hover:underline"
+                                            >
+                                                清除篩選
+                                            </button>
+                                        )}
+                                    </div>
+                                    </td>
+                                </tr>
+                                ) : (
+                                displayLogs.map((group) => (
+                                    <tr key={`${group.date}-${group.code}`} className="hover:bg-slate-800/40 transition-colors group">
+                                        
+                                        <td className="py-4 px-6 text-slate-400 text-sm font-mono">
+                                            {group.date}
+                                        </td>
+                                        
+                                        <td className="py-4 px-6">
+                                            <span className="font-mono text-blue-300 font-bold bg-blue-500/10 border border-blue-500/20 px-2 py-1 rounded">
+                                                {group.code}
+                                            </span>
+                                        </td>
+                                        
+                                        <td className="py-4 px-6 text-slate-200 font-bold text-base tracking-wide">
+                                            {group.name}
+                                        </td>
+                                        
+                                        <td className="py-4 px-6">
+                                            <div className="flex flex-wrap gap-2">
+                                                {group.strategies.map(strat => {
+                                                    const stratDef = STRATEGIES.find(s => s.id === strat.strategyId);
+                                                    if (!stratDef) return null;
+                                                    const Icon = stratDef.icon;
+                                                    // Highlight strategy if filtering
+                                                    const isHighlighted = filterStrategy === strat.strategyLabel;
+                                                    
+                                                    return (
+                                                        <div key={strat.id} className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs border shadow-sm backdrop-blur-sm transition-all
+                                                            ${isHighlighted 
+                                                                ? `${stratDef.color} ring-1 ring-offset-1 ring-offset-slate-900 ring-current scale-105` 
+                                                                : `${stratDef.color} opacity-80 hover:opacity-100`
+                                                            }`}>
+                                                            <Icon size={12} />
+                                                            {stratDef.label}
+                                                            <button 
+                                                                type="button"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleDeleteLog(strat.id);
+                                                                }}
+                                                                className="ml-1 opacity-60 hover:opacity-100 hover:text-white transition-opacity"
+                                                            >
+                                                                <X size={10} />
+                                                            </button>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </td>
+                                        
+                                        <td className="py-4 px-6 text-slate-500 text-sm hidden md:table-cell">
+                                            {group.industry}
+                                        </td>
+                                        
+                                        <td className="py-4 px-6 text-right">
+                                            <div className="flex items-center justify-end gap-3 opacity-60 group-hover:opacity-100 transition-opacity">
+                                                <button 
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleToggleTrackGroup(group.date, group.code, group.isTracked);
+                                                    }}
+                                                    className={`p-2 rounded-lg transition-all duration-300 ${
+                                                        group.isTracked 
+                                                        ? 'text-amber-400 bg-amber-400/10 shadow-[0_0_10px_rgba(251,191,36,0.2)]' 
+                                                        : 'text-slate-500 hover:text-amber-400 hover:bg-slate-800'
+                                                    }`}
+                                                    title="加入追蹤"
+                                                >
+                                                    <Star size={18} fill={group.isTracked ? "currentColor" : "none"} />
+                                                </button>
+                                                <button 
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleDeleteGroup(group.date, group.code);
+                                                    }}
+                                                    className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"
+                                                    title="刪除整筆"
+                                                >
+                                                    <Trash2 size={18} />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                                )}
+                            </tbody>
+                            </table>
+                        </div>
+                        </section>
+                    </main>
+                </div>
+            );
+        }
+
+        const root = createRoot(document.getElementById('root'));
+        root.render(<RyanStockJournal />);
+    </script>
+</body>
+</html>
