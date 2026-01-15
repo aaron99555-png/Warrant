@@ -49,14 +49,14 @@
             height: 8px;
         }
         ::-webkit-scrollbar-track {
-            background: #0f172a; 
+            background: #020617; 
         }
         ::-webkit-scrollbar-thumb {
-            background: #475569; 
+            background: #334155; 
             border-radius: 4px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: #64748b; 
+            background: #475569; 
         }
         
         /* Date Picker UX Improvement */
@@ -74,9 +74,16 @@
             opacity: 0;
             cursor: pointer;
         }
+
+        /* Number input subtle styling */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-50">
+<body class="bg-slate-950 text-slate-50 selection:bg-blue-500 selection:text-white">
     <div id="root"></div>
 
     <script type="text/babel" data-type="module">
@@ -86,7 +93,7 @@
             TrendingUp, Rocket, Sprout, Clock, BarChart2, Activity, 
             ArrowDownCircle, Trash2, Star, Copy, Search, Plus, 
             Filter, X, PieChart, Target, AlertCircle, CheckCircle2, ArrowUpDown, RefreshCcw,
-            Download, Upload, AlertTriangle
+            Download, Upload, AlertTriangle, DollarSign, LogIn, LogOut, ShieldAlert, Trophy
         } from 'lucide-react';
 
         // --- 完整台股資料庫 ---
@@ -540,7 +547,7 @@
             '8906':{name:'花王',industry:'其他'},'8908':{name:'欣雄',industry:'油電燃氣'},'8916':{name:'光隆',industry:'其他'},'8917':{name:'欣泰',industry:'油電燃氣'},
             '8921':{name:'沈氏',industry:'其他'},'8923':{name:'時報',industry:'文化創意'},'8924':{name:'大田',industry:'運動休閒'},'8926':{name:'台汽電',industry:'油電燃氣'},
             '8927':{name:'北基',industry:'油電燃氣'},'8928':{name:'鉅明',industry:'運動休閒'},'8929':{name:'富堡',industry:'其他'},'8930':{name:'青鋼',industry:'鋼鐵'},
-            '8931':{name:'大汽電',industry:'油電燃氣'},'8932':{name:'智通',industry:'其他'},'8933':{name:'愛地雅',industry:'運動休閒'},'8935':{name:'邦泰',industry:'其他'},
+            '8931':{name:'大汽電',industry:'油電燃氣'},'8932':{name:'宏大',industry:'其他'},'8933':{name:'愛地雅',industry:'運動休閒'},'8935':{name:'邦泰',industry:'其他'},
             '8936':{name:'國統',industry:'其他'},'8937':{name:'合騏',industry:'其他'},'8938':{name:'明安',industry:'運動休閒'},'8940':{name:'新天地',industry:'觀光餐旅'},
             '8941':{name:'關中',industry:'居家生活'},'8942':{name:'森鉅',industry:'其他'},'8996':{name:'高力',industry:'電機機械'},'9103':{name:'美德醫療-DR',industry:'存託憑證'},
             '9105':{name:'泰金寶-DR',industry:'存託憑證'},'9110':{name:'越南控-DR',industry:'存託憑證'},'9136':{name:'巨騰-DR',industry:'存託憑證'},'9802':{name:'鈺齊-KY',industry:'運動休閒'},
@@ -560,13 +567,13 @@
         
         // --- 策略定義 ---
         const STRATEGIES = [
-            { id: 'monthly_up', label: '月來越好', icon: TrendingUp, color: 'bg-red-900/30 text-red-400 border-red-500 shadow-[0_0_10px_rgba(239,68,68,0.4)]' },
-            { id: 'quarterly_gold', label: '季不可失', icon: Rocket, color: 'bg-orange-900/30 text-orange-400 border-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.4)]' },
-            { id: 'twist_flower', label: '麻花捲開花', icon: Sprout, color: 'bg-pink-900/30 text-pink-400 border-pink-500 shadow-[0_0_10px_rgba(236,72,153,0.4)]' },
-            { id: 'wait_monthly', label: '等待月線', icon: Clock, color: 'bg-blue-900/30 text-blue-400 border-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.4)]' },
-            { id: 'wait_quarterly', label: '等待季線', icon: Activity, color: 'bg-indigo-900/30 text-indigo-400 border-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.4)]' },
-            { id: 'bull_obv', label: '多頭OBV', icon: BarChart2, color: 'bg-emerald-900/30 text-emerald-400 border-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)]' },
-            { id: 'bear_trend', label: '空方趨勢', icon: ArrowDownCircle, color: 'bg-slate-800 text-slate-300 border-slate-500 shadow-[0_0_10px_rgba(148,163,184,0.4)]' },
+            { id: 'monthly_up', label: '月來越好', icon: TrendingUp, color: 'bg-red-600 text-white border-red-500 shadow-[0_0_15px_rgba(220,38,38,0.6)]' },
+            { id: 'quarterly_gold', label: '季不可失', icon: Rocket, color: 'bg-orange-600 text-white border-orange-500 shadow-[0_0_15px_rgba(234,88,12,0.6)]' },
+            { id: 'twist_flower', label: '麻花捲開花', icon: Sprout, color: 'bg-pink-600 text-white border-pink-500 shadow-[0_0_15px_rgba(219,39,119,0.6)]' },
+            { id: 'wait_monthly', label: '等待月線', icon: Clock, color: 'bg-blue-600 text-white border-blue-500 shadow-[0_0_15px_rgba(37,99,235,0.6)]' },
+            { id: 'wait_quarterly', label: '等待季線', icon: Activity, color: 'bg-indigo-600 text-white border-indigo-500 shadow-[0_0_15px_rgba(79,70,229,0.6)]' },
+            { id: 'bull_obv', label: '多頭OBV', icon: BarChart2, color: 'bg-emerald-600 text-white border-emerald-500 shadow-[0_0_15px_rgba(5,150,105,0.6)]' },
+            { id: 'bear_trend', label: '空方趨勢', icon: ArrowDownCircle, color: 'bg-slate-700 text-white border-slate-500 shadow-[0_0_15px_rgba(71,85,105,0.6)]' },
         ];
         
         function RyanStockJournal() {
@@ -587,6 +594,12 @@
             const [inputIndustry, setInputIndustry] = useState('');
             const [selectedStrategy, setSelectedStrategy] = useState(STRATEGIES[0]);
             
+            // New Trade Plan Fields
+            const [inputEntry, setInputEntry] = useState('');
+            const [inputStopLoss, setInputStopLoss] = useState('');
+            const [inputTakeProfit, setInputTakeProfit] = useState('');
+            const [inputExit, setInputExit] = useState('');
+
             // Filter & Sort State
             const [filterStartDate, setFilterStartDate] = useState(today);
             const [filterEndDate, setFilterEndDate] = useState(today);
@@ -678,6 +691,11 @@
                     strategyId: selectedStrategy.id,
                     strategyLabel: selectedStrategy.label,
                     isTracked: false,
+                    // New fields
+                    entry: inputEntry,
+                    stopLoss: inputStopLoss,
+                    takeProfit: inputTakeProfit,
+                    exit: inputExit
                 };
 
                 setLogs([newLog, ...logs]);
@@ -687,6 +705,10 @@
                 setInputCode('');
                 setInputName('');
                 setInputIndustry('');
+                setInputEntry('');
+                setInputStopLoss('');
+                setInputTakeProfit('');
+                setInputExit('');
                 document.getElementById('stock-code-input').focus();
             };
 
@@ -809,9 +831,20 @@
                             name: log.name,
                             industry: log.industry,
                             isTracked: log.isTracked,
-                            strategies: []
+                            strategies: [],
+                            // Take first valid entry data as group data (usually plan is per stock/date)
+                            entry: log.entry,
+                            stopLoss: log.stopLoss,
+                            takeProfit: log.takeProfit,
+                            exit: log.exit
                         };
                     }
+                    // If subsequent logs in same group have data, overwrite (or could keep array)
+                    if(log.entry) groups[key].entry = log.entry;
+                    if(log.stopLoss) groups[key].stopLoss = log.stopLoss;
+                    if(log.takeProfit) groups[key].takeProfit = log.takeProfit;
+                    if(log.exit) groups[key].exit = log.exit;
+
                     groups[key].strategies.push({
                         id: log.id,
                         strategyId: log.strategyId,
@@ -936,7 +969,7 @@
             };
 
             return (
-                <div className="min-h-screen bg-slate-950 text-slate-200 font-sans pb-20 selection:bg-blue-500/30 relative">
+                <div className="min-h-screen bg-slate-950 text-slate-50 font-sans pb-20 selection:bg-blue-500/30 relative">
                     
                     {/* Confirm Modal */}
                     {confirmModal.show && (
@@ -967,31 +1000,31 @@
 
                     {toast && (
                         <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-xl shadow-2xl backdrop-blur-md border flex items-center gap-3 animate-fade-in-down transition-all
-                        ${toast.type === 'success' ? 'bg-emerald-900/80 border-emerald-500/50 text-emerald-200' : 'bg-red-900/80 border-red-500/50 text-red-200'}`}>
+                        ${toast.type === 'success' ? 'bg-emerald-600 border-emerald-400 text-white shadow-emerald-900/50' : 'bg-red-600 border-red-400 text-white shadow-red-900/50'}`}>
                         {toast.type === 'success' ? <CheckCircle2 size={20} /> : <AlertCircle size={20} />}
-                        <span className="font-medium">{toast.message}</span>
+                        <span className="font-bold tracking-wide">{toast.message}</span>
                         </div>
                     )}
 
-                    <header className="bg-slate-900/80 border-b border-slate-800 backdrop-blur-md sticky top-0 z-30">
+                    <header className="bg-slate-900 border-b border-slate-800 backdrop-blur-md sticky top-0 z-30 shadow-2xl">
                         <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
                         <div className="flex items-center gap-3">
-                            <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-2.5 rounded-xl shadow-lg shadow-blue-900/40">
+                            <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-2.5 rounded-xl shadow-[0_0_15px_rgba(59,130,246,0.6)]">
                             <Activity size={24} className="text-white" />
                             </div>
-                            <h1 className="text-2xl font-bold tracking-wider text-white bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-slate-400">
+                            <h1 className="text-2xl font-black tracking-wider text-white drop-shadow-md">
                             萊恩選股日誌
                             </h1>
                         </div>
-                        <div className="flex items-center gap-4 text-sm">
-                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700">
+                        <div className="flex items-center gap-4 text-sm font-medium">
+                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800 border border-slate-600">
                                 <Target size={14} className="text-blue-400"/>
-                                <span className="text-slate-400">筆數:</span>
+                                <span className="text-slate-300">筆數:</span>
                                 <span className="text-white font-mono">{displayLogs.length}</span>
                             </div>
-                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700">
+                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800 border border-slate-600">
                                 <Star size={14} className="text-amber-400"/>
-                                <span className="text-slate-400">追蹤:</span>
+                                <span className="text-slate-300">追蹤:</span>
                                 <span className="text-amber-400 font-mono font-bold">{trackedCount}</span>
                             </div>
                         </div>
@@ -1002,48 +1035,50 @@
                         
                         <section className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                         
-                        <div className="lg:col-span-8 bg-slate-900 rounded-2xl shadow-xl border border-slate-800 p-6 relative overflow-hidden group/panel">
+                        <div className="lg:col-span-8 bg-slate-900 rounded-2xl shadow-xl border border-slate-800 p-6 relative overflow-hidden group/panel hover:border-slate-600 transition-colors">
                             <div className="absolute top-0 right-0 p-10 opacity-[0.03] group-hover/panel:opacity-[0.05] transition-opacity duration-700 pointer-events-none">
                             <TrendingUp size={200} />
                             </div>
                             
-                            <h2 className="text-lg font-semibold mb-6 flex items-center gap-2 text-white relative z-10">
-                            <div className="w-1 h-6 bg-blue-500 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
+                            <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-white relative z-10">
+                            <div className="w-1.5 h-6 bg-blue-500 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.8)]"></div>
                             新增觀察個股
                             </h2>
                             
                             <div className="space-y-6 relative z-10">
+                            
+                            {/* Row 1: Date & Code */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-xs font-medium text-slate-400 mb-1.5 ml-1">日期</label>
+                                    <label className="block text-xs font-bold text-slate-300 mb-1.5 ml-1">日期</label>
                                     <div className="date-input-wrapper">
                                         <input 
                                             type="date" 
                                             value={inputDate}
                                             onChange={(e) => setInputDate(e.target.value)}
-                                            className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-slate-200 text-sm transition-all shadow-inner cursor-pointer"
+                                            className="w-full px-4 py-3 bg-slate-950/80 border border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-400 outline-none text-white font-medium text-sm transition-all shadow-inner cursor-pointer hover:bg-slate-900"
                                         />
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-medium text-slate-400 mb-1.5 ml-1">股票代碼 (Enter新增)</label>
+                                    <label className="block text-xs font-bold text-slate-300 mb-1.5 ml-1">股票代碼 (Enter新增)</label>
                                     <div className="relative">
                                         <input 
                                             id="stock-code-input"
                                             type="text" 
-                                            placeholder="輸入代碼 例如 2330"
+                                            placeholder="例如 2330"
                                             value={inputCode}
                                             onChange={(e) => setInputCode(e.target.value)}
                                             onKeyDown={(e) => e.key === 'Enter' && handleAddStock()}
-                                            className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-slate-200 text-sm font-mono tracking-wide placeholder:text-slate-600 shadow-inner"
+                                            className="w-full px-4 py-3 bg-slate-950/80 border border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-400 outline-none text-white font-bold text-sm font-mono tracking-wide placeholder:text-slate-600 shadow-inner hover:bg-slate-900"
                                         />
                                         {inputName && inputName !== '無該檔股票資訊' && (
-                                            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs px-2 py-1 bg-blue-900/40 text-blue-300 rounded border border-blue-700/30">
+                                            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs px-2 py-1 bg-blue-600 text-white font-bold rounded shadow-lg">
                                                 {inputName}
                                             </div>
                                         )}
                                         {inputName === '無該檔股票資訊' && (
-                                            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs px-2 py-1 bg-red-900/40 text-red-300 rounded border border-red-700/30 animate-pulse">
+                                            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs px-2 py-1 bg-red-600 text-white font-bold rounded shadow-lg animate-pulse">
                                                 無資訊
                                             </div>
                                         )}
@@ -1051,35 +1086,99 @@
                                 </div>
                             </div>
 
+                            {/* Row 2: Name & Industry */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="relative group">
-                                    <label className="block text-xs font-medium text-slate-500 mb-1.5 ml-1">名稱</label>
+                                    <label className="block text-xs font-bold text-slate-400 mb-1.5 ml-1">名稱</label>
                                     <input 
                                         type="text" 
                                         value={inputName}
                                         onChange={(e) => setInputName(e.target.value)}
                                         placeholder="--"
-                                        className={`w-full px-4 py-2.5 bg-slate-900/50 border rounded-xl text-sm focus:bg-slate-950 outline-none transition-colors shadow-inner
+                                        className={`w-full px-4 py-2.5 bg-slate-950/50 border rounded-xl text-sm focus:bg-slate-950 outline-none transition-colors shadow-inner font-medium
                                         ${inputName === '無該檔股票資訊' 
                                             ? 'text-red-400 border-red-900/50 focus:border-red-500/50' 
-                                            : 'text-slate-400 border-slate-800/50 focus:border-blue-500/50 focus:text-slate-200'
+                                            : 'text-white border-slate-700 focus:border-blue-500'
                                         }`}
                                     />
                                 </div>
                                 <div className="relative group">
-                                    <label className="block text-xs font-medium text-slate-500 mb-1.5 ml-1">產業</label>
+                                    <label className="block text-xs font-bold text-slate-400 mb-1.5 ml-1">產業</label>
                                     <input 
                                         type="text" 
                                         value={inputIndustry}
                                         onChange={(e) => setInputIndustry(e.target.value)}
                                         placeholder="--"
-                                        className="w-full px-4 py-2.5 bg-slate-900/50 border border-slate-800/50 rounded-xl text-slate-400 text-sm focus:bg-slate-950 focus:border-blue-500/50 focus:text-slate-200 transition-colors outline-none shadow-inner"
+                                        className="w-full px-4 py-2.5 bg-slate-950/50 border border-slate-700 rounded-xl text-white text-sm focus:bg-slate-950 focus:border-blue-500 transition-colors outline-none shadow-inner font-medium"
                                     />
                                 </div>
                             </div>
+                            
+                            {/* Row 3: Trade Plan Inputs (Entry, Stop Loss, Take Profit, Exit) */}
+                            <div className="bg-slate-950/50 p-4 rounded-xl border border-slate-800">
+                                <label className="block text-xs font-bold text-slate-400 mb-3 ml-1 flex items-center gap-1">
+                                    <DollarSign size={14} className="text-emerald-400"/> 
+                                    交易規劃 (選填)
+                                </label>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                    <div>
+                                        <span className="text-[10px] text-slate-500 mb-1 block pl-1">進場價</span>
+                                        <div className="relative">
+                                            <input 
+                                                type="number" 
+                                                placeholder="--"
+                                                value={inputEntry}
+                                                onChange={(e) => setInputEntry(e.target.value)}
+                                                className="w-full pl-7 pr-2 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:border-blue-500 outline-none font-mono"
+                                            />
+                                            <LogIn size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500"/>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <span className="text-[10px] text-green-500/80 mb-1 block pl-1">停損價</span>
+                                        <div className="relative">
+                                            <input 
+                                                type="number" 
+                                                placeholder="--"
+                                                value={inputStopLoss}
+                                                onChange={(e) => setInputStopLoss(e.target.value)}
+                                                className="w-full pl-7 pr-2 py-2 bg-slate-900 border border-slate-700 rounded-lg text-green-400 text-sm focus:border-green-500 outline-none font-mono"
+                                            />
+                                            <ShieldAlert size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-green-600"/>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <span className="text-[10px] text-red-400/80 mb-1 block pl-1">停利價</span>
+                                        <div className="relative">
+                                            <input 
+                                                type="number" 
+                                                placeholder="--"
+                                                value={inputTakeProfit}
+                                                onChange={(e) => setInputTakeProfit(e.target.value)}
+                                                className="w-full pl-7 pr-2 py-2 bg-slate-900 border border-slate-700 rounded-lg text-red-400 text-sm focus:border-red-500 outline-none font-mono"
+                                            />
+                                            <Trophy size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-red-600"/>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <span className="text-[10px] text-slate-500 mb-1 block pl-1">出場價 (後補)</span>
+                                        <div className="relative">
+                                            <input 
+                                                type="number" 
+                                                placeholder="--"
+                                                value={inputExit}
+                                                onChange={(e) => setInputExit(e.target.value)}
+                                                className="w-full pl-7 pr-2 py-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-300 text-sm focus:border-blue-500 outline-none font-mono"
+                                            />
+                                            <LogOut size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
+                            {/* Row 4: Strategies */}
                             <div>
-                                <label className="block text-xs font-medium text-slate-400 mb-2 ml-1">選擇策略 (必選)</label>
+                                <label className="block text-xs font-bold text-slate-300 mb-2 ml-1">選擇策略 (必選)</label>
                                 <div className="flex flex-wrap gap-2.5">
                                     {STRATEGIES.map((strat) => {
                                     const Icon = strat.icon;
@@ -1088,14 +1187,14 @@
                                         <button
                                         key={strat.id}
                                         onClick={() => setSelectedStrategy(strat)}
-                                        className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm border transition-all duration-300 relative overflow-hidden
+                                        className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-bold border transition-all duration-200 relative overflow-hidden group
                                             ${isSelected 
-                                            ? `${strat.color} ring-1 ring-white/10 font-bold shadow-[0_0_20px_rgba(0,0,0,0.3)] scale-105 z-10` 
-                                            : 'bg-slate-950 border-slate-800 text-slate-500 hover:bg-slate-800 hover:text-slate-300'
+                                            ? `${strat.color} ring-2 ring-white/20 scale-105 z-10` 
+                                            : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-white'
                                             }`}
                                         >
-                                        {isSelected && <div className={`absolute inset-0 opacity-20 ${strat.color.split(' ')[0]}`}></div>}
-                                        <Icon size={16} className="relative z-10"/>
+                                        {isSelected && <div className="absolute inset-0 bg-white/10 mix-blend-overlay"></div>}
+                                        <Icon size={16} className={`relative z-10 ${isSelected ? 'animate-pulse' : ''}`}/>
                                         <span className="relative z-10">{strat.label}</span>
                                         </button>
                                     );
@@ -1105,9 +1204,9 @@
                             
                             <button 
                                 onClick={handleAddStock}
-                                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-3.5 rounded-xl shadow-[0_4px_20px_rgba(37,99,235,0.2)] hover:shadow-[0_4px_25px_rgba(37,99,235,0.4)] transition-all active:scale-[0.99] flex items-center justify-center gap-2 border border-blue-500/20"
+                                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black tracking-wide py-4 rounded-xl shadow-[0_4px_20px_rgba(37,99,235,0.4)] hover:shadow-[0_6px_25px_rgba(37,99,235,0.6)] transition-all active:scale-[0.98] flex items-center justify-center gap-2 border border-blue-400/30 text-base"
                             >
-                                <Plus size={20} />
+                                <Plus size={22} strokeWidth={3} />
                                 加入日誌
                             </button>
                             </div>
@@ -1116,15 +1215,15 @@
                         <div className="lg:col-span-4 space-y-6">
                             
                             <div className="bg-slate-900 rounded-2xl shadow-xl border border-slate-800 p-5">
-                            <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4 flex items-center justify-between">
+                            <h3 className="text-sm font-bold text-slate-300 uppercase tracking-wider mb-4 flex items-center justify-between">
                                 <div className="flex items-center gap-2">
-                                    <PieChart size={16} />
+                                    <PieChart size={18} className="text-blue-400"/>
                                     本期策略統計
                                 </div>
                                 {filterStrategy && (
                                     <button 
                                         onClick={() => setFilterStrategy(null)}
-                                        className="flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 transition-colors animate-fade-in-down"
+                                        className="flex items-center gap-1 text-xs font-bold text-blue-400 hover:text-blue-300 transition-colors animate-fade-in-down bg-blue-900/30 px-2 py-1 rounded-lg border border-blue-800"
                                     >
                                         <RefreshCcw size={12} />
                                         清除篩選
@@ -1138,70 +1237,70 @@
                                     
                                     if (count === 0 && !isFilterActive) return null;
                                     
+                                    // Extract color classes for active state
+                                    const activeClasses = strat.color; 
+                                    
                                     return (
                                         <div 
                                             key={strat.id} 
                                             onClick={() => setFilterStrategy(isFilterActive ? null : strat.label)}
-                                            className={`flex items-center justify-between p-3 rounded-lg border transition-all cursor-pointer relative overflow-hidden group ${
+                                            className={`flex items-center justify-between p-3 rounded-lg border-2 transition-all cursor-pointer relative overflow-hidden group ${
                                                 isFilterActive 
-                                                ? 'bg-blue-900/30 border-blue-500 ring-1 ring-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.3)]' 
-                                                : 'bg-slate-950 border-slate-800/50 hover:bg-slate-900 hover:border-slate-700'
+                                                ? `${activeClasses} ring-2 ring-white/20 scale-105 shadow-lg` 
+                                                : 'bg-slate-950 border-slate-800 hover:border-slate-600'
                                             }`}
                                         >
-                                            <div className={`flex items-center gap-2 text-xs transition-colors ${isFilterActive ? 'text-blue-200' : 'text-slate-400 group-hover:text-slate-300'}`}>
-                                                <div className={`w-2 h-2 rounded-full shadow-[0_0_5px] ${strat.color.split(' ')[0].replace('/20', '')} ${strat.color.split(' ')[2].replace('/50', '')}`}></div>
+                                            <div className={`flex items-center gap-2 text-xs font-bold transition-colors ${isFilterActive ? 'text-white' : 'text-slate-400 group-hover:text-white'}`}>
+                                                {!isFilterActive && <div className={`w-2 h-2 rounded-full shadow-[0_0_5px] ${strat.color.split(' ')[0].replace('/30', '')}`}></div>}
+                                                {isFilterActive && <strat.icon size={14}/>}
                                                 {strat.label}
                                             </div>
-                                            <span className={`font-mono font-bold transition-all ${isFilterActive ? 'text-blue-300 scale-110' : 'text-white'}`}>{count}</span>
-                                            
-                                            {isFilterActive && (
-                                                <div className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-500 shadow-[0_0_10px_#3b82f6]"></div>
-                                            )}
+                                            <span className={`font-mono font-black text-lg transition-all ${isFilterActive ? 'text-white' : 'text-slate-500 group-hover:text-white'}`}>{count}</span>
                                         </div>
                                     )
                                 })}
                                 {Object.values(summaryStats).every(v => v === 0) && (
-                                    <div className="col-span-2 text-center text-slate-600 text-xs py-4 border border-dashed border-slate-800 rounded-lg">無數據</div>
+                                    <div className="col-span-2 text-center text-slate-600 text-xs py-6 border-2 border-dashed border-slate-800 rounded-xl bg-slate-950/50">目前無數據</div>
                                 )}
                             </div>
                             </div>
 
                             <div className="bg-slate-900 rounded-2xl shadow-xl border border-slate-800 p-5">
-                                <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-                                <Filter size={16} />
+                                <h3 className="text-sm font-bold text-slate-300 uppercase tracking-wider mb-4 flex items-center gap-2">
+                                <Filter size={18} className="text-blue-400" />
                                 顯示設定
                             </h3>
                             
                             <div className="space-y-4">
-                                <div className="flex items-center justify-between bg-slate-950 p-1.5 rounded-xl border border-slate-800">
-                                        <button onClick={() => adjustDate(setFilterStartDate, filterStartDate, -1)} className="p-2 hover:bg-slate-800 rounded-lg text-slate-500 hover:text-white transition-colors"><ArrowDownCircle size={16} className="rotate-90" /></button>
+                                <div className="flex items-center justify-between bg-slate-950 p-2 rounded-xl border border-slate-700">
+                                        <button onClick={() => adjustDate(setFilterStartDate, filterStartDate, -1)} className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-colors"><ArrowDownCircle size={18} className="rotate-90" /></button>
                                         <div className="date-input-wrapper">
                                             <input 
                                                 type="date" 
                                                 value={filterStartDate}
                                                 onChange={(e) => setFilterStartDate(e.target.value)}
-                                                className="bg-transparent border-none text-xs text-center text-slate-300 w-24 focus:ring-0 cursor-pointer"
+                                                className="bg-transparent border-none text-sm font-bold text-center text-white w-28 focus:ring-0 cursor-pointer"
                                             />
                                         </div>
-                                        <span className="text-slate-600 text-xs">至</span>
+                                        <span className="text-slate-500 text-xs font-bold">至</span>
                                         <div className="date-input-wrapper">
                                             <input 
                                                 type="date" 
                                                 value={filterEndDate}
                                                 onChange={(e) => setFilterEndDate(e.target.value)}
-                                                className="bg-transparent border-none text-xs text-center text-slate-300 w-24 focus:ring-0 cursor-pointer"
+                                                className="bg-transparent border-none text-sm font-bold text-center text-white w-28 focus:ring-0 cursor-pointer"
                                             />
                                         </div>
-                                        <button onClick={() => adjustDate(setFilterEndDate, filterEndDate, 1)} className="p-2 hover:bg-slate-800 rounded-lg text-slate-500 hover:text-white transition-colors"><ArrowDownCircle size={16} className="-rotate-90" /></button>
+                                        <button onClick={() => adjustDate(setFilterEndDate, filterEndDate, 1)} className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-colors"><ArrowDownCircle size={18} className="-rotate-90" /></button>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-3">
                                         <button
                                             onClick={() => setShowTrackedOnly(!showTrackedOnly)}
-                                            className={`flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-all border ${
+                                            className={`flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all border ${
                                                 showTrackedOnly 
-                                                ? 'bg-amber-500/10 border-amber-500/50 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.2)]' 
-                                                : 'bg-slate-950 border-slate-800 text-slate-400 hover:bg-slate-800 hover:text-white'
+                                                ? 'bg-amber-900/40 border-amber-500 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.3)]' 
+                                                : 'bg-slate-950 border-slate-700 text-slate-400 hover:bg-slate-800 hover:text-white'
                                             }`}
                                         >
                                             <Star size={16} fill={showTrackedOnly ? "currentColor" : "none"} />
@@ -1210,25 +1309,25 @@
 
                                         <button
                                             onClick={handleCopy}
-                                            className="flex items-center justify-center gap-2 py-3 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 hover:border-emerald-500/50 rounded-xl text-sm font-medium transition-all"
+                                            className="flex items-center justify-center gap-2 py-3 bg-emerald-900/30 hover:bg-emerald-900/50 text-emerald-400 border border-emerald-500/50 hover:border-emerald-400 rounded-xl text-sm font-bold transition-all shadow-[0_0_10px_rgba(16,185,129,0.2)]"
                                         >
                                             <Copy size={16} />
                                             複製結果
                                         </button>
                                 </div>
-                                <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-800">
+                                <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-800">
                                     <button 
                                         onClick={handleExport}
-                                        className="flex items-center justify-center gap-2 py-3 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border border-blue-500/30 hover:border-blue-500/50 rounded-xl text-sm font-medium transition-all"
+                                        className="flex items-center justify-center gap-2 py-3 bg-blue-900/20 hover:bg-blue-900/40 text-blue-400 border border-blue-500/30 hover:border-blue-400/50 rounded-xl text-xs font-bold transition-all"
                                     >
-                                        <Download size={16} />
+                                        <Download size={14} />
                                         匯出紀錄
                                     </button>
                                     <button 
                                         onClick={handleImportClick}
-                                        className="flex items-center justify-center gap-2 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-600 hover:border-slate-500 rounded-xl text-sm font-medium transition-all"
+                                        className="flex items-center justify-center gap-2 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-600 hover:border-slate-500 rounded-xl text-xs font-bold transition-all"
                                     >
-                                        <Upload size={16} />
+                                        <Upload size={14} />
                                         匯入紀錄
                                     </button>
                                     <input 
@@ -1249,7 +1348,7 @@
                         <div className="overflow-x-auto">
                             <table className="w-full text-left border-collapse">
                             <thead>
-                                <tr className="bg-slate-950 text-slate-400 text-xs uppercase tracking-wider border-b border-slate-800">
+                                <tr className="bg-slate-950 text-slate-400 text-xs font-bold uppercase tracking-wider border-b border-slate-800">
                                 <th 
                                     className="py-4 px-6 w-32 cursor-pointer hover:text-blue-400 transition-colors select-none"
                                     onClick={() => handleSort('date')}
@@ -1277,29 +1376,35 @@
                                     {sortConfig.key === 'name' && <ArrowUpDown size={12} className="text-blue-500" />}
                                     </div>
                                 </th>
+                                {/* New Individual Columns */}
+                                <th className="py-4 px-4 font-bold text-slate-300 w-20 text-center">進場</th>
+                                <th className="py-4 px-4 font-bold text-green-400 w-20 text-center">停損</th>
+                                <th className="py-4 px-4 font-bold text-red-400 w-20 text-center">停利</th>
+                                <th className="py-4 px-4 font-bold text-slate-400 w-20 text-center">出場</th>
+
                                 <th className="py-4 px-6">符合策略</th>
                                 <th className="py-4 px-6 w-32 hidden md:table-cell">產業</th>
-                                <th className="py-4 px-6 w-28 text-right">操作</th>
+                                <th className="py-4 px-6 w-24 text-right">操作</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-800/50">
+                            <tbody className="divide-y divide-slate-800">
                                 {displayLogs.length === 0 ? (
                                 <tr>
-                                    <td colSpan="6" className="py-20 text-center text-slate-600">
+                                    <td colSpan="10" className="py-20 text-center text-slate-500">
                                     <div className="flex flex-col items-center gap-4">
-                                        <div className="bg-slate-800/50 p-6 rounded-full border border-slate-700/50">
-                                        <Search size={40} className="text-slate-700" />
+                                        <div className="bg-slate-800/50 p-6 rounded-full border border-slate-700">
+                                        <Search size={40} className="text-slate-600" />
                                         </div>
-                                        <p className="font-light">
+                                        <p className="font-bold text-lg">
                                             {filterStrategy 
                                                 ? `沒有符合「${filterStrategy}」的股票` 
-                                                : '目前沒有資料，請調整日期或新增策略'
+                                                : '目前沒有資料，請新增觀察個股'
                                             }
                                         </p>
                                         {filterStrategy && (
                                             <button 
                                                 onClick={() => setFilterStrategy(null)}
-                                                className="text-blue-400 text-sm hover:underline"
+                                                className="text-blue-400 text-sm hover:text-blue-300 font-bold underline decoration-dotted underline-offset-4"
                                             >
                                                 清除篩選
                                             </button>
@@ -1309,22 +1414,36 @@
                                 </tr>
                                 ) : (
                                 displayLogs.map((group) => (
-                                    <tr key={`${group.date}-${group.code}`} className="hover:bg-slate-800/40 transition-colors group">
+                                    <tr key={`${group.date}-${group.code}`} className="hover:bg-slate-800/50 transition-colors group">
                                         
-                                        <td className="py-4 px-6 text-slate-400 text-sm font-mono">
+                                        <td className="py-4 px-6 text-slate-300 text-sm font-mono font-medium whitespace-nowrap">
                                             {group.date}
                                         </td>
                                         
                                         <td className="py-4 px-6">
-                                            <span className="font-mono text-blue-300 font-bold bg-blue-500/10 border border-blue-500/20 px-2 py-1 rounded">
+                                            <span className="font-mono text-blue-300 font-bold bg-blue-900/30 border border-blue-500/30 px-2 py-1 rounded">
                                                 {group.code}
                                             </span>
                                         </td>
                                         
-                                        <td className="py-4 px-6 text-slate-200 font-bold text-base tracking-wide">
+                                        <td className="py-4 px-6 text-white font-black text-base tracking-wide whitespace-nowrap">
                                             {group.name}
                                         </td>
                                         
+                                        {/* Individual Cells for Trade Plan */}
+                                        <td className="py-4 px-4 text-center font-mono text-sm font-bold text-white">
+                                            {group.entry ? group.entry : <span className="text-slate-700">-</span>}
+                                        </td>
+                                        <td className="py-4 px-4 text-center font-mono text-sm font-bold text-green-400">
+                                            {group.stopLoss ? group.stopLoss : <span className="text-slate-700">-</span>}
+                                        </td>
+                                        <td className="py-4 px-4 text-center font-mono text-sm font-bold text-red-400">
+                                            {group.takeProfit ? group.takeProfit : <span className="text-slate-700">-</span>}
+                                        </td>
+                                        <td className="py-4 px-4 text-center font-mono text-sm font-bold text-slate-400">
+                                            {group.exit ? group.exit : <span className="text-slate-700">-</span>}
+                                        </td>
+
                                         <td className="py-4 px-6">
                                             <div className="flex flex-wrap gap-2">
                                                 {group.strategies.map(strat => {
@@ -1335,12 +1454,12 @@
                                                     const isHighlighted = filterStrategy === strat.strategyLabel;
                                                     
                                                     return (
-                                                        <div key={strat.id} className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs border shadow-sm backdrop-blur-sm transition-all
+                                                        <div key={strat.id} className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border shadow-lg backdrop-blur-sm transition-all whitespace-nowrap
                                                             ${isHighlighted 
-                                                                ? `${stratDef.color} ring-1 ring-offset-1 ring-offset-slate-900 ring-current scale-105` 
-                                                                : `${stratDef.color} opacity-80 hover:opacity-100`
+                                                                ? `${stratDef.color} ring-2 ring-white/50 scale-110 z-10` 
+                                                                : `${stratDef.color} opacity-90 hover:opacity-100 hover:scale-105`
                                                             }`}>
-                                                            <Icon size={12} />
+                                                            <Icon size={12} strokeWidth={3} />
                                                             {stratDef.label}
                                                             <button 
                                                                 type="button"
@@ -1348,9 +1467,9 @@
                                                                     e.stopPropagation();
                                                                     handleDeleteLog(strat.id);
                                                                 }}
-                                                                className="ml-1 opacity-60 hover:opacity-100 hover:text-white transition-opacity"
+                                                                className="ml-1 opacity-60 hover:opacity-100 hover:bg-black/20 rounded-full p-0.5 transition-all"
                                                             >
-                                                                <X size={10} />
+                                                                <X size={10} strokeWidth={3} />
                                                             </button>
                                                         </div>
                                                     );
@@ -1358,7 +1477,7 @@
                                             </div>
                                         </td>
                                         
-                                        <td className="py-4 px-6 text-slate-500 text-sm hidden md:table-cell">
+                                        <td className="py-4 px-6 text-slate-400 text-sm hidden md:table-cell font-medium whitespace-nowrap">
                                             {group.industry}
                                         </td>
                                         
@@ -1372,7 +1491,7 @@
                                                     }}
                                                     className={`p-2 rounded-lg transition-all duration-300 ${
                                                         group.isTracked 
-                                                        ? 'text-amber-400 bg-amber-400/10 shadow-[0_0_10px_rgba(251,191,36,0.2)]' 
+                                                        ? 'text-amber-400 bg-amber-400/20 shadow-[0_0_15px_rgba(251,191,36,0.3)]' 
                                                         : 'text-slate-500 hover:text-amber-400 hover:bg-slate-800'
                                                     }`}
                                                     title="加入追蹤"
