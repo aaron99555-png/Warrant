@@ -126,7 +126,7 @@
                 const saved = localStorage.getItem('ryan_stock_logs');
                 return saved ? JSON.parse(saved) : [];
             });
-            const [filterStrategy, setFilterStrategy] = useState(null);
+            const [filterStrategy, setFilterStrategy] = useState([]);
             const [activeTab, setActiveTab] = useState('journal'); // 'journal' or 'plan'
 
             const today = new Date().toISOString().split('T')[0];
@@ -138,7 +138,8 @@
             const [inputCode, setInputCode] = useState('');
             const [inputName, setInputName] = useState('');
             const [inputIndustry, setInputIndustry] = useState('');
-            const [selectedStrategy, setSelectedStrategy] = useState(STRATEGIES[0]);
+            // Modified: Support multiple strategies
+            const [selectedStrategies, setSelectedStrategies] = useState([STRATEGIES[0]]);
             
             // Trade Plan Calculator State
             const [planDate, setPlanDate] = useState(today);
@@ -244,6 +245,17 @@
                 setToast({ type, message });
             };
 
+            const toggleStrategy = (strat) => {
+                setSelectedStrategies(prev => {
+                    const exists = prev.find(s => s.id === strat.id);
+                    if (exists) {
+                        return prev.filter(s => s.id !== strat.id);
+                    } else {
+                        return [...prev, strat];
+                    }
+                });
+            };
+
             // Auto-calculate Stop Loss (-5%) when Entry Price changes
             const handleEntryChange = (e) => {
                 const val = e.target.value;
@@ -265,42 +277,52 @@
                     return;
                 }
 
-                if (!inputCode || !inputName || !selectedStrategy) {
+                if (!inputCode || !inputName || selectedStrategies.length === 0) {
+                    showToast('error', "請填寫股票代號並至少選擇一個策略");
                     return; 
                 }
 
-                const exists = logs.some(log => 
-                    log.date === inputDate && 
-                    log.code === inputCode && 
-                    log.strategyId === selectedStrategy.id
-                );
+                let addedCount = 0;
+                const newLogs = [];
 
-                if (exists) {
-                    showToast('error', "此策略已存在於該日期的紀錄中");
+                selectedStrategies.forEach(strat => {
+                    const exists = logs.some(log => 
+                        log.date === inputDate && 
+                        log.code === inputCode && 
+                        log.strategyId === strat.id
+                    );
+
+                    if (!exists) {
+                        newLogs.push({
+                            id: Date.now() + Math.random(),
+                            date: inputDate,
+                            code: inputCode,
+                            name: inputName,
+                            industry: inputIndustry,
+                            strategyId: strat.id,
+                            strategyLabel: strat.label,
+                            isTracked: false,
+                        });
+                        addedCount++;
+                    }
+                });
+
+                if (addedCount > 0) {
+                    setLogs([...newLogs, ...logs]);
+                    showToast('success', `已新增 ${inputName} - ${addedCount} 個策略標記`);
                     setInputCode('');
                     setInputName('');
                     setInputIndustry('');
-                    return;
+                    // Keep strategies selected or reset? Let's reset to first one for convenience or keep user selection?
+                    // Resetting is usually safer to avoid accidental adds
+                    // setSelectedStrategies([STRATEGIES[0]]); 
+                    document.getElementById('stock-code-input').focus();
+                } else {
+                    showToast('error', "所選策略皆已存在於該日期的紀錄中");
+                    setInputCode('');
+                    setInputName('');
+                    setInputIndustry('');
                 }
-
-                const newLog = {
-                    id: Date.now(),
-                    date: inputDate,
-                    code: inputCode,
-                    name: inputName,
-                    industry: inputIndustry,
-                    strategyId: selectedStrategy.id,
-                    strategyLabel: selectedStrategy.label,
-                    isTracked: false,
-                };
-
-                setLogs([newLog, ...logs]);
-                showToast('success', `已新增 ${inputName} - ${selectedStrategy.label}`);
-                
-                setInputCode('');
-                setInputName('');
-                setInputIndustry('');
-                document.getElementById('stock-code-input').focus();
             };
             
             const handleSavePlan = () => {
@@ -399,7 +421,7 @@
 
             const handleImportClick = () => {
                 if (logs.length > 0) {
-                     setConfirmModal({
+                      setConfirmModal({
                         show: true,
                         title: '確認匯入',
                         message: `確定要匯入嗎？這將覆蓋目前的 ${logs.length} 筆紀錄。建議先匯出備份。`,
@@ -498,9 +520,9 @@
             const displayLogs = useMemo(() => {
                 let result = groupedRawLogs;
 
-                if (filterStrategy) {
+                if (filterStrategy.length > 0) {
                     result = result.filter(group => 
-                        group.strategies.some(s => s.strategyLabel === filterStrategy)
+                        group.strategies.some(s => filterStrategy.includes(s.strategyLabel))
                     );
                 }
 
@@ -532,6 +554,16 @@
                 return stats;
             }, [baseLogs]);
 
+            const toggleFilterStrategy = (label) => {
+                setFilterStrategy(prev => {
+                    if (prev.includes(label)) {
+                        return prev.filter(l => l !== label);
+                    } else {
+                        return [...prev, label];
+                    }
+                });
+            };
+
             const trackedCount = useMemo(() => {
                 return displayLogs.filter(g => g.isTracked).length;
             }, [displayLogs]);
@@ -542,6 +574,11 @@
                 
                 displayLogs.forEach(group => {
                     group.strategies.forEach(strat => {
+                        // Modify: Only include strategy if it matches the filter (if filter is active)
+                        if (filterStrategy.length > 0 && !filterStrategy.includes(strat.strategyLabel)) {
+                            return;
+                        }
+
                         if (!groupedByStrategy[strat.strategyLabel]) {
                             groupedByStrategy[strat.strategyLabel] = [];
                         }
@@ -649,16 +686,17 @@
                                     <div className="relative"><label className="block text-xs font-bold text-slate-400 mb-1.5 ml-1">產業</label><input type="text" value={inputIndustry} onChange={(e) => setInputIndustry(e.target.value)} placeholder="--" className="w-full px-4 py-2 bg-slate-950/50 border border-slate-700 rounded-xl text-white text-sm focus:border-blue-500 outline-none shadow-inner font-medium"/></div>
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-300 mb-2 ml-1">選擇策略 (必選)</label>
+                                    <label className="block text-xs font-bold text-slate-300 mb-2 ml-1">選擇策略 (可複選)</label>
                                     <div className="flex flex-wrap gap-2.5">
                                         {STRATEGIES.map((strat) => {
                                             const Icon = strat.icon;
-                                            const isSelected = selectedStrategy.id === strat.id;
+                                            const isSelected = selectedStrategies.some(s => s.id === strat.id);
                                             return (
-                                                <button key={strat.id} onClick={() => setSelectedStrategy(strat)} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold border transition-all duration-200 relative overflow-hidden group ${isSelected ? `${strat.color} ring-2 ring-white/20 scale-105 z-10` : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-white'}`}>
+                                                <button key={strat.id} onClick={() => toggleStrategy(strat)} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold border transition-all duration-200 relative overflow-hidden group ${isSelected ? `${strat.color} ring-2 ring-white/20 scale-105 z-10` : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-white'}`}>
                                                     {isSelected && <div className="absolute inset-0 bg-white/10 mix-blend-overlay"></div>}
                                                     <Icon size={16} className={`relative z-10 ${isSelected ? 'animate-pulse' : ''}`}/>
                                                     <span className="relative z-10">{strat.label}</span>
+                                                    {isSelected && <div className="absolute top-1 right-1 w-2 h-2 bg-white rounded-full"></div>}
                                                 </button>
                                             );
                                         })}
@@ -729,14 +767,15 @@
                         <div className="bg-slate-900 rounded-2xl shadow-xl border border-slate-800 p-5">
                             <h3 className="text-sm font-bold text-slate-300 uppercase tracking-wider mb-4 flex items-center justify-between">
                                 <div className="flex items-center gap-2"><PieChart size={18} className="text-blue-400"/>本期策略統計</div>
-                                {filterStrategy && <button onClick={() => setFilterStrategy(null)} className="flex items-center gap-1 text-xs font-bold text-blue-400 bg-blue-900/30 px-2 py-1 rounded-lg border border-blue-800"><RefreshCcw size={12} />清除篩選</button>}
+                                {filterStrategy.length > 0 && <button onClick={() => setFilterStrategy([])} className="flex items-center gap-1 text-xs font-bold text-blue-400 bg-blue-900/30 px-2 py-1 rounded-lg border border-blue-800"><RefreshCcw size={12} />清除篩選</button>}
                             </h3>
                             <div className="grid grid-cols-2 gap-3">
                                 {STRATEGIES.map(strat => {
                                     const count = summaryStats[strat.label];
-                                    if (count === 0 && filterStrategy !== strat.label) return null;
+                                    const isSelected = filterStrategy.includes(strat.label);
+                                    if (count === 0 && !isSelected) return null;
                                     return (
-                                        <div key={strat.id} onClick={() => setFilterStrategy(filterStrategy === strat.label ? null : strat.label)} className={`flex items-center justify-between p-3 rounded-lg border-2 transition-all cursor-pointer ${filterStrategy === strat.label ? 'bg-blue-900/30 border-blue-500' : 'bg-slate-950 border-slate-800 hover:border-slate-600'}`}>
+                                        <div key={strat.id} onClick={() => toggleFilterStrategy(strat.label)} className={`flex items-center justify-between p-3 rounded-lg border-2 transition-all cursor-pointer ${isSelected ? 'bg-blue-900/30 border-blue-500' : 'bg-slate-950 border-slate-800 hover:border-slate-600'}`}>
                                             <div className="flex items-center gap-2 text-xs font-bold text-white"><div className={`w-2 h-2 rounded-full ${strat.color.split(' ')[0]}`}></div>{strat.label}</div>
                                             <span className="font-mono font-black text-lg text-white">{count}</span>
                                         </div>
@@ -758,7 +797,7 @@
                                 </div>
                                 <div className="grid grid-cols-2 gap-3">
                                     <button onClick={() => setShowTrackedOnly(!showTrackedOnly)} className={`flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all border ${showTrackedOnly ? 'bg-amber-900/40 border-amber-500 text-amber-400' : 'bg-slate-950 border-slate-700 text-slate-400'}`}><Star size={16} fill={showTrackedOnly ? "currentColor" : "none"} />只看追蹤</button>
-                                    <button onClick={handleCopy} className="flex items-center justify-center gap-2 py-3 bg-emerald-900/30 hover:bg-emerald-900/50 text-emerald-400 border border-emerald-500/50 hover:border-emerald-400 rounded-xl text-sm font-bold transition-all"><Copy size={16} />複製結果</button>
+                                    <button onClick={handleCopy} className="flex items-center justify-center gap-2 py-3 bg-emerald-900/30 hover:bg-emerald-900/50 text-emerald-400 border border-emerald-500/50 hover:border-emerald-400 rounded-xl text-sm font-bold transition-all"><Copy size={16} />{filterStrategy.length > 0 ? "複製所選" : "複製結果"}</button>
                                 </div>
                                 <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-800">
                                     <button onClick={handleExport} className="flex items-center justify-center gap-2 py-3 bg-blue-900/20 text-blue-400 border border-blue-500/30 rounded-xl text-xs font-bold"><Download size={14} />匯出紀錄</button>
