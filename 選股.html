@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>萊恩選股日誌</title>
+    <title>萊恩交易手札</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -49,14 +49,14 @@
             height: 8px;
         }
         ::-webkit-scrollbar-track {
-            background: #020617; 
+            background: #0f172a; 
         }
         ::-webkit-scrollbar-thumb {
-            background: #334155; 
+            background: #475569; 
             border-radius: 4px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: #475569; 
+            background: #64748b; 
         }
         
         /* Date Picker UX Improvement */
@@ -83,7 +83,7 @@
         }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-50 selection:bg-blue-500 selection:text-white">
+<body class="bg-[#0B1121] text-slate-100 selection:bg-fuchsia-500 selection:text-white">
     <div id="root"></div>
 
     <script type="text/babel" data-type="module">
@@ -94,7 +94,8 @@
             ArrowDownCircle, Trash2, Star, Copy, Search, Plus, 
             Filter, X, PieChart, Target, AlertCircle, CheckCircle2, ArrowUpDown, RefreshCcw,
             Download, Upload, AlertTriangle, DollarSign, LogIn, LogOut, ShieldAlert, Trophy, Calculator, Save,
-            BookOpen, ClipboardList, PenTool, FileText, Percent, Box
+            BookOpen, ClipboardList, PenTool, FileText, Percent, Box, CalendarRange, TrendingDown,
+            Coins, Zap
         } from 'lucide-react';
 
         // --- 完整台股資料庫 (壓縮儲存) ---
@@ -109,15 +110,15 @@
             }
         });
 
-        // --- 策略定義 ---
+        // --- 策略定義 (配色升級：更鮮豔、漸層、光暈) ---
         const STRATEGIES = [
-            { id: 'monthly_up', label: '月來越好', icon: TrendingUp, color: 'bg-red-600 text-white border-red-500 shadow-[0_0_15px_rgba(220,38,38,0.6)]' },
-            { id: 'quarterly_gold', label: '季不可失', icon: Rocket, color: 'bg-orange-600 text-white border-orange-500 shadow-[0_0_15px_rgba(234,88,12,0.6)]' },
-            { id: 'twist_flower', label: '麻花捲開花', icon: Sprout, color: 'bg-pink-600 text-white border-pink-500 shadow-[0_0_15px_rgba(219,39,119,0.6)]' },
-            { id: 'wait_monthly', label: '等待月線', icon: Clock, color: 'bg-blue-600 text-white border-blue-500 shadow-[0_0_15px_rgba(37,99,235,0.6)]' },
-            { id: 'wait_quarterly', label: '等待季線', icon: Activity, color: 'bg-indigo-600 text-white border-indigo-500 shadow-[0_0_15px_rgba(79,70,229,0.6)]' },
-            { id: 'bull_obv', label: '多頭OBV', icon: BarChart2, color: 'bg-emerald-600 text-white border-emerald-500 shadow-[0_0_15px_rgba(5,150,105,0.6)]' },
-            { id: 'bear_trend', label: '空方趨勢', icon: ArrowDownCircle, color: 'bg-slate-700 text-white border-slate-500 shadow-[0_0_15px_rgba(71,85,105,0.6)]' },
+            { id: 'monthly_up', label: '月來越好', icon: TrendingUp, color: 'bg-gradient-to-r from-red-600 via-rose-600 to-pink-600 text-white shadow-[0_0_20px_rgba(244,63,94,0.6)] border-rose-400' },
+            { id: 'quarterly_gold', label: '季不可失', icon: Rocket, color: 'bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 text-white shadow-[0_0_20px_rgba(245,158,11,0.6)] border-amber-300' },
+            { id: 'twist_flower', label: '麻花捲開花', icon: Sprout, color: 'bg-gradient-to-r from-fuchsia-600 via-purple-600 to-indigo-600 text-white shadow-[0_0_20px_rgba(192,38,211,0.6)] border-fuchsia-400' },
+            { id: 'wait_monthly', label: '等待月線', icon: Clock, color: 'bg-gradient-to-r from-blue-600 via-sky-600 to-cyan-500 text-white shadow-[0_0_20px_rgba(14,165,233,0.6)] border-sky-400' },
+            { id: 'wait_quarterly', label: '等待季線', icon: Activity, color: 'bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 text-white shadow-[0_0_20px_rgba(124,58,237,0.6)] border-violet-400' },
+            { id: 'bull_obv', label: '多頭OBV', icon: BarChart2, color: 'bg-gradient-to-r from-emerald-600 via-green-600 to-lime-600 text-white shadow-[0_0_20px_rgba(16,185,129,0.6)] border-emerald-400' },
+            { id: 'bear_trend', label: '空方趨勢', icon: ArrowDownCircle, color: 'bg-gradient-to-r from-slate-600 to-slate-800 text-white shadow-[0_0_15px_rgba(71,85,105,0.6)] border-slate-500' },
         ];
         
         function RyanStockJournal() {
@@ -138,10 +139,9 @@
             const [inputCode, setInputCode] = useState('');
             const [inputName, setInputName] = useState('');
             const [inputIndustry, setInputIndustry] = useState('');
-            // Modified: Support multiple strategies
             const [selectedStrategies, setSelectedStrategies] = useState([STRATEGIES[0]]);
             
-            // Trade Plan Calculator State
+            // Trade Plan Calculator State (Stock)
             const [planDate, setPlanDate] = useState(today);
             const [planCode, setPlanCode] = useState('');
             const [planName, setPlanName] = useState('');
@@ -149,15 +149,31 @@
             const [planStopLoss, setPlanStopLoss] = useState('');
             const [planTakeProfit, setPlanTakeProfit] = useState('');
             const [planExit, setPlanExit] = useState('');
+            const [planQty, setPlanQty] = useState(1); // Default 1 lot
             const [planReason, setPlanReason] = useState(''); 
             const [planStatus, setPlanStatus] = useState('planning'); 
-            const [planInStock, setPlanInStock] = useState(false); // New state for "In Stock"
+            const [planInStock, setPlanInStock] = useState(false); 
+
+            // Trade Plan Calculator State (Warrant)
+            const [planWarrantCode, setPlanWarrantCode] = useState('');
+            const [planWarrantNote, setPlanWarrantNote] = useState(''); // "指標" column
+            const [planWarrantEntry, setPlanWarrantEntry] = useState('');
+            const [planWarrantExit, setPlanWarrantExit] = useState('');
+            const [planWarrantQty, setPlanWarrantQty] = useState('');
 
             // Filter & Sort State
             const [filterStartDate, setFilterStartDate] = useState(today);
             const [filterEndDate, setFilterEndDate] = useState(today);
             const [showTrackedOnly, setShowTrackedOnly] = useState(false);
             const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' });
+            
+            // Plan Stats Date Range
+            const [statsStartDate, setStatsStartDate] = useState(() => {
+                const d = new Date();
+                d.setDate(1); // Default to first day of current month
+                return d.toISOString().split('T')[0];
+            });
+            const [statsEndDate, setStatsEndDate] = useState(today);
 
             // Toast & Modal State
             const [toast, setToast] = useState(null);
@@ -240,6 +256,76 @@
                 return (planReward.val / planRisk.val).toFixed(2);
             }, [planRisk, planReward]);
 
+            // --- Computed for Plan Stats ---
+            const planStats = useMemo(() => {
+                let totalTrades = 0;
+                let closedTrades = 0;
+                let winCount = 0;
+                let totalROI = 0;
+                let totalProfitAmount = 0;
+
+                logs.forEach(log => {
+                    // Check if log has basic trade plan data
+                    if (!log.entry && !log.warrantCode) return;
+                    
+                    // Filter by Date Range
+                    if (log.date < statsStartDate || log.date > statsEndDate) return;
+
+                    totalTrades++;
+
+                    // --- Stock Profit Calculation ---
+                    let stockProfit = 0;
+                    if (log.entry && log.exit) {
+                        closedTrades++; // Simplified: count as closed if stock closed. If only warrant, logic handles below.
+                        const entry = parseFloat(log.entry);
+                        const exit = parseFloat(log.exit);
+                        const qty = parseFloat(log.qty || 1);
+                        const sl = log.stopLoss ? parseFloat(log.stopLoss) : 0;
+                        
+                        // Infer Direction: Short if SL > Entry, otherwise Long
+                        const isShort = sl > entry; 
+                        
+                        let roi = 0;
+                        if (isShort) {
+                             roi = ((entry - exit) / entry) * 100;
+                             stockProfit = (entry - exit) * 1000 * qty;
+                        } else {
+                             roi = ((exit - entry) / entry) * 100;
+                             stockProfit = (exit - entry) * 1000 * qty;
+                        }
+
+                        totalROI += roi;
+                        if (roi > 0) winCount++;
+                    }
+
+                    // --- Warrant Profit Calculation ---
+                    let warrantProfit = 0;
+                    if (log.warrantCode && log.warrantEntry && log.warrantExit && log.warrantQty) {
+                        const wEntry = parseFloat(log.warrantEntry);
+                        const wExit = parseFloat(log.warrantExit);
+                        const wQty = parseFloat(log.warrantQty);
+                        
+                        // Assume standard 1000 units per lot for warrants (or adjusted based on user input intent, usually TW warrants are traded in 1000s)
+                        warrantProfit = (wExit - wEntry) * 1000 * wQty;
+                    }
+
+                    totalProfitAmount += (stockProfit + warrantProfit);
+                });
+
+                const winRate = closedTrades > 0 ? ((winCount / closedTrades) * 100).toFixed(1) : 0;
+                const avgROI = closedTrades > 0 ? (totalROI / closedTrades).toFixed(2) : 0;
+
+                return {
+                    totalTrades,
+                    closedTrades,
+                    winRate,
+                    totalROI: totalROI.toFixed(2),
+                    avgROI,
+                    totalProfitAmount: Math.round(totalProfitAmount)
+                };
+            }, [logs, statsStartDate, statsEndDate]);
+
+
             // --- Handlers ---
             const showToast = (type, message) => {
                 setToast({ type, message });
@@ -262,7 +348,7 @@
                 setPlanEntry(val);
                 if (val && !isNaN(val)) {
                     // Automatically calculate -5% stop loss
-                    const sl = (parseFloat(val) * 0.95).toFixed(1); // Round to 1 decimal place usually fine for stocks
+                    const sl = (parseFloat(val) * 0.95).toFixed(1); 
                     setPlanStopLoss(sl);
                 } else {
                     setPlanStopLoss('');
@@ -313,9 +399,6 @@
                     setInputCode('');
                     setInputName('');
                     setInputIndustry('');
-                    // Keep strategies selected or reset? Let's reset to first one for convenience or keep user selection?
-                    // Resetting is usually safer to avoid accidental adds
-                    // setSelectedStrategies([STRATEGIES[0]]); 
                     document.getElementById('stock-code-input').focus();
                 } else {
                     showToast('error', "所選策略皆已存在於該日期的紀錄中");
@@ -326,25 +409,37 @@
             };
             
             const handleSavePlan = () => {
-                if (!planCode || !planEntry) {
-                    showToast('error', '請至少輸入股票代號與進場價');
+                if (!planCode) {
+                    showToast('error', '請輸入股票代號');
                     return;
                 }
                 
                 const existingIndex = logs.findIndex(log => log.code === planCode && log.date === planDate);
                 
+                // Fields to update
+                const planData = {
+                    entry: planEntry,
+                    stopLoss: planStopLoss,
+                    takeProfit: planTakeProfit,
+                    exit: planExit,
+                    qty: planQty, // Save Qty
+                    reason: planReason, 
+                    planStatus: planStatus,
+                    inStock: planInStock,
+                    // Warrant fields
+                    warrantCode: planWarrantCode,
+                    warrantNote: planWarrantNote,
+                    warrantEntry: planWarrantEntry,
+                    warrantExit: planWarrantExit,
+                    warrantQty: planWarrantQty
+                };
+
                 if (existingIndex >= 0) {
                     // Update existing
                     const newLogs = [...logs];
                     newLogs[existingIndex] = {
                         ...newLogs[existingIndex],
-                        entry: planEntry,
-                        stopLoss: planStopLoss,
-                        takeProfit: planTakeProfit,
-                        exit: planExit,
-                        reason: planReason, 
-                        planStatus: planStatus,
-                        inStock: planInStock // Save inStock status
+                        ...planData
                     };
                     setLogs(newLogs);
                     showToast('success', '交易規劃已更新');
@@ -359,13 +454,7 @@
                         strategyId: 'custom_plan', 
                         strategyLabel: '自訂規劃',
                         isTracked: true,
-                        entry: planEntry,
-                        stopLoss: planStopLoss,
-                        takeProfit: planTakeProfit,
-                        exit: planExit,
-                        reason: planReason, 
-                        planStatus: planStatus,
-                        inStock: planInStock // Save inStock status
+                        ...planData
                     };
                     setLogs([newLog, ...logs]);
                     showToast('success', '新交易規劃已建立');
@@ -406,12 +495,39 @@
                 setSortConfig({ key, direction });
             };
 
+            // --- 匯出功能：標準化欄位格式 ---
             const handleExport = () => {
                 try {
-                    const ws = XLSX.utils.json_to_sheet(logs);
+                    // 建立標準化資料集，確保所有欄位齊全且格式正確
+                    const dataToExport = logs.map(log => ({
+                        id: log.id,
+                        date: log.date,
+                        code: log.code ? String(log.code) : '', // 強制轉字串，避免 Excel 科學記號或去零
+                        name: log.name,
+                        industry: log.industry,
+                        strategyId: log.strategyId,
+                        strategyLabel: log.strategyLabel,
+                        isTracked: log.isTracked ? true : false, // 確保為 Boolean
+                        entry: log.entry ? String(log.entry) : '',
+                        stopLoss: log.stopLoss ? String(log.stopLoss) : '',
+                        takeProfit: log.takeProfit ? String(log.takeProfit) : '',
+                        exit: log.exit ? String(log.exit) : '',
+                        qty: log.qty ? String(log.qty) : '1',
+                        reason: log.reason || '',
+                        planStatus: log.planStatus || 'planning',
+                        inStock: log.inStock ? true : false,
+                        // Warrant Export
+                        warrantCode: log.warrantCode ? String(log.warrantCode) : '',
+                        warrantNote: log.warrantNote || '',
+                        warrantEntry: log.warrantEntry ? String(log.warrantEntry) : '',
+                        warrantExit: log.warrantExit ? String(log.warrantExit) : '',
+                        warrantQty: log.warrantQty ? String(log.warrantQty) : ''
+                    }));
+
+                    const ws = XLSX.utils.json_to_sheet(dataToExport);
                     const wb = XLSX.utils.book_new();
                     XLSX.utils.book_append_sheet(wb, ws, "StockLogs");
-                    XLSX.writeFile(wb, `RyansStockJournal_${today}.xlsx`);
+                    XLSX.writeFile(wb, `RyansStockJournal_Backup_${today}.xlsx`);
                     showToast('success', '匯出成功');
                 } catch (error) {
                     console.error("Export failed:", error);
@@ -435,6 +551,7 @@
                 }
             };
 
+            // --- 匯入功能：嚴格解析欄位 ---
             const handleImport = (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
@@ -448,11 +565,51 @@
                         const ws = wb.Sheets[wsname];
                         const data = XLSX.utils.sheet_to_json(ws);
                         
-                        const newLogs = data.map(row => ({
-                            ...row,
-                            strategyId: row.strategyId || STRATEGIES.find(s => s.label === row.strategyLabel)?.id || 'monthly_up',
-                            id: row.id || Date.now() + Math.random() 
-                        }));
+                        // 標準化匯入資料，處理型別轉換
+                        const newLogs = data.map(row => {
+                            // 輔助函式：處理布林值 (相容 Excel 的 TRUE/FALSE 字串、數值或布林型別)
+                            const parseBool = (val) => {
+                                if (val === true || val === 'TRUE' || val === 'true' || val === 1) return true;
+                                return false;
+                            };
+
+                            // 處理策略 ID：如果是自訂規劃，確保 ID 正確
+                            let stratId = row.strategyId;
+                            if (!stratId) {
+                                if (row.strategyLabel === '自訂規劃') {
+                                    stratId = 'custom_plan';
+                                } else {
+                                    stratId = STRATEGIES.find(s => s.label === row.strategyLabel)?.id || 'monthly_up';
+                                }
+                            }
+
+                            return {
+                                id: row.id || Date.now() + Math.random(),
+                                date: row.date,
+                                // 強制轉回字串，確保與系統內的 code 格式一致
+                                code: row.code ? String(row.code) : '', 
+                                name: row.name || '',
+                                industry: row.industry || '',
+                                strategyId: stratId,
+                                strategyLabel: row.strategyLabel || '',
+                                isTracked: parseBool(row.isTracked),
+                                // 數值欄位轉字串儲存，保持一致性
+                                entry: row.entry ? String(row.entry) : '',
+                                stopLoss: row.stopLoss ? String(row.stopLoss) : '',
+                                takeProfit: row.takeProfit ? String(row.takeProfit) : '',
+                                exit: row.exit ? String(row.exit) : '',
+                                qty: row.qty ? String(row.qty) : '1',
+                                reason: row.reason || '',
+                                planStatus: row.planStatus || 'planning',
+                                inStock: parseBool(row.inStock),
+                                // Warrant Import
+                                warrantCode: row.warrantCode ? String(row.warrantCode) : '',
+                                warrantNote: row.warrantNote || '',
+                                warrantEntry: row.warrantEntry ? String(row.warrantEntry) : '',
+                                warrantExit: row.warrantExit ? String(row.warrantExit) : '',
+                                warrantQty: row.warrantQty ? String(row.warrantQty) : ''
+                            };
+                        });
 
                         if (newLogs.length > 0) {
                             setLogs(newLogs);
@@ -482,10 +639,12 @@
             }, [logs, filterStartDate, filterEndDate, showTrackedOnly, activeTab]);
 
             // Plan View Logs
-            const planLogs = useMemo(() => {
+            const logsWithPlans = useMemo(() => {
                  return logs.filter(log => {
-                    const hasPlan = log.entry || log.stopLoss || log.takeProfit;
+                    // Must have plan details OR be a custom plan OR have warrant details
+                    const hasPlan = log.entry || log.stopLoss || log.takeProfit || log.strategyId === 'custom_plan' || log.warrantCode;
                     if (!hasPlan) return false;
+                    
                     const dateMatch = log.date >= filterStartDate && log.date <= filterEndDate;
                     return dateMatch;
                 });
@@ -652,92 +811,95 @@
                     {/* Left Column */}
                     <div className="lg:col-span-8 space-y-6">
                         {/* Add Stock Panel */}
-                        <div className="bg-slate-900 rounded-2xl shadow-xl border border-slate-800 p-5 relative overflow-hidden group/panel hover:border-slate-600 transition-colors">
+                        <div className="bg-[#111827] rounded-2xl shadow-xl border border-white/10 p-6 relative overflow-hidden group/panel hover:border-blue-500/30 transition-colors">
                             {/* ... Input Fields ... */}
                             <div className="absolute top-0 right-0 p-10 opacity-[0.03] group-hover/panel:opacity-[0.05] transition-opacity duration-700 pointer-events-none">
                                 <TrendingUp size={200} />
                             </div>
-                            <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-white relative z-10">
-                                <div className="w-1.5 h-6 bg-blue-500 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.8)]"></div>
+                            <h2 className="text-xl font-bold mb-5 flex items-center gap-3 text-white relative z-10">
+                                <div className="w-1.5 h-6 bg-gradient-to-b from-blue-400 to-indigo-600 rounded-full shadow-[0_0_15px_rgba(99,102,241,0.8)]"></div>
                                 新增觀察個股
                             </h2>
-                            <div className="space-y-4 relative z-10">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-5 relative z-10">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                     <div>
-                                        <label className="block text-xs font-bold text-slate-300 mb-1.5 ml-1">日期</label>
+                                        <label className="block text-xs font-bold text-slate-300 mb-1.5 ml-1 uppercase tracking-wide">日期</label>
                                         <div className="date-input-wrapper">
-                                            <input type="date" value={inputDate} onChange={(e) => setInputDate(e.target.value)} className="w-full px-4 py-2.5 bg-slate-950/80 border border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-white font-medium text-sm transition-all shadow-inner cursor-pointer hover:bg-slate-900"/>
+                                            <input type="date" value={inputDate} onChange={(e) => setInputDate(e.target.value)} className="w-full px-4 py-3 bg-[#1F2937] border border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-white font-medium text-sm transition-all shadow-inner cursor-pointer hover:bg-slate-800"/>
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-bold text-slate-300 mb-1.5 ml-1">股票代碼</label>
+                                        <label className="block text-xs font-bold text-slate-300 mb-1.5 ml-1 uppercase tracking-wide">股票代碼</label>
                                         <div className="relative">
-                                            <input id="stock-code-input" type="text" placeholder="例如 2330" value={inputCode} onChange={(e) => setInputCode(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAddStock()} className="w-full px-4 py-2.5 bg-slate-950/80 border border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-white font-bold text-sm font-mono tracking-wide shadow-inner hover:bg-slate-900"/>
+                                            <input id="stock-code-input" type="text" placeholder="例如 2330" value={inputCode} onChange={(e) => setInputCode(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAddStock()} className="w-full px-4 py-3 bg-[#1F2937] border border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-white font-bold text-sm font-mono tracking-wide shadow-inner hover:bg-slate-800 placeholder:text-slate-600"/>
                                             {inputName && (
-                                                <div className={`absolute right-3 top-1/2 -translate-y-1/2 text-xs px-2 py-1 font-bold rounded shadow-lg ${inputName === '無該檔股票資訊' ? 'bg-red-600 text-white animate-pulse' : 'bg-blue-600 text-white'}`}>
+                                                <div className={`absolute right-3 top-1/2 -translate-y-1/2 text-xs px-2.5 py-1 font-bold rounded shadow-lg flex items-center gap-1 ${inputName === '無該檔股票資訊' ? 'bg-red-600 text-white animate-pulse' : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border border-blue-400/50'}`}>
+                                                    {inputName === '無該檔股票資訊' && <AlertTriangle size={12} />}
                                                     {inputName}
                                                 </div>
                                             )}
                                         </div>
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="relative"><label className="block text-xs font-bold text-slate-400 mb-1.5 ml-1">名稱</label><input type="text" value={inputName} onChange={(e) => setInputName(e.target.value)} placeholder="--" className="w-full px-4 py-2 bg-slate-950/50 border border-slate-700 rounded-xl text-sm focus:border-blue-500 outline-none transition-colors shadow-inner font-medium text-white"/></div>
-                                    <div className="relative"><label className="block text-xs font-bold text-slate-400 mb-1.5 ml-1">產業</label><input type="text" value={inputIndustry} onChange={(e) => setInputIndustry(e.target.value)} placeholder="--" className="w-full px-4 py-2 bg-slate-950/50 border border-slate-700 rounded-xl text-white text-sm focus:border-blue-500 outline-none shadow-inner font-medium"/></div>
+                                <div className="grid grid-cols-2 gap-5">
+                                    <div className="relative"><label className="block text-xs font-bold text-slate-400 mb-1.5 ml-1 uppercase tracking-wide">名稱</label><input type="text" value={inputName} onChange={(e) => setInputName(e.target.value)} placeholder="--" className="w-full px-4 py-2.5 bg-[#1F2937]/80 border border-slate-700 rounded-xl text-sm focus:border-blue-500 outline-none transition-colors shadow-inner font-bold text-blue-200 placeholder:text-slate-700"/></div>
+                                    <div className="relative"><label className="block text-xs font-bold text-slate-400 mb-1.5 ml-1 uppercase tracking-wide">產業</label><input type="text" value={inputIndustry} onChange={(e) => setInputIndustry(e.target.value)} placeholder="--" className="w-full px-4 py-2.5 bg-[#1F2937]/80 border border-slate-700 rounded-xl text-slate-300 text-sm focus:border-blue-500 outline-none shadow-inner font-medium placeholder:text-slate-700"/></div>
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-300 mb-2 ml-1">選擇策略 (可複選)</label>
-                                    <div className="flex flex-wrap gap-2.5">
+                                    <label className="block text-xs font-bold text-slate-300 mb-2 ml-1 uppercase tracking-wide">選擇策略 (可複選)</label>
+                                    <div className="flex flex-wrap gap-3">
                                         {STRATEGIES.map((strat) => {
                                             const Icon = strat.icon;
                                             const isSelected = selectedStrategies.some(s => s.id === strat.id);
                                             return (
-                                                <button key={strat.id} onClick={() => toggleStrategy(strat)} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold border transition-all duration-200 relative overflow-hidden group ${isSelected ? `${strat.color} ring-2 ring-white/20 scale-105 z-10` : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-white'}`}>
+                                                <button key={strat.id} onClick={() => toggleStrategy(strat)} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold border transition-all duration-300 relative overflow-hidden group ${isSelected ? `${strat.color} ring-2 ring-white/20 scale-105 z-10 shadow-lg` : 'bg-slate-800/50 border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-white hover:border-slate-500'}`}>
                                                     {isSelected && <div className="absolute inset-0 bg-white/10 mix-blend-overlay"></div>}
                                                     <Icon size={16} className={`relative z-10 ${isSelected ? 'animate-pulse' : ''}`}/>
                                                     <span className="relative z-10">{strat.label}</span>
-                                                    {isSelected && <div className="absolute top-1 right-1 w-2 h-2 bg-white rounded-full"></div>}
                                                 </button>
                                             );
                                         })}
                                     </div>
                                 </div>
-                                <button onClick={handleAddStock} className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black tracking-wide py-3.5 rounded-xl shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2 border border-blue-400/30 text-base">
-                                    <Plus size={22} strokeWidth={3} /> 加入日誌
+                                <button onClick={handleAddStock} className="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-black tracking-widest py-4 rounded-xl shadow-lg shadow-indigo-500/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2 border border-white/10 text-base group">
+                                    <Plus size={22} strokeWidth={3} className="group-hover:rotate-90 transition-transform duration-300"/> 加入日誌
                                 </button>
                             </div>
                         </div>
 
                         {/* List */}
-                        <div className="bg-slate-900 rounded-2xl shadow-xl border border-slate-800 overflow-hidden min-h-[400px]">
+                        <div className="bg-[#111827] rounded-2xl shadow-2xl border border-white/10 overflow-hidden min-h-[400px]">
                             <div className="overflow-x-auto">
-                                <table className="w-full text-left border-collapse">
+                                <table className="w-full text-left border-collapse min-w-[400px]">
                                     <thead>
-                                        <tr className="bg-slate-950 text-slate-400 text-xs font-bold uppercase tracking-wider border-b border-slate-800">
-                                            <th className="py-4 px-6 w-32 cursor-pointer hover:text-blue-400 select-none" onClick={() => handleSort('date')}><div className="flex items-center gap-1">日期{sortConfig.key === 'date' && <ArrowUpDown size={12} className="text-blue-500" />}</div></th>
-                                            <th className="py-4 px-6 w-24 cursor-pointer hover:text-blue-400 select-none" onClick={() => handleSort('code')}><div className="flex items-center gap-1">代號{sortConfig.key === 'code' && <ArrowUpDown size={12} className="text-blue-500" />}</div></th>
-                                            <th className="py-4 px-6 w-32 cursor-pointer hover:text-blue-400 select-none" onClick={() => handleSort('name')}><div className="flex items-center gap-1">名稱{sortConfig.key === 'name' && <ArrowUpDown size={12} className="text-blue-500" />}</div></th>
+                                        <tr className="bg-slate-900/80 text-blue-300 text-xs font-bold uppercase tracking-wider border-b border-white/10">
+                                            <th className="py-4 px-6 w-32 cursor-pointer hover:text-white select-none transition-colors" onClick={() => handleSort('date')}><div className="flex items-center gap-1">日期{sortConfig.key === 'date' && <ArrowUpDown size={12} className="text-blue-500" />}</div></th>
+                                            <th className="py-4 px-6 w-24 cursor-pointer hover:text-white select-none transition-colors" onClick={() => handleSort('code')}><div className="flex items-center gap-1">代號{sortConfig.key === 'code' && <ArrowUpDown size={12} className="text-blue-500" />}</div></th>
+                                            <th className="py-4 px-6 w-32 cursor-pointer hover:text-white select-none transition-colors" onClick={() => handleSort('name')}><div className="flex items-center gap-1">名稱{sortConfig.key === 'name' && <ArrowUpDown size={12} className="text-blue-500" />}</div></th>
                                             <th className="py-4 px-6">符合策略</th>
                                             <th className="py-4 px-6 w-32 hidden md:table-cell">產業</th>
                                             <th className="py-4 px-6 w-24 text-right">操作</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-slate-800">
+                                    <tbody className="divide-y divide-white/5">
                                         {displayLogs.length === 0 ? (
-                                            <tr><td colSpan="10" className="py-20 text-center text-slate-500">無資料</td></tr>
+                                            <tr><td colSpan="10" className="py-24 text-center text-slate-600 flex flex-col items-center justify-center gap-4">
+                                                <div className="p-4 bg-slate-800/50 rounded-full"><Search size={32} className="text-slate-600"/></div>
+                                                <span>暫無資料</span>
+                                            </td></tr>
                                         ) : (
                                             displayLogs.map((group) => (
-                                                <tr key={`${group.date}-${group.code}`} className="hover:bg-slate-800/50 transition-colors group">
-                                                    <td className="py-4 px-6 text-slate-300 text-sm font-mono font-medium">{group.date}</td>
-                                                    <td className="py-4 px-6"><span className="font-mono text-blue-300 font-bold bg-blue-900/30 border border-blue-500/30 px-2 py-1 rounded cursor-pointer hover:bg-blue-800/50 transition-colors" onClick={() => { setActiveTab('plan'); setPlanCode(group.code); setPlanDate(group.date); if(group.entry) setPlanEntry(group.entry); if(group.stopLoss) setPlanStopLoss(group.stopLoss); if(group.takeProfit) setPlanTakeProfit(group.takeProfit); if(group.exit) setPlanExit(group.exit); setPlanReason(group.reason || ''); setPlanStatus(group.planStatus || 'planning'); setPlanInStock(group.inStock || false); }}>{group.code}</span></td>
-                                                    <td className="py-4 px-6 text-white font-black text-base tracking-wide whitespace-nowrap">{group.name}</td>
+                                                <tr key={`${group.date}-${group.code}`} className="hover:bg-white/5 transition-colors group">
+                                                    <td className="py-4 px-6 text-slate-400 text-sm font-mono font-medium">{group.date}</td>
+                                                    <td className="py-4 px-6"><span className="font-mono text-cyan-300 font-bold bg-cyan-950/30 border border-cyan-500/30 px-2 py-1 rounded cursor-pointer hover:bg-cyan-900/50 hover:border-cyan-400/50 transition-all hover:shadow-[0_0_10px_rgba(34,211,238,0.2)]" onClick={() => { setActiveTab('plan'); setPlanCode(group.code); setPlanDate(group.date); if(group.entry) setPlanEntry(group.entry); if(group.stopLoss) setPlanStopLoss(group.stopLoss); if(group.takeProfit) setPlanTakeProfit(group.takeProfit); if(group.exit) setPlanExit(group.exit); setPlanReason(group.reason || ''); setPlanStatus(group.planStatus || 'planning'); setPlanInStock(group.inStock || false); }}>{group.code}</span></td>
+                                                    <td className="py-4 px-6 text-white font-black text-lg tracking-wide whitespace-nowrap">{group.name}</td>
                                                     <td className="py-4 px-6">
                                                         <div className="flex flex-wrap gap-2">
                                                             {group.strategies.map(strat => {
                                                                 const stratDef = STRATEGIES.find(s => s.id === strat.strategyId) || { color: 'bg-slate-700', icon: Activity };
                                                                 const Icon = stratDef.icon;
                                                                 return (
-                                                                    <div key={strat.id} className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border shadow-lg backdrop-blur-sm ${stratDef.color} opacity-90 hover:opacity-100`}>
+                                                                    <div key={strat.id} className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border backdrop-blur-md ${stratDef.color} bg-opacity-90 transition-all hover:scale-105`}>
                                                                         <Icon size={12} strokeWidth={3} /> {stratDef.label || strat.strategyLabel}
                                                                         <button onClick={(e) => { e.stopPropagation(); handleDeleteLog(strat.id); }} className="ml-1 opacity-60 hover:opacity-100 hover:bg-black/20 rounded-full p-0.5"><X size={10} strokeWidth={3}/></button>
                                                                     </div>
@@ -745,11 +907,11 @@
                                                             })}
                                                         </div>
                                                     </td>
-                                                    <td className="py-4 px-6 text-slate-400 text-sm hidden md:table-cell">{group.industry}</td>
+                                                    <td className="py-4 px-6 text-slate-500 text-sm hidden md:table-cell font-medium">{group.industry}</td>
                                                     <td className="py-4 px-6 text-right">
                                                         <div className="flex items-center justify-end gap-3">
-                                                            <button onClick={(e) => { e.stopPropagation(); handleToggleTrackGroup(group.date, group.code, group.isTracked); }} className={`p-2 rounded-lg ${group.isTracked ? 'text-amber-400 bg-amber-400/20' : 'text-slate-500 hover:text-amber-400 hover:bg-slate-800'}`}><Star size={18} fill={group.isTracked ? "currentColor" : "none"} /></button>
-                                                            <button onClick={(e) => { e.stopPropagation(); handleDeleteGroup(group.date, group.code); }} className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg"><Trash2 size={18} /></button>
+                                                            <button onClick={(e) => { e.stopPropagation(); handleToggleTrackGroup(group.date, group.code, group.isTracked); }} className={`p-2 rounded-lg transition-all ${group.isTracked ? 'text-amber-400 bg-amber-900/20 shadow-[0_0_10px_rgba(251,191,36,0.2)]' : 'text-slate-600 hover:text-amber-400 hover:bg-slate-800'}`}><Star size={18} fill={group.isTracked ? "currentColor" : "none"} /></button>
+                                                            <button onClick={(e) => { e.stopPropagation(); handleDeleteGroup(group.date, group.code); }} className="p-2 text-slate-600 hover:text-red-400 hover:bg-red-900/10 rounded-lg transition-all"><Trash2 size={18} /></button>
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -764,10 +926,10 @@
                     {/* Right Column: Sidebar */}
                     <div className="lg:col-span-4 space-y-6 sticky top-24">
                         {/* Stats */}
-                        <div className="bg-slate-900 rounded-2xl shadow-xl border border-slate-800 p-5">
-                            <h3 className="text-sm font-bold text-slate-300 uppercase tracking-wider mb-4 flex items-center justify-between">
-                                <div className="flex items-center gap-2"><PieChart size={18} className="text-blue-400"/>本期策略統計</div>
-                                {filterStrategy.length > 0 && <button onClick={() => setFilterStrategy([])} className="flex items-center gap-1 text-xs font-bold text-blue-400 bg-blue-900/30 px-2 py-1 rounded-lg border border-blue-800"><RefreshCcw size={12} />清除篩選</button>}
+                        <div className="bg-[#111827] rounded-2xl shadow-xl border border-white/10 p-6">
+                            <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center justify-between">
+                                <div className="flex items-center gap-2"><PieChart size={18} className="text-blue-500"/>本期策略統計</div>
+                                {filterStrategy.length > 0 && <button onClick={() => setFilterStrategy([])} className="flex items-center gap-1 text-xs font-bold text-cyan-400 bg-cyan-950/30 px-2.5 py-1.5 rounded-lg border border-cyan-800 hover:bg-cyan-900/50 transition-colors"><RefreshCcw size={12} />清除篩選</button>}
                             </h3>
                             <div className="grid grid-cols-2 gap-3">
                                 {STRATEGIES.map(strat => {
@@ -775,9 +937,9 @@
                                     const isSelected = filterStrategy.includes(strat.label);
                                     if (count === 0 && !isSelected) return null;
                                     return (
-                                        <div key={strat.id} onClick={() => toggleFilterStrategy(strat.label)} className={`flex items-center justify-between p-3 rounded-lg border-2 transition-all cursor-pointer ${isSelected ? 'bg-blue-900/30 border-blue-500' : 'bg-slate-950 border-slate-800 hover:border-slate-600'}`}>
-                                            <div className="flex items-center gap-2 text-xs font-bold text-white"><div className={`w-2 h-2 rounded-full ${strat.color.split(' ')[0]}`}></div>{strat.label}</div>
-                                            <span className="font-mono font-black text-lg text-white">{count}</span>
+                                        <div key={strat.id} onClick={() => toggleFilterStrategy(strat.label)} className={`flex items-center justify-between p-3.5 rounded-xl border transition-all cursor-pointer group relative overflow-hidden ${isSelected ? 'bg-blue-900/20 border-blue-500/50 shadow-[0_0_15px_rgba(59,130,246,0.3)]' : 'bg-[#1F2937] border-white/5 hover:border-slate-600 hover:bg-slate-800'}`}>
+                                            <div className="flex items-center gap-2 text-xs font-bold text-slate-200 z-10"><div className={`w-2 h-2 rounded-full shadow-[0_0_8px] ${strat.color.split(' ')[0]}`}></div>{strat.label}</div>
+                                            <span className={`font-mono font-black text-xl z-10 ${isSelected ? 'text-blue-400' : 'text-slate-500 group-hover:text-white transition-colors'}`}>{count}</span>
                                         </div>
                                     )
                                 })}
@@ -785,23 +947,23 @@
                         </div>
 
                         {/* Display Settings */}
-                        <div className="bg-slate-900 rounded-2xl shadow-xl border border-slate-800 p-5">
-                            <h3 className="text-sm font-bold text-slate-300 uppercase tracking-wider mb-4 flex items-center gap-2"><Filter size={18} className="text-blue-400" />顯示設定</h3>
+                        <div className="bg-[#111827] rounded-2xl shadow-xl border border-white/10 p-6">
+                            <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2"><Filter size={18} className="text-blue-500" />顯示設定</h3>
                             <div className="space-y-4">
-                                <div className="flex items-center justify-between bg-slate-950 p-2 rounded-xl border border-slate-700">
-                                    <button onClick={() => adjustDate(setFilterStartDate, filterStartDate, -1)} className="p-2 hover:bg-slate-800 rounded-lg text-slate-400"><ArrowDownCircle size={18} className="rotate-90" /></button>
-                                    <div className="date-input-wrapper"><input type="date" value={filterStartDate} onChange={(e) => setFilterStartDate(e.target.value)} className="bg-transparent border-none text-sm font-bold text-center text-white w-28 focus:ring-0 cursor-pointer"/></div>
-                                    <span className="text-slate-500 text-xs font-bold">至</span>
-                                    <div className="date-input-wrapper"><input type="date" value={filterEndDate} onChange={(e) => setFilterEndDate(e.target.value)} className="bg-transparent border-none text-sm font-bold text-center text-white w-28 focus:ring-0 cursor-pointer"/></div>
-                                    <button onClick={() => adjustDate(setFilterEndDate, filterEndDate, 1)} className="p-2 hover:bg-slate-800 rounded-lg text-slate-400"><ArrowDownCircle size={18} className="-rotate-90" /></button>
+                                <div className="flex items-center justify-between bg-[#1F2937] p-2.5 rounded-xl border border-slate-700">
+                                    <button onClick={() => adjustDate(setFilterStartDate, filterStartDate, -1)} className="p-2 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white transition-colors"><ArrowDownCircle size={18} className="rotate-90" /></button>
+                                    <div className="date-input-wrapper"><input type="date" value={filterStartDate} onChange={(e) => setFilterStartDate(e.target.value)} className="bg-transparent border-none text-sm font-bold text-center text-white w-28 focus:ring-0 cursor-pointer hover:text-blue-400 transition-colors"/></div>
+                                    <span className="text-slate-600 text-xs font-bold">至</span>
+                                    <div className="date-input-wrapper"><input type="date" value={filterEndDate} onChange={(e) => setFilterEndDate(e.target.value)} className="bg-transparent border-none text-sm font-bold text-center text-white w-28 focus:ring-0 cursor-pointer hover:text-blue-400 transition-colors"/></div>
+                                    <button onClick={() => adjustDate(setFilterEndDate, filterEndDate, 1)} className="p-2 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white transition-colors"><ArrowDownCircle size={18} className="-rotate-90" /></button>
                                 </div>
                                 <div className="grid grid-cols-2 gap-3">
-                                    <button onClick={() => setShowTrackedOnly(!showTrackedOnly)} className={`flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all border ${showTrackedOnly ? 'bg-amber-900/40 border-amber-500 text-amber-400' : 'bg-slate-950 border-slate-700 text-slate-400'}`}><Star size={16} fill={showTrackedOnly ? "currentColor" : "none"} />只看追蹤</button>
-                                    <button onClick={handleCopy} className="flex items-center justify-center gap-2 py-3 bg-emerald-900/30 hover:bg-emerald-900/50 text-emerald-400 border border-emerald-500/50 hover:border-emerald-400 rounded-xl text-sm font-bold transition-all"><Copy size={16} />{filterStrategy.length > 0 ? "複製所選" : "複製結果"}</button>
+                                    <button onClick={() => setShowTrackedOnly(!showTrackedOnly)} className={`flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all border ${showTrackedOnly ? 'bg-amber-500 text-white border-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.5)]' : 'bg-[#1F2937] border-slate-700 text-slate-400 hover:bg-slate-800'}`}><Star size={16} fill={showTrackedOnly ? "currentColor" : "none"} />只看追蹤</button>
+                                    <button onClick={handleCopy} className="flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white border border-emerald-500/50 rounded-xl text-sm font-bold transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)]"><Copy size={16} />{filterStrategy.length > 0 ? "複製所選" : "複製結果"}</button>
                                 </div>
-                                <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-800">
-                                    <button onClick={handleExport} className="flex items-center justify-center gap-2 py-3 bg-blue-900/20 text-blue-400 border border-blue-500/30 rounded-xl text-xs font-bold"><Download size={14} />匯出紀錄</button>
-                                    <button onClick={handleImportClick} className="flex items-center justify-center gap-2 py-3 bg-slate-800 text-slate-300 border border-slate-600 rounded-xl text-xs font-bold"><Upload size={14} />匯入紀錄</button>
+                                <div className="grid grid-cols-2 gap-3 pt-3 border-t border-white/10">
+                                    <button onClick={handleExport} className="flex items-center justify-center gap-2 py-3 bg-blue-900/20 hover:bg-blue-900/40 text-blue-400 border border-blue-500/30 rounded-xl text-xs font-bold transition-all"><Download size={14} />匯出紀錄</button>
+                                    <button onClick={handleImportClick} className="flex items-center justify-center gap-2 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-600 rounded-xl text-xs font-bold transition-all"><Upload size={14} />匯入紀錄</button>
                                     <input type="file" ref={fileInputRef} onChange={handleImport} accept=".xlsx, .xls" className="hidden" />
                                 </div>
                             </div>
@@ -812,9 +974,6 @@
 
             // Renders Trade Plan Tab
             const renderPlanView = () => {
-                // Filter logs that have plans
-                const logsWithPlans = logs.filter(l => l.entry || l.stopLoss || l.takeProfit || l.strategyId === 'custom_plan');
-                
                 // Helper to calc risk % for list items
                 const calcRiskReward = (entry, sl, tp) => {
                     if(!entry) return null;
@@ -826,39 +985,66 @@
 
                 return (
                 <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                    {/* Left: Editor */}
+                    {/* Left: Editor & Stats */}
                     <div className="lg:col-span-4 space-y-6">
-                        <div ref={editorTopRef} className="bg-slate-900 rounded-2xl shadow-xl border border-slate-800 p-5 sticky top-24">
+                        <div ref={editorTopRef} className="bg-[#111827] rounded-2xl shadow-xl border border-white/10 p-6">
                             <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                                 <PenTool size={20} className="text-emerald-400" />
                                 交易規劃編輯器
                             </h3>
-                            <div className="space-y-4 bg-slate-950 p-4 rounded-xl border border-slate-800">
+                            <div className="space-y-4 bg-[#1F2937]/50 p-4 rounded-xl border border-slate-700/50">
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
-                                        <label className="text-[10px] text-slate-500 font-bold mb-1 block pl-1">日期</label>
+                                        <label className="text-[10px] text-slate-400 font-bold mb-1 block pl-1 uppercase">日期</label>
                                         <div className="date-input-wrapper">
                                             <input type="date" value={planDate} onChange={(e) => setPlanDate(e.target.value)} className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:border-blue-500 outline-none font-mono font-bold cursor-pointer"/>
                                         </div>
                                     </div>
                                     <div className="relative">
-                                        <label className="text-[10px] text-slate-500 font-bold mb-1 block pl-1">股票代號</label>
+                                        <label className="text-[10px] text-slate-400 font-bold mb-1 block pl-1 uppercase">股票代號</label>
                                         <input type="text" value={planCode} onChange={(e) => setPlanCode(e.target.value)} placeholder="代號" className="w-full pl-3 pr-2 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:border-blue-500 outline-none font-mono font-bold"/>
                                         {planName && <div className={`absolute right-1 top-[26px] text-[10px] px-1.5 py-0.5 rounded font-bold ${planName === '無資訊' ? 'bg-red-900/50 text-red-400' : 'bg-blue-900/50 text-blue-300'}`}>{planName}</div>}
                                     </div>
                                 </div>
                                 <div className="space-y-3">
-                                    <div><label className="text-[10px] text-slate-500 font-bold mb-1 block pl-1">進場價 (Entry)</label><div className="relative"><input type="number" value={planEntry} onChange={handleEntryChange} className="w-full pl-9 pr-2 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:border-blue-500 outline-none font-mono font-bold"/><div className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-slate-700 flex items-center justify-center text-[10px] text-slate-300 font-bold">進</div></div></div>
+                                    <div><label className="text-[10px] text-slate-400 font-bold mb-1 block pl-1">進場價 (Entry)</label><div className="relative"><input type="number" value={planEntry} onChange={handleEntryChange} className="w-full pl-9 pr-2 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:border-blue-500 outline-none font-mono font-bold"/><div className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-slate-700 flex items-center justify-center text-[10px] text-slate-300 font-bold">進</div></div></div>
                                     <div><label className="text-[10px] text-green-500/80 font-bold mb-1 block pl-1">-5%停損 (Stop Loss)</label><div className="relative"><input type="number" value={planStopLoss} onChange={(e) => setPlanStopLoss(e.target.value)} className="w-full pl-9 pr-2 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-green-400 text-sm focus:border-green-500 outline-none font-mono font-bold"/><div className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-green-900/50 flex items-center justify-center text-[10px] text-green-400 font-bold">損</div></div></div>
                                     <div><label className="text-[10px] text-red-400/80 font-bold mb-1 block pl-1">移動停利價 (Trailing)</label><div className="relative"><input type="number" value={planTakeProfit} onChange={(e) => setPlanTakeProfit(e.target.value)} className="w-full pl-9 pr-2 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-red-400 text-sm focus:border-red-500 outline-none font-mono font-bold"/><div className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-red-900/50 flex items-center justify-center text-[10px] text-red-400 font-bold">利</div></div></div>
-                                    <div><label className="text-[10px] text-slate-500 font-bold mb-1 block pl-1">出場價 (Exit)</label><div className="relative"><input type="number" value={planExit} onChange={(e) => setPlanExit(e.target.value)} className="w-full pl-9 pr-2 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-300 text-sm focus:border-blue-500 outline-none font-mono font-bold"/><div className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-slate-700 flex items-center justify-center text-[10px] text-slate-300 font-bold">出</div></div></div>
+                                    
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="text-[10px] text-slate-400 font-bold mb-1 block pl-1">出場價 (Exit)</label>
+                                            <div className="relative"><input type="number" value={planExit} onChange={(e) => setPlanExit(e.target.value)} className="w-full pl-9 pr-2 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-300 text-sm focus:border-blue-500 outline-none font-mono font-bold"/><div className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-slate-700 flex items-center justify-center text-[10px] text-slate-300 font-bold">出</div></div>
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] text-slate-400 font-bold mb-1 block pl-1">股票張數</label>
+                                            <div className="relative"><input type="number" value={planQty} onChange={(e) => setPlanQty(e.target.value)} className="w-full pl-9 pr-2 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-amber-300 text-sm focus:border-amber-500 outline-none font-mono font-bold"/><div className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-amber-900/50 flex items-center justify-center text-[10px] text-amber-500 font-bold">張</div></div>
+                                        </div>
+                                    </div>
+
+                                    {/* Warrant Section */}
+                                    <div className="border-t border-slate-700 pt-3 mt-3">
+                                        <div className="text-xs font-bold text-slate-400 mb-2 flex items-center gap-1"><Zap size={12} className="text-yellow-400" /> 權證交易專區 (選填)</div>
+                                        <div className="space-y-3 p-3 bg-slate-950/30 rounded-lg border border-slate-800">
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <input type="text" value={planWarrantCode} onChange={(e) => setPlanWarrantCode(e.target.value)} placeholder="權證代號" className="px-2 py-1.5 bg-slate-900 border border-slate-700 rounded text-xs text-white outline-none"/>
+                                                <input type="text" value={planWarrantNote} onChange={(e) => setPlanWarrantNote(e.target.value)} placeholder="標的" className="px-2 py-1.5 bg-slate-900 border border-slate-700 rounded text-xs text-white outline-none"/>
+                                            </div>
+                                            <div className="grid grid-cols-3 gap-2">
+                                                <input type="number" value={planWarrantEntry} onChange={(e) => setPlanWarrantEntry(e.target.value)} placeholder="買進" className="px-2 py-1.5 bg-slate-900 border border-slate-700 rounded text-xs text-white outline-none"/>
+                                                <input type="number" value={planWarrantExit} onChange={(e) => setPlanWarrantExit(e.target.value)} placeholder="賣出" className="px-2 py-1.5 bg-slate-900 border border-slate-700 rounded text-xs text-white outline-none"/>
+                                                <input type="number" value={planWarrantQty} onChange={(e) => setPlanWarrantQty(e.target.value)} placeholder="張數" className="px-2 py-1.5 bg-slate-900 border border-slate-700 rounded text-xs text-white outline-none"/>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <div>
-                                        <label className="text-[10px] text-slate-500 font-bold mb-1 block pl-1">進場理由</label>
+                                        <label className="text-[10px] text-slate-400 font-bold mb-1 block pl-1">進場理由</label>
                                         <textarea 
                                             value={planReason}
                                             onChange={(e) => setPlanReason(e.target.value)}
-                                            className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:border-blue-500 outline-none resize-none"
-                                            rows={3}
+                                            className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:border-blue-500 outline-none resize-none placeholder:text-slate-600"
+                                            rows={2}
                                             placeholder="紀錄進場原因..."
                                         />
                                     </div>
@@ -874,90 +1060,216 @@
                                     </div>
                                 </div>
                                 {(planRisk || planReward) && (
-                                    <div className="pt-3 border-t border-slate-800 grid grid-cols-2 gap-2 text-xs">
-                                        {planRisk && <div className="flex justify-between items-center text-green-400 bg-green-900/10 p-1.5 rounded"><span>風險</span><span className="font-mono font-bold">-{Math.abs(planRisk.val).toFixed(1)} ({Math.abs(planRisk.percent)}%)</span></div>}
-                                        {planReward && <div className="flex justify-between items-center text-red-400 bg-red-900/10 p-1.5 rounded"><span>獲利</span><span className="font-mono font-bold">+{Math.abs(planReward.val).toFixed(1)} ({Math.abs(planReward.percent)}%)</span></div>}
-                                        {rrRatio && <div className="col-span-2 flex justify-between items-center bg-blue-900/20 border border-blue-500/20 px-2 py-1.5 rounded text-blue-300 mt-1"><span>風報比 (R:R)</span><span className="font-mono font-bold text-sm">1 : {Math.abs(rrRatio)}</span></div>}
+                                    <div className="pt-3 border-t border-slate-700 grid grid-cols-2 gap-2 text-xs">
+                                        {planRisk && <div className="flex justify-between items-center text-green-400 bg-green-900/10 p-1.5 rounded border border-green-900/30"><span>風險</span><span className="font-mono font-bold">-{Math.abs(planRisk.val).toFixed(1)} ({Math.abs(planRisk.percent)}%)</span></div>}
+                                        {planReward && <div className="flex justify-between items-center text-red-400 bg-red-900/10 p-1.5 rounded border border-red-900/30"><span>獲利</span><span className="font-mono font-bold">+{Math.abs(planReward.val).toFixed(1)} ({Math.abs(planReward.percent)}%)</span></div>}
+                                        {rrRatio && <div className="col-span-2 flex justify-between items-center bg-blue-900/20 border border-blue-500/30 px-2 py-2 rounded text-blue-300 mt-1 shadow-inner"><span>風報比 (R:R)</span><span className="font-mono font-bold text-sm">1 : {Math.abs(rrRatio)}</span></div>}
                                     </div>
                                 )}
-                                <button onClick={handleSavePlan} className="w-full mt-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-emerald-900/20 transition-all flex items-center justify-center gap-2"><Save size={18} />儲存規劃</button>
+                                <button onClick={handleSavePlan} className="w-full mt-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-emerald-900/20 transition-all flex items-center justify-center gap-2 border border-emerald-500/30"><Save size={18} />儲存規劃</button>
+                            </div>
+                        </div>
+
+                        {/* Trade Performance Stats */}
+                        <div className="bg-[#111827] rounded-2xl shadow-xl border border-white/10 p-6">
+                            <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2"><Trophy size={18} className="text-amber-400" />績效統計 (含權證)</h3>
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between bg-[#1F2937] p-2.5 rounded-xl border border-slate-700">
+                                    <button onClick={() => adjustDate(setStatsStartDate, statsStartDate, -1)} className="p-2 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white transition-colors"><ArrowDownCircle size={18} className="rotate-90" /></button>
+                                    <div className="date-input-wrapper"><input type="date" value={statsStartDate} onChange={(e) => setStatsStartDate(e.target.value)} className="bg-transparent border-none text-sm font-bold text-center text-white w-28 focus:ring-0 cursor-pointer hover:text-blue-400 transition-colors"/></div>
+                                    <span className="text-slate-600 text-xs font-bold">至</span>
+                                    <div className="date-input-wrapper"><input type="date" value={statsEndDate} onChange={(e) => setStatsEndDate(e.target.value)} className="bg-transparent border-none text-sm font-bold text-center text-white w-28 focus:ring-0 cursor-pointer hover:text-blue-400 transition-colors"/></div>
+                                    <button onClick={() => adjustDate(setStatsEndDate, statsEndDate, 1)} className="p-2 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white transition-colors"><ArrowDownCircle size={18} className="-rotate-90" /></button>
+                                </div>
+                                
+                                {/* New Total Profit Card */}
+                                <div className="bg-gradient-to-br from-[#1F2937] to-slate-900 p-4 rounded-xl border border-slate-700 relative overflow-hidden group">
+                                     <div className={`absolute top-0 right-0 p-8 opacity-10 ${planStats.totalProfitAmount >= 0 ? 'text-red-500' : 'text-green-500'}`}><Coins size={80} /></div>
+                                     <div className="relative z-10">
+                                         <div className="text-xs text-slate-400 font-bold uppercase mb-2">總獲利金額 (已平倉)</div>
+                                         <div className={`text-3xl font-black font-mono tracking-tight ${planStats.totalProfitAmount >= 0 ? 'text-red-400' : 'text-green-400'}`}>
+                                            <span className="text-sm mr-1">$</span>{planStats.totalProfitAmount.toLocaleString()}
+                                         </div>
+                                     </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-2 text-center">
+                                    <div className="bg-[#1F2937] p-3 rounded-xl border border-slate-700">
+                                        <div className="text-[10px] text-slate-400 font-bold uppercase mb-1">已平倉交易</div>
+                                        <div className="text-xl font-black text-white">{planStats.closedTrades} <span className="text-xs text-slate-500 font-normal">/ {planStats.totalTrades}</span></div>
+                                    </div>
+                                    <div className="bg-[#1F2937] p-3 rounded-xl border border-slate-700">
+                                        <div className="text-[10px] text-slate-400 font-bold uppercase mb-1">勝率</div>
+                                        <div className="text-xl font-black text-amber-400">{planStats.winRate}%</div>
+                                    </div>
+                                </div>
+                                <div className="bg-[#1F2937] p-4 rounded-xl border border-slate-700 relative overflow-hidden">
+                                     <div className="relative z-10">
+                                         <div className="text-xs text-slate-400 font-bold uppercase mb-2">累積 ROI (股票)</div>
+                                         <div className={`text-2xl font-black font-mono tracking-tight ${parseFloat(planStats.totalROI) >= 0 ? 'text-red-400' : 'text-green-400'}`}>
+                                            {parseFloat(planStats.totalROI) > 0 ? '+' : ''}{planStats.totalROI}%
+                                         </div>
+                                         <div className="text-[10px] text-slate-500 mt-1 font-medium">平均每筆: {planStats.avgROI}%</div>
+                                     </div>
+                                </div>
+
+                                {/* Integrated Data Management Buttons */}
+                                <div className="pt-4 mt-2 border-t border-slate-700/50">
+                                     <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">資料管理</h4>
+                                     <div className="grid grid-cols-2 gap-3">
+                                        <button onClick={handleExport} className="flex items-center justify-center gap-2 py-3 bg-blue-900/20 hover:bg-blue-900/40 text-blue-400 border border-blue-500/30 rounded-xl text-xs font-bold transition-all"><Download size={14} />匯出紀錄</button>
+                                        <button onClick={handleImportClick} className="flex items-center justify-center gap-2 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-600 rounded-xl text-xs font-bold transition-all"><Upload size={14} />匯入紀錄</button>
+                                     </div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     {/* Right: List */}
-                    <div className="lg:col-span-8 bg-slate-900 rounded-2xl shadow-xl border border-slate-800 overflow-hidden min-h-[600px]">
-                         <div className="p-4 border-b border-slate-800 flex justify-between items-center">
-                            <h3 className="font-bold text-white flex items-center gap-2"><ClipboardList size={20} className="text-blue-400"/> 交易規劃紀錄表</h3>
+                    <div className="lg:col-span-8 bg-[#111827] rounded-2xl shadow-xl border border-white/10 overflow-hidden min-h-[600px] overflow-x-auto">
+                         <div className="p-5 border-b border-white/10 flex justify-between items-center bg-slate-900/50 min-w-[800px]">
+                            <div className="flex items-center gap-4">
+                                <h3 className="font-bold text-white flex items-center gap-2"><ClipboardList size={20} className="text-blue-400"/> 交易規劃紀錄表</h3>
+                                <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs">
+                                    <CalendarRange size={12} className="text-slate-400"/>
+                                    <span className="text-slate-300">{filterStartDate} ~ {filterEndDate}</span>
+                                </div>
+                            </div>
+                            <div className="flex gap-2">
+                                <button onClick={() => adjustDate(setFilterStartDate, filterStartDate, -30)} className="p-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 rounded border border-slate-600">近30日</button>
+                            </div>
                          </div>
                          <div className="overflow-x-auto">
                             <table className="w-full text-left border-collapse">
                                 <thead>
-                                    <tr className="bg-slate-950 text-slate-400 text-xs font-bold uppercase tracking-wider border-b border-slate-800">
-                                        <th className="py-4 px-6 w-24">日期</th>
-                                        <th className="py-4 px-4 w-20">代號</th>
-                                        <th className="py-4 px-4 w-28">名稱</th>
-                                        <th className="py-4 px-4">進場理由</th>
-                                        <th className="py-4 px-4 text-center">進場</th>
-                                        <th className="py-4 px-4 text-center">-5%停損</th>
-                                        <th className="py-4 px-4 text-center">移動停利價</th>
-                                        <th className="py-4 px-4 text-center text-red-400">預期獲利%</th> 
-                                        <th className="py-4 px-4 w-32">風報比</th>
-                                        <th className="py-4 px-4 w-20 text-center">庫存中</th>
-                                        <th className="py-4 px-4 w-20 text-right">編輯</th>
+                                    <tr className="bg-slate-950/80 text-blue-300 text-xs font-bold uppercase tracking-wider border-b border-white/10">
+                                        <th className="py-3 px-1 w-20">日期</th>
+                                        <th className="py-3 px-1 w-16">代號</th>
+                                        <th className="py-3 px-1 w-20">名稱</th>
+                                        <th className="py-3 px-1 text-center bg-slate-900/50 w-24">股票進出</th>
+                                        <th className="py-3 px-1 text-center bg-slate-900/50 w-12">張</th>
+                                        <th className="py-3 px-1 text-center bg-slate-900/50 w-20">股損益</th>
+                                        
+                                        <th className="py-3 px-1 text-center bg-yellow-900/10 border-l border-white/5 w-24">權證代號</th>
+                                        <th className="py-3 px-1 text-center bg-yellow-900/10 w-24">權證進出</th>
+                                        <th className="py-3 px-1 text-center bg-yellow-900/10 w-12">張</th>
+                                        <th className="py-3 px-1 text-center bg-yellow-900/10 w-20">權損益</th>
+
+                                        <th className="py-3 px-1 text-center bg-slate-900/20 w-24 border-l border-white/10 font-black text-white">單筆總益</th>
+                                        
+                                        <th className="py-3 px-1 w-14 text-center">庫存</th>
+                                        <th className="py-3 px-1 w-12 text-right">編輯</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-800">
+                                <tbody className="divide-y divide-white/5">
                                     {logsWithPlans.length === 0 ? (
-                                        <tr><td colSpan="11" className="py-20 text-center text-slate-500">尚無規劃紀錄</td></tr>
+                                        <tr><td colSpan="13" className="py-24 text-center text-slate-600">
+                                            <div className="flex flex-col items-center gap-3">
+                                                <div className="p-3 bg-slate-800/50 rounded-full"><FileText size={28} className="text-slate-700"/></div>
+                                                <span>在此區間無規劃紀錄</span>
+                                            </div>
+                                        </td></tr>
                                     ) : (
                                         logsWithPlans.map(log => {
-                                            const metrics = calcRiskReward(log.entry, log.stopLoss, log.takeProfit);
+                                            // Stock Calc
+                                            let stockProfit = 0;
+                                            if (log.entry && log.exit) {
+                                                const e = parseFloat(log.entry);
+                                                const x = parseFloat(log.exit);
+                                                const q = parseFloat(log.qty || 1);
+                                                const sl = log.stopLoss ? parseFloat(log.stopLoss) : 0;
+                                                const isShort = sl > e;
+                                                // Assuming 1000 shares per lot
+                                                stockProfit = isShort ? (e - x) * 1000 * q : (x - e) * 1000 * q;
+                                            }
+
+                                            // Warrant Calc
+                                            let warrantProfit = 0;
+                                            if (log.warrantEntry && log.warrantExit && log.warrantQty) {
+                                                const we = parseFloat(log.warrantEntry);
+                                                const wx = parseFloat(log.warrantExit);
+                                                const wq = parseFloat(log.warrantQty);
+                                                // Assuming 1000 units per lot for Warrant
+                                                warrantProfit = (wx - we) * 1000 * wq;
+                                            }
+
+                                            const totalRowProfit = stockProfit + warrantProfit;
+                                            const hasProfitData = (log.entry && log.exit) || (log.warrantEntry && log.warrantExit);
+
                                             return (
-                                                <tr key={log.id} className="hover:bg-slate-800/50 transition-colors">
-                                                    <td className="py-4 px-6 text-slate-400 text-sm font-mono">{log.date}</td>
-                                                    <td className="py-4 px-4 font-mono text-blue-300 font-bold">{log.code}</td>
-                                                    <td className="py-4 px-4 text-white font-bold">{log.name}</td>
-                                                    <td className="py-4 px-4 text-slate-300 text-sm max-w-[150px] truncate" title={log.reason}>{log.reason || '-'}</td>
-                                                    <td className="py-4 px-4 text-center font-mono font-bold text-white">{log.entry || '-'}</td>
-                                                    <td className="py-4 px-4 text-center font-mono font-bold text-green-400">{log.stopLoss || '-'}</td>
-                                                    <td className="py-4 px-4 text-center font-mono font-bold text-red-400">{log.takeProfit || '-'}</td>
-                                                    <td className="py-4 px-4 text-center font-mono font-bold text-red-400">
-                                                        {metrics && metrics.p > 0 ? `+${metrics.p}%` : '-'}
+                                                <tr key={log.id} className="hover:bg-white/5 transition-colors text-xs">
+                                                    <td className="py-3 px-1 text-slate-400 font-mono">{log.date}</td>
+                                                    <td className="py-3 px-1 font-mono text-cyan-300 font-bold">{log.code}</td>
+                                                    <td className="py-3 px-1 text-white font-bold max-w-[80px] truncate" title={log.name}>{log.name}</td>
+                                                    
+                                                    {/* Stock Columns */}
+                                                    <td className="py-3 px-1 text-center bg-slate-900/30">
+                                                        <div className="flex flex-col gap-0.5">
+                                                            <span className="text-[10px] text-slate-400">進: {log.entry || '-'}</span>
+                                                            <span className="text-[10px] text-slate-300">出: {log.exit || '-'}</span>
+                                                        </div>
                                                     </td>
-                                                    <td className="py-4 px-4">
-                                                        {metrics && metrics.rr > 0 ? (
-                                                            <div className="flex flex-col gap-1">
-                                                                <div className="flex justify-between text-[10px] font-mono text-slate-400">
-                                                                    <span>R:{metrics.r}%</span>
-                                                                    <span>P:{metrics.p}%</span>
-                                                                </div>
-                                                                <div className="w-full h-1.5 bg-slate-700 rounded-full overflow-hidden flex">
-                                                                    <div style={{width: '40%'}} className="h-full bg-green-500"></div>
-                                                                    <div style={{width: '60%'}} className="h-full bg-red-500"></div>
-                                                                </div>
-                                                                <div className="text-center text-xs font-bold text-blue-300">1 : {metrics.rr}</div>
+                                                    <td className="py-3 px-1 text-center font-mono font-bold text-amber-300 bg-slate-900/30">{log.qty || '1'}</td>
+                                                    <td className="py-3 px-1 text-center bg-slate-900/30">
+                                                        {stockProfit !== 0 ? (
+                                                            <span className={`font-mono font-bold ${stockProfit >= 0 ? 'text-red-400' : 'text-green-400'}`}>
+                                                                {stockProfit.toLocaleString()}
+                                                            </span>
+                                                        ) : '-'}
+                                                    </td>
+
+                                                    {/* Warrant Columns */}
+                                                    <td className="py-3 px-1 text-center font-mono text-yellow-500 bg-yellow-900/5 border-l border-white/5">
+                                                        {log.warrantCode ? (
+                                                            <div className="flex flex-col">
+                                                                <span>{log.warrantCode}</span>
+                                                                {log.warrantNote && <span className="text-[9px] text-slate-500 truncate max-w-[60px]">{log.warrantNote}</span>}
                                                             </div>
-                                                        ) : <span className="text-slate-600 text-xs">-</span>}
+                                                        ) : '-'}
                                                     </td>
-                                                    <td className="py-4 px-4 text-center">
+                                                    <td className="py-3 px-1 text-center bg-yellow-900/5">
+                                                         {log.warrantCode ? (
+                                                            <div className="flex flex-col gap-0.5">
+                                                                <span className="text-[10px] text-slate-400">進: {log.warrantEntry || '-'}</span>
+                                                                <span className="text-[10px] text-slate-300">出: {log.warrantExit || '-'}</span>
+                                                            </div>
+                                                        ) : '-'}
+                                                    </td>
+                                                    <td className="py-3 px-1 text-center font-mono text-slate-300 bg-yellow-900/5">{log.warrantQty || '-'}</td>
+                                                    <td className="py-3 px-1 text-center bg-yellow-900/5">
+                                                        {warrantProfit !== 0 ? (
+                                                            <span className={`font-mono font-bold ${warrantProfit >= 0 ? 'text-red-400' : 'text-green-400'}`}>
+                                                                {warrantProfit.toLocaleString()}
+                                                            </span>
+                                                        ) : '-'}
+                                                    </td>
+
+                                                    {/* Total Row Profit */}
+                                                    <td className="py-3 px-1 text-center bg-slate-900/20 border-l border-white/10">
+                                                        {hasProfitData ? (
+                                                            <span className={`font-mono font-black text-sm ${totalRowProfit >= 0 ? 'text-red-400' : 'text-green-400'}`}>
+                                                                {totalRowProfit.toLocaleString()}
+                                                            </span>
+                                                        ) : '-'}
+                                                    </td>
+
+                                                    <td className="py-3 px-1 text-center">
                                                         <button 
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                // Toggle logic
                                                                 const newLogs = logs.map(l => l.id === log.id ? { ...l, inStock: !l.inStock } : l);
                                                                 setLogs(newLogs);
                                                             }}
-                                                            className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-bold transition-all cursor-pointer ${
+                                                            className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold transition-all cursor-pointer ${
                                                                 log.inStock 
-                                                                ? 'bg-emerald-900/50 text-emerald-400 border border-emerald-700/50 hover:bg-emerald-900/80' 
-                                                                : 'text-slate-600 hover:text-slate-400 border border-transparent hover:border-slate-700'
+                                                                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50' 
+                                                                : 'text-slate-600 border border-slate-800'
                                                             }`}
                                                         >
-                                                            {log.inStock ? '持倉' : '-'}
+                                                            {log.inStock ? '持倉' : '空手'}
                                                         </button>
                                                     </td>
-                                                    <td className="py-4 px-4 text-right">
+                                                    <td className="py-3 px-1 text-right">
                                                         <button 
                                                             onClick={() => {
                                                                 setPlanCode(log.code);
@@ -966,10 +1278,18 @@
                                                                 setPlanStopLoss(log.stopLoss || '');
                                                                 setPlanTakeProfit(log.takeProfit || '');
                                                                 setPlanExit(log.exit || '');
+                                                                setPlanQty(log.qty || 1);
                                                                 setPlanReason(log.reason || '');
                                                                 setPlanStatus(log.planStatus || 'planning');
                                                                 setPlanInStock(log.inStock || false);
-                                                                // Scroll to editor
+                                                                
+                                                                // Load Warrant Data
+                                                                setPlanWarrantCode(log.warrantCode || '');
+                                                                setPlanWarrantNote(log.warrantNote || '');
+                                                                setPlanWarrantEntry(log.warrantEntry || '');
+                                                                setPlanWarrantExit(log.warrantExit || '');
+                                                                setPlanWarrantQty(log.warrantQty || '');
+
                                                                 if (editorTopRef.current) {
                                                                     window.scrollTo({
                                                                         top: editorTopRef.current.offsetTop - 100, 
@@ -979,7 +1299,7 @@
                                                             }}
                                                             className="p-1.5 hover:bg-slate-700 rounded text-blue-400 transition-colors"
                                                         >
-                                                            <PenTool size={16} />
+                                                            <PenTool size={14} />
                                                         </button>
                                                     </td>
                                                 </tr>
@@ -995,27 +1315,27 @@
             };
 
             return (
-                <div className="min-h-screen bg-slate-950 text-slate-50 font-sans pb-20 selection:bg-blue-500/30 relative">
+                <div className="min-h-screen bg-[#0B1121] text-slate-100 font-sans pb-20 selection:bg-fuchsia-500/30 relative">
                     
                     {/* Confirm Modal */}
                     {confirmModal.show && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-                            <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6 w-full max-w-sm shadow-2xl space-y-4 animate-bounce-in">
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+                            <div className="bg-[#111827] border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl space-y-4 animate-bounce-in ring-1 ring-white/10">
                                 <div className="flex items-center gap-3 text-amber-500 mb-2">
-                                    <AlertTriangle size={28} />
-                                    <h3 className="text-xl font-bold text-white">{confirmModal.title}</h3>
+                                    <AlertTriangle size={28} className="drop-shadow-[0_0_10px_rgba(245,158,11,0.5)]"/>
+                                    <h3 className="text-xl font-bold text-white tracking-wide">{confirmModal.title}</h3>
                                 </div>
-                                <p className="text-slate-300 leading-relaxed">{confirmModal.message}</p>
+                                <p className="text-slate-300 leading-relaxed font-medium">{confirmModal.message}</p>
                                 <div className="flex gap-3 justify-end pt-4">
                                     <button 
                                         onClick={() => setConfirmModal({ ...confirmModal, show: false })} 
-                                        className="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition-colors"
+                                        className="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition-colors border border-white/5"
                                     >
                                         取消
                                     </button>
                                     <button 
                                         onClick={confirmModal.onConfirm} 
-                                        className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-500 transition-colors font-bold shadow-lg shadow-red-900/20"
+                                        className="px-4 py-2 rounded-lg bg-gradient-to-r from-red-600 to-rose-600 text-white hover:from-red-500 hover:to-rose-500 transition-colors font-bold shadow-lg shadow-red-900/30 border border-red-500/30"
                                     >
                                         確認執行
                                     </button>
@@ -1026,48 +1346,48 @@
 
                     {toast && (
                         <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-xl shadow-2xl backdrop-blur-md border flex items-center gap-3 animate-fade-in-down transition-all
-                        ${toast.type === 'success' ? 'bg-emerald-600 border-emerald-400 text-white shadow-emerald-900/50' : 'bg-red-600 border-red-400 text-white shadow-red-900/50'}`}>
+                        ${toast.type === 'success' ? 'bg-emerald-600/90 border-emerald-400 text-white shadow-[0_0_20px_rgba(16,185,129,0.4)]' : 'bg-red-600/90 border-red-400 text-white shadow-[0_0_20px_rgba(239,68,68,0.4)]'}`}>
                         {toast.type === 'success' ? <CheckCircle2 size={20} /> : <AlertCircle size={20} />}
                         <span className="font-bold tracking-wide">{toast.message}</span>
                         </div>
                     )}
 
-                    <header className="bg-slate-900 border-b border-slate-800 backdrop-blur-md sticky top-0 z-30 shadow-2xl">
+                    <header className="bg-[#0B1121]/80 border-b border-white/10 backdrop-blur-xl sticky top-0 z-30 shadow-2xl">
                         <div className="w-[98%] max-w-[2400px] mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
-                        <div className="flex items-center gap-3">
-                            <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-2.5 rounded-xl shadow-[0_0_15px_rgba(59,130,246,0.6)]">
+                        <div className="flex items-center gap-4 group">
+                            <div className="bg-gradient-to-br from-cyan-500 via-blue-600 to-purple-600 p-2.5 rounded-xl shadow-[0_0_20px_rgba(59,130,246,0.5)] group-hover:scale-105 transition-transform duration-300">
                             <Activity size={24} className="text-white" />
                             </div>
-                            <h1 className="text-2xl font-black tracking-wider text-white drop-shadow-md">
-                            萊恩選股日誌
+                            <h1 className="text-3xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-200 to-cyan-300 drop-shadow-sm">
+                            萊恩交易手札
                             </h1>
                         </div>
                         
                         {/* Navigation Tabs */}
-                        <div className="flex bg-slate-800 p-1 rounded-xl">
+                        <div className="flex bg-[#1F2937] p-1.5 rounded-xl border border-white/5">
                             <button 
                                 onClick={() => setActiveTab('journal')}
-                                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'journal' ? 'bg-slate-700 text-white shadow-sm' : 'text-slate-400 hover:text-white'}`}
+                                className={`px-5 py-2.5 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'journal' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-900/50' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
                             >
                                 <BookOpen size={16} /> 選股日誌
                             </button>
                             <button 
                                 onClick={() => setActiveTab('plan')}
-                                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'plan' ? 'bg-slate-700 text-white shadow-sm' : 'text-slate-400 hover:text-white'}`}
+                                className={`px-5 py-2.5 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'plan' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-900/50' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
                             >
                                 <ClipboardList size={16} /> 交易規劃紀錄
                             </button>
                         </div>
 
                         <div className="flex items-center gap-4 text-sm font-medium">
-                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800 border border-slate-600">
-                                <Target size={14} className="text-blue-400"/>
+                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#1F2937] border border-slate-700 shadow-inner">
+                                <Target size={14} className="text-cyan-400"/>
                                 <span className="text-slate-300">筆數:</span>
-                                <span className="text-white font-mono">{activeTab === 'journal' ? displayLogs.length : logs.filter(l => l.entry || l.stopLoss).length}</span>
+                                <span className="text-white font-mono font-bold">{activeTab === 'journal' ? displayLogs.length : logsWithPlans.length}</span>
                             </div>
                             {activeTab === 'journal' && (
-                                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800 border border-slate-600">
-                                    <Star size={14} className="text-amber-400"/>
+                                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#1F2937] border border-slate-700 shadow-inner">
+                                    <Star size={14} className="text-amber-400 fill-amber-400 animate-pulse"/>
                                     <span className="text-slate-300">追蹤清單:</span>
                                     <span className="text-amber-400 font-mono font-bold">{trackedCount}</span>
                                 </div>
