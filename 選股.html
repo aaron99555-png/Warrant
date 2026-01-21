@@ -191,12 +191,8 @@
             const [showTrackedOnly, setShowTrackedOnly] = useState(false);
             const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' });
             
-            // Plan Stats Date Range
-            const [statsStartDate, setStatsStartDate] = useState(() => {
-                const d = new Date();
-                d.setDate(1); 
-                return d.toISOString().split('T')[0];
-            });
+            // Plan Stats Date Range - Default to Today
+            const [statsStartDate, setStatsStartDate] = useState(today); // Changed from 1st of month
             const [statsEndDate, setStatsEndDate] = useState(today);
 
             // Toast & Modal State
@@ -952,17 +948,17 @@
                     {/* Left Column */}
                     <div className="lg:col-span-8 space-y-6">
                         {/* Add Stock Panel */}
-                        <div className="bg-[#111827] rounded-2xl shadow-xl border border-white/10 p-6 relative overflow-hidden group/panel hover:border-blue-500/30 transition-colors">
+                        <div className="bg-[#111827] rounded-xl shadow-xl border border-white/10 p-4 relative overflow-hidden group/panel hover:border-blue-500/30 transition-colors">
                             {/* ... Input Fields ... */}
                             <div className="absolute top-0 right-0 p-10 opacity-[0.03] group-hover/panel:opacity-[0.05] transition-opacity duration-700 pointer-events-none">
                                 <TrendingUp size={200} />
                             </div>
-                            <h2 className="text-xl font-bold mb-5 flex items-center gap-3 text-white relative z-10">
+                            <h2 className="text-lg font-bold mb-3 flex items-center gap-3 text-white relative z-10">
                                 <div className="w-1.5 h-6 bg-gradient-to-b from-blue-400 to-indigo-600 rounded-full shadow-[0_0_15px_rgba(99,102,241,0.8)]"></div>
                                 新增觀察個股
                             </h2>
                             <div className="space-y-5 relative z-10">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     <div>
                                         <label className="block text-xs font-bold text-slate-300 mb-1.5 ml-1 uppercase tracking-wide">日期</label>
                                         <div className="date-input-wrapper">
@@ -982,7 +978,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-2 gap-5">
+                                <div className="grid grid-cols-2 gap-3">
                                     <div className="relative"><label className="block text-xs font-bold text-slate-400 mb-1.5 ml-1 uppercase tracking-wide">名稱</label><input type="text" value={inputName} onChange={(e) => setInputName(e.target.value)} placeholder="--" className="w-full px-4 py-2.5 bg-[#1F2937]/80 border border-slate-700 rounded-xl text-sm focus:border-blue-500 outline-none transition-colors shadow-inner font-bold text-blue-200 placeholder:text-slate-700"/></div>
                                     <div className="relative"><label className="block text-xs font-bold text-slate-400 mb-1.5 ml-1 uppercase tracking-wide">產業</label><input type="text" value={inputIndustry} onChange={(e) => setInputIndustry(e.target.value)} placeholder="--" className="w-full px-4 py-2.5 bg-[#1F2937]/80 border border-slate-700 rounded-xl text-slate-300 text-sm focus:border-blue-500 outline-none shadow-inner font-medium placeholder:text-slate-700"/></div>
                                 </div>
@@ -1002,8 +998,9 @@
                                         })}
                                     </div>
                                 </div>
-                                <button onClick={handleAddStock} className="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-black tracking-widest py-4 rounded-xl shadow-lg shadow-indigo-500/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2 border border-white/10 text-base group">
-                                    <Plus size={22} strokeWidth={3} className="group-hover:rotate-90 transition-transform duration-300"/> 加入日誌
+                                <button onClick={handleAddStock} className="w-full bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-bold tracking-widest py-2.5 rounded-lg shadow-[0_0_15px_rgba(139,92,246,0.5)] transition-all active:scale-[0.98] flex items-center justify-center gap-2 border border-white/20 text-sm group relative overflow-hidden">
+                                    <span className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></span>
+                                    <Plus size={18} strokeWidth={3} className="group-hover:rotate-90 transition-transform duration-300"/> 加入日誌
                                 </button>
                             </div>
                         </div>
