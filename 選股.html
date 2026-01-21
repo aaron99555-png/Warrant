@@ -1581,6 +1581,58 @@
             return (
                 <div className="min-h-screen bg-[#0B1121] text-slate-100 font-sans pb-20 selection:bg-fuchsia-500/30 relative">
                     
+                    {/* Add Custom Stock Modal (Restored) */}
+                    {showAddStockModal && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+                            <div className="bg-[#111827] border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl space-y-4 animate-bounce-in ring-1 ring-white/10">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3 text-indigo-400">
+                                        <Database size={24} className="drop-shadow-[0_0_10px_rgba(99,102,241,0.5)]"/>
+                                        <h3 className="text-lg font-bold text-white tracking-wide">新增自訂股票</h3>
+                                    </div>
+                                    <button onClick={() => setShowAddStockModal(false)} className="text-slate-500 hover:text-white"><X size={20}/></button>
+                                </div>
+                                
+                                <div className="space-y-3">
+                                    <div>
+                                        <label className="text-xs text-slate-400 font-bold mb-1 block pl-1">股票代號</label>
+                                        <input type="text" value={newStockCode} onChange={(e) => setNewStockCode(e.target.value)} className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none font-mono font-bold" placeholder="例如: 00940"/>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-slate-400 font-bold mb-1 block pl-1">股票名稱</label>
+                                        <input type="text" value={newStockName} onChange={(e) => setNewStockName(e.target.value)} className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none" placeholder="例如: 元大台灣價值高息"/>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-slate-400 font-bold mb-1 block pl-1">產業類別 (選填)</label>
+                                        <input type="text" value={newStockIndustry} onChange={(e) => setNewStockIndustry(e.target.value)} className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none" placeholder="例如: ETF"/>
+                                    </div>
+                                </div>
+
+                                <button onClick={handleAddCustomStock} className="w-full py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold transition-colors shadow-lg shadow-indigo-900/30">
+                                    加入資料庫
+                                </button>
+
+                                {/* List of custom stocks */}
+                                {Object.keys(customStocks).length > 0 && (
+                                    <div className="pt-4 mt-2 border-t border-white/10">
+                                        <div className="text-xs font-bold text-slate-500 mb-2">已自訂股票 ({Object.keys(customStocks).length})</div>
+                                        <div className="max-h-32 overflow-y-auto space-y-1 custom-scrollbar pr-1">
+                                            {Object.entries(customStocks).map(([code, data]) => (
+                                                <div key={code} className="flex items-center justify-between text-xs bg-slate-900/50 p-2 rounded border border-slate-800">
+                                                    <div className="flex gap-2">
+                                                        <span className="font-mono text-indigo-300 font-bold">{code}</span>
+                                                        <span className="text-slate-300">{data.name}</span>
+                                                    </div>
+                                                    <button onClick={() => handleDeleteCustomStock(code)} className="text-slate-600 hover:text-red-400"><Trash2 size={12}/></button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
                     {/* Confirm Modal */}
                     {confirmModal.show && (
                         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
