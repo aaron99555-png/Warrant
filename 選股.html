@@ -1142,7 +1142,8 @@
                                 {STRATEGIES.map(strat => {
                                     const count = summaryStats[strat.label];
                                     const isSelected = filterStrategy.includes(strat.label);
-                                    if (count === 0 && !isSelected) return null;
+                                    // 移除隱藏邏輯，確保與選擇策略列表項目一致
+                                    // if (count === 0 && !isSelected) return null;
                                     return (
                                         <div 
                                             key={strat.id} 
