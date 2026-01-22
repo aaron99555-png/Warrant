@@ -521,8 +521,10 @@
                 setSortConfig({ key, direction });
             };
 
+            // --- 匯出功能 (統一為 Excel，含多工作表) ---
             const handleExport = () => {
                 try {
+                    // 1. 準備選股紀錄資料
                     const dataToExport = logs.map(log => ({
                         id: log.id,
                         date: log.date,
@@ -549,11 +551,27 @@
                         warrantCurrentPrice: log.warrantCurrentPrice ? String(log.warrantCurrentPrice) : ''
                     }));
 
-                    const ws = XLSX.utils.json_to_sheet(dataToExport);
+                    // 2. 準備自訂股號資料庫
+                    const customStockList = Object.entries(customStocks).map(([code, data]) => ({
+                        code: String(code),
+                        name: data.name,
+                        industry: data.industry || ''
+                    }));
+
                     const wb = XLSX.utils.book_new();
-                    XLSX.utils.book_append_sheet(wb, ws, "StockLogs");
+                    
+                    // 建立選股紀錄工作表
+                    const wsLogs = XLSX.utils.json_to_sheet(dataToExport);
+                    XLSX.utils.book_append_sheet(wb, wsLogs, "StockLogs");
+
+                    // 建立自訂股號工作表 (如果有資料)
+                    if (customStockList.length > 0) {
+                        const wsCustom = XLSX.utils.json_to_sheet(customStockList);
+                        XLSX.utils.book_append_sheet(wb, wsCustom, "CustomStocks");
+                    }
+
                     XLSX.writeFile(wb, `RyansStockJournal_Backup_${today}.xlsx`);
-                    showToast('success', '匯出成功');
+                    showToast('success', '匯出成功 (含自訂資料庫)');
                 } catch (error) {
                     console.error("Export failed:", error);
                     showToast('error', '匯出失敗');
@@ -565,7 +583,7 @@
                       setConfirmModal({
                         show: true,
                         title: '確認匯入',
-                        message: `確定要匯入嗎？這將覆蓋目前的 ${logs.length} 筆紀錄。建議先匯出備份。`,
+                        message: `確定要匯入嗎？這將覆蓋目前的 ${logs.length} 筆紀錄，並合併自訂股號。`,
                         onConfirm: () => {
                             setConfirmModal(prev => ({ ...prev, show: false }));
                             fileInputRef.current.click();
@@ -576,6 +594,7 @@
                 }
             };
 
+            // --- 匯入功能 (統一為 Excel，支援多工作表) ---
             const handleImport = (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
@@ -585,58 +604,94 @@
                     try {
                         const bstr = evt.target.result;
                         const wb = XLSX.read(bstr, { type: 'binary' });
-                        const wsname = wb.SheetNames[0];
-                        const ws = wb.Sheets[wsname];
-                        const data = XLSX.utils.sheet_to_json(ws);
                         
-                        const newLogs = data.map(row => {
-                            const parseBool = (val) => {
-                                if (val === true || val === 'TRUE' || val === 'true' || val === 1) return true;
-                                return false;
-                            };
+                        // 1. 處理選股紀錄 (StockLogs)
+                        // 優先尋找名為 "StockLogs" 的工作表，若無則取第一個
+                        let logSheetName = wb.SheetNames.find(n => n === "StockLogs");
+                        if (!logSheetName && wb.SheetNames.length > 0) logSheetName = wb.SheetNames[0];
 
-                            let stratId = row.strategyId;
-                            if (!stratId) {
-                                if (row.strategyLabel === '自訂規劃') {
-                                    stratId = 'custom_plan';
-                                } else {
-                                    stratId = STRATEGIES.find(s => s.label === row.strategyLabel)?.id || 'monthly_up';
+                        let importedCount = 0;
+                        if (logSheetName) {
+                            const wsLogs = wb.Sheets[logSheetName];
+                            const dataLogs = XLSX.utils.sheet_to_json(wsLogs);
+                            
+                            const newLogs = dataLogs.map(row => {
+                                const parseBool = (val) => {
+                                    if (val === true || val === 'TRUE' || val === 'true' || val === 1) return true;
+                                    return false;
+                                };
+
+                                let stratId = row.strategyId;
+                                if (!stratId) {
+                                    if (row.strategyLabel === '自訂規劃') {
+                                        stratId = 'custom_plan';
+                                    } else {
+                                        stratId = STRATEGIES.find(s => s.label === row.strategyLabel)?.id || 'monthly_up';
+                                    }
                                 }
+
+                                return {
+                                    id: row.id || Date.now() + Math.random(),
+                                    date: row.date,
+                                    code: row.code ? String(row.code) : '', 
+                                    name: row.name || '',
+                                    industry: row.industry || '',
+                                    strategyId: stratId,
+                                    strategyLabel: row.strategyLabel || '',
+                                    isTracked: parseBool(row.isTracked),
+                                    entry: row.entry ? String(row.entry) : '',
+                                    stopLoss: row.stopLoss ? String(row.stopLoss) : '',
+                                    takeProfit: row.takeProfit ? String(row.takeProfit) : '',
+                                    exit: row.exit ? String(row.exit) : '',
+                                    qty: row.qty ? String(row.qty) : '0',
+                                    reason: row.reason || '',
+                                    planStatus: row.planStatus || 'planning',
+                                    inStock: parseBool(row.inStock),
+                                    warrantCode: row.warrantCode ? String(row.warrantCode) : '',
+                                    warrantNote: row.warrantNote || '',
+                                    warrantEntry: row.warrantEntry ? String(row.warrantEntry) : '',
+                                    warrantExit: row.warrantExit ? String(row.warrantExit) : '',
+                                    warrantQty: row.warrantQty ? String(row.warrantQty) : '',
+                                    currentPrice: row.currentPrice ? String(row.currentPrice) : '',
+                                    warrantCurrentPrice: row.warrantCurrentPrice ? String(row.warrantCurrentPrice) : ''
+                                };
+                            });
+
+                            if (newLogs.length > 0) {
+                                setLogs(newLogs);
+                                importedCount = newLogs.length;
                             }
-
-                            return {
-                                id: row.id || Date.now() + Math.random(),
-                                date: row.date,
-                                code: row.code ? String(row.code) : '', 
-                                name: row.name || '',
-                                industry: row.industry || '',
-                                strategyId: stratId,
-                                strategyLabel: row.strategyLabel || '',
-                                isTracked: parseBool(row.isTracked),
-                                entry: row.entry ? String(row.entry) : '',
-                                stopLoss: row.stopLoss ? String(row.stopLoss) : '',
-                                takeProfit: row.takeProfit ? String(row.takeProfit) : '',
-                                exit: row.exit ? String(row.exit) : '',
-                                qty: row.qty ? String(row.qty) : '0',
-                                reason: row.reason || '',
-                                planStatus: row.planStatus || 'planning',
-                                inStock: parseBool(row.inStock),
-                                warrantCode: row.warrantCode ? String(row.warrantCode) : '',
-                                warrantNote: row.warrantNote || '',
-                                warrantEntry: row.warrantEntry ? String(row.warrantEntry) : '',
-                                warrantExit: row.warrantExit ? String(row.warrantExit) : '',
-                                warrantQty: row.warrantQty ? String(row.warrantQty) : '',
-                                currentPrice: row.currentPrice ? String(row.currentPrice) : '',
-                                warrantCurrentPrice: row.warrantCurrentPrice ? String(row.warrantCurrentPrice) : ''
-                            };
-                        });
-
-                        if (newLogs.length > 0) {
-                            setLogs(newLogs);
-                            showToast('success', `匯入成功，共 ${newLogs.length} 筆紀錄`);
-                        } else {
-                            showToast('error', '匯入檔案無資料');
                         }
+
+                        // 2. 處理自訂股號 (CustomStocks)
+                        const customSheetName = wb.SheetNames.find(n => n === "CustomStocks");
+                        let customImportCount = 0;
+                        if (customSheetName) {
+                            const wsCustom = wb.Sheets[customSheetName];
+                            const dataCustom = XLSX.utils.sheet_to_json(wsCustom);
+                            const newCustomStocks = {};
+                            
+                            dataCustom.forEach(row => {
+                                if (row.code && row.name) {
+                                    newCustomStocks[String(row.code)] = {
+                                        name: row.name,
+                                        industry: row.industry || ''
+                                    };
+                                }
+                            });
+
+                            if (Object.keys(newCustomStocks).length > 0) {
+                                setCustomStocks(prev => ({ ...prev, ...newCustomStocks }));
+                                customImportCount = Object.keys(newCustomStocks).length;
+                            }
+                        }
+
+                        if (importedCount > 0 || customImportCount > 0) {
+                            showToast('success', `匯入完成：${importedCount} 筆紀錄, ${customImportCount} 筆自訂股號`);
+                        } else {
+                            showToast('error', '檔案中未發現有效資料');
+                        }
+
                     } catch (error) {
                         console.error("Import failed:", error);
                         showToast('error', '匯入失敗，格式錯誤');
