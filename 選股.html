@@ -26,7 +26,7 @@
     </script>
 
     <style>
-        /* Import Fonts: Noto Sans TC, JetBrains Mono, and Ma Shan Zheng (Artistic) */
+        /* Import Fonts */
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Ma+Shan+Zheng&family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
 
         /* Custom Animations */
@@ -46,7 +46,7 @@
             animation: bounce-in 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
         }
         
-        /* Scrollbar styling for dark mode */
+        /* Scrollbar styling */
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
@@ -62,19 +62,16 @@
             background: #64748b; 
         }
         
-        /* Date Picker Styling - Fixed interaction issues */
+        /* Date Picker Styling */
         input[type="date"] {
-            color-scheme: dark; /* Native dark mode support for calendar popup */
+            color-scheme: dark;
         }
-        
-        /* Custom styling for the calendar icon to ensure visibility */
         input[type="date"]::-webkit-calendar-picker-indicator {
             cursor: pointer;
             opacity: 0.6;
             transition: 0.2s;
-            filter: invert(1); /* Make icon white in dark background */
+            filter: invert(1);
         }
-        
         input[type="date"]::-webkit-calendar-picker-indicator:hover {
             opacity: 1;
         }
@@ -119,15 +116,18 @@
             }
         });
 
-        // --- 策略定義 ---
+        // --- 條件定義 ---
         const STRATEGIES = [
             { id: 'monthly_up', label: '月來越好', icon: TrendingUp, color: 'bg-gradient-to-r from-red-600 via-rose-600 to-pink-600 text-white shadow-[0_0_20px_rgba(244,63,94,0.6)] border-rose-400' },
             { id: 'quarterly_gold', label: '季不可失', icon: Rocket, color: 'bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 text-white shadow-[0_0_20px_rgba(245,158,11,0.6)] border-amber-300' },
             { id: 'twist_flower', label: '芝麻開花', icon: Sprout, color: 'bg-gradient-to-r from-fuchsia-600 via-purple-600 to-indigo-600 text-white shadow-[0_0_20px_rgba(192,38,211,0.6)] border-fuchsia-400' },
             { id: 'wait_monthly', label: '守株待兔', icon: Clock, color: 'bg-gradient-to-r from-blue-600 via-sky-600 to-cyan-500 text-white shadow-[0_0_20px_rgba(14,165,233,0.6)] border-sky-400' },
+            // 新增 KD 金叉
             { id: 'kd_gold', label: 'KD金叉', icon: Zap, color: 'bg-gradient-to-r from-yellow-400 via-yellow-500 to-amber-500 text-white shadow-[0_0_20px_rgba(234,179,8,0.8)] border-yellow-200' },
+            // 新增 MACD 翻紅
             { id: 'macd_red', label: 'MACD翻紅', icon: Activity, color: 'bg-gradient-to-r from-rose-500 via-red-500 to-orange-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.6)] border-red-300' },
-            { id: 'turnover_value', label: '成交值', icon: DollarSign, color: 'bg-gradient-to-r from-teal-500 via-teal-600 to-cyan-600 text-white shadow-[0_0_20px_rgba(20,184,166,0.6)] border-teal-400' },
+            // 新增 高成交值 (更名)
+            { id: 'turnover_value', label: '高成交值', icon: DollarSign, color: 'bg-gradient-to-r from-teal-500 via-teal-600 to-cyan-600 text-white shadow-[0_0_20px_rgba(20,184,166,0.6)] border-teal-400' },
             { id: 'bull_obv', label: '多頭OBV', icon: BarChart2, color: 'bg-gradient-to-r from-emerald-600 via-green-600 to-lime-600 text-white shadow-[0_0_20px_rgba(16,185,129,0.6)] border-emerald-400' },
             { id: 'foreign_buy', label: '外資買進', icon: Globe, color: 'bg-gradient-to-r from-sky-500 to-indigo-500 text-white shadow-[0_0_20px_rgba(99,102,241,0.6)] border-indigo-300' },
             { id: 'trust_buy', label: '投信買進', icon: Landmark, color: 'bg-gradient-to-r from-amber-500 to-red-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.6)] border-red-300' },
@@ -340,7 +340,7 @@
                 }
 
                 if (!inputCode || !inputName || selectedStrategies.length === 0) {
-                    showToast('error', "請填寫股票代號並至少選擇一個策略");
+                    showToast('error', "請填寫股票代號並至少選擇一個條件");
                     return; 
                 }
 
@@ -371,13 +371,13 @@
 
                 if (addedCount > 0) {
                     setLogs([...newLogs, ...logs]);
-                    showToast('success', `已新增 ${inputName} - ${addedCount} 個策略標記`);
+                    showToast('success', `已新增 ${inputName} - ${addedCount} 個條件標記`);
                     setInputCode('');
                     setInputName('');
                     setInputIndustry('');
                     document.getElementById('stock-code-input').focus();
                 } else {
-                    showToast('error', "所選策略皆已存在於該日期的紀錄中");
+                    showToast('error', "所選條件皆已存在於該日期的紀錄中");
                     setInputCode('');
                     setInputName('');
                     setInputIndustry('');
@@ -713,7 +713,7 @@
                     if (label === '守株待兔') return '🐰';
                     if (label === 'KD金叉') return '⚡';
                     if (label === 'MACD翻紅') return '📶';
-                    if (label === '成交值') return '💰'; 
+                    if (label === '高成交值') return '💰'; 
                     if (label === '多頭OBV') return '📊';
                     if (label === '空方趨勢') return '📉';
                     if (label === '外資買進') return '🌏';
@@ -1011,9 +1011,15 @@
                                         <label className="block text-xs font-bold text-slate-300 mb-1.5 ml-1 uppercase tracking-wide">股票代碼</label>
                                         <div className="relative">
                                             <input id="stock-code-input" type="text" placeholder="例如 2330" value={inputCode} onChange={(e) => setInputCode(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAddStock()} className="w-full px-4 py-3 bg-[#1F2937] border border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-white font-bold text-sm font-mono tracking-wide shadow-inner hover:bg-slate-800 placeholder:text-slate-600"/>
-                                            {inputName && (
-                                                <div className={`absolute right-3 top-1/2 -translate-y-1/2 text-xs px-2.5 py-1 font-bold rounded shadow-lg flex items-center gap-1 ${inputName === '無該檔股票資訊' ? 'bg-red-600 text-white animate-pulse' : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border border-blue-400/50'}`}>
-                                                    {inputName === '無該檔股票資訊' && <AlertTriangle size={12} />}
+                                            {inputName === '無該檔股票資訊' ? (
+                                                <button 
+                                                    onClick={() => { setNewStockCode(inputCode); setShowAddStockModal(true); }}
+                                                    className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] px-3 py-1.5 font-bold rounded-lg shadow-lg flex items-center gap-1 bg-rose-600 hover:bg-rose-500 text-white transition-all border border-rose-400 animate-pulse hover:animate-none cursor-pointer z-20"
+                                                >
+                                                    <Plus size={14} strokeWidth={3} /> 新增股號
+                                                </button>
+                                            ) : inputName && (
+                                                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs px-2.5 py-1 font-bold rounded shadow-lg flex items-center gap-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white border border-blue-400/50 cursor-default">
                                                     {inputName}
                                                 </div>
                                             )}
@@ -1025,7 +1031,7 @@
                                     <div className="relative"><label className="block text-xs font-bold text-slate-400 mb-1.5 ml-1 uppercase tracking-wide">產業</label><input type="text" value={inputIndustry} onChange={(e) => setInputIndustry(e.target.value)} placeholder="--" className="w-full px-4 py-2.5 bg-[#1F2937]/80 border border-slate-700 rounded-xl text-slate-300 text-sm focus:border-blue-500 outline-none shadow-inner font-medium placeholder:text-slate-700"/></div>
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-300 mb-2 ml-1 uppercase tracking-wide">選擇策略 (可複選)</label>
+                                    <label className="block text-xs font-bold text-slate-300 mb-2 ml-1 uppercase tracking-wide">選擇條件 (可複選)</label>
                                     <div className="flex flex-wrap gap-3">
                                         {STRATEGIES.map((strat) => {
                                             const Icon = strat.icon;
@@ -1056,7 +1062,7 @@
                                             <th className="py-4 px-6 w-32 cursor-pointer hover:text-white select-none transition-colors" onClick={() => handleSort('date')}><div className="flex items-center gap-1">日期{sortConfig.key === 'date' && <ArrowUpDown size={12} className="text-blue-500" />}</div></th>
                                             <th className="py-4 px-6 w-24 cursor-pointer hover:text-white select-none transition-colors" onClick={() => handleSort('code')}><div className="flex items-center gap-1">代號{sortConfig.key === 'code' && <ArrowUpDown size={12} className="text-blue-500" />}</div></th>
                                             <th className="py-4 px-6 w-32 cursor-pointer hover:text-white select-none transition-colors" onClick={() => handleSort('name')}><div className="flex items-center gap-1">名稱{sortConfig.key === 'name' && <ArrowUpDown size={12} className="text-blue-500" />}</div></th>
-                                            <th className="py-4 px-6">符合策略</th>
+                                            <th className="py-4 px-6">符合條件</th>
                                             <th className="py-4 px-6 w-32 hidden md:table-cell">產業</th>
                                             <th className="py-4 px-6 w-24 text-right">操作</th>
                                         </tr>
@@ -1109,7 +1115,7 @@
                         <div className="bg-[#111827] rounded-2xl shadow-xl border border-white/10 p-6">
                             <div className="flex items-center justify-between mb-4">
                                 <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                    <PieChart size={18} className="text-blue-500"/>本期策略統計
+                                    <PieChart size={18} className="text-blue-500"/>本期條件統計
                                 </h3>
                                 {filterStrategy.length > 0 && (
                                     <div className="flex items-center gap-3">
