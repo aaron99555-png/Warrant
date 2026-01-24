@@ -285,11 +285,19 @@
 
             const toggleFilterStrategy = (label) => {
                 setFilterStrategy(prev => {
+                    let newFilters;
                     if (prev.includes(label)) {
-                        return prev.filter(l => l !== label);
+                        newFilters = prev.filter(l => l !== label);
                     } else {
-                        return [...prev, label];
+                        newFilters = [...prev, label];
                     }
+
+                    // 連動邏輯：同步更新左側的「選擇條件」
+                    // 找出所有標籤存在於 newFilters 中的策略物件
+                    const newSelectedStrategies = STRATEGIES.filter(s => newFilters.includes(s.label));
+                    setSelectedStrategies(newSelectedStrategies);
+
+                    return newFilters;
                 });
             };
 
@@ -1128,7 +1136,7 @@
                                             />
                                             <span className={`text-[10px] font-bold transition-colors ${strictMode ? 'text-blue-400' : 'text-slate-500 group-hover:text-slate-300'}`}>完全符合</span>
                                         </label>
-                                        <button onClick={() => setFilterStrategy([])} className="flex items-center gap-1 text-xs font-bold text-cyan-400 bg-cyan-950/30 px-2.5 py-1.5 rounded-lg border border-cyan-800 hover:bg-cyan-900/50 transition-colors"><RefreshCcw size={12} />清除</button>
+                                        <button onClick={() => { setFilterStrategy([]); setSelectedStrategies([]); }} className="flex items-center gap-1 text-xs font-bold text-cyan-400 bg-cyan-950/30 px-2.5 py-1.5 rounded-lg border border-cyan-800 hover:bg-cyan-900/50 transition-colors"><RefreshCcw size={12} />清除</button>
                                     </div>
                                 )}
                             </div>
