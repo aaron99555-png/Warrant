@@ -742,7 +742,7 @@
                 const copyToClipboard = (str) => {
                     if (navigator.clipboard && window.isSecureContext) {
                         navigator.clipboard.writeText(str)
-                        .then(() => showToast('success', '日誌內容已複製到剪貼簿'))
+                        .then(() => showToast('success', '內容已複製到剪貼簿'))
                         .catch(() => fallbackCopy(str));
                     } else {
                         fallbackCopy(str);
@@ -759,7 +759,7 @@
                     textArea.select();
                     try {
                         document.execCommand('copy');
-                        showToast('success', '日誌內容已複製到剪貼簿');
+                        showToast('success', '內容已複製到剪貼簿');
                     } catch (err) {
                         showToast('error', '複製失敗，請手動選取');
                     }
@@ -767,6 +767,65 @@
                 };
 
                 copyToClipboard(text);
+            };
+
+            // 新增：複製重複清單 (每符合一個條件就列出一次)
+            const handleCopyDuplicates = () => {
+                let text = '';
+                
+                displayLogs.forEach(group => {
+                    group.strategies.forEach(strat => {
+                        // 如果有設定篩選，只複製符合篩選的策略項目
+                        if (filterStrategy.length > 0 && !filterStrategy.includes(strat.strategyLabel)) {
+                            return;
+                        }
+                        text += `${group.code} ${group.name}\n`;
+                    });
+                });
+
+                if (!text) {
+                    showToast('error', '目前無資料可複製');
+                    return;
+                }
+
+                // 復用 copyToClipboard 邏輯
+                if (navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard.writeText(text)
+                        .then(() => showToast('success', '重複清單已複製'))
+                        .catch(() => {
+                            // fallback
+                            const textArea = document.createElement("textarea");
+                            textArea.value = text;
+                            textArea.style.position = "fixed";
+                            textArea.style.left = "-9999px";
+                            document.body.appendChild(textArea);
+                            textArea.focus();
+                            textArea.select();
+                            try {
+                                document.execCommand('copy');
+                                showToast('success', '重複清單已複製');
+                            } catch (err) {
+                                showToast('error', '複製失敗');
+                            }
+                            document.body.removeChild(textArea);
+                        });
+                } else {
+                     // fallback for non-secure context
+                    const textArea = document.createElement("textarea");
+                    textArea.value = text;
+                    textArea.style.position = "fixed";
+                    textArea.style.left = "-9999px";
+                    document.body.appendChild(textArea);
+                    textArea.focus();
+                    textArea.select();
+                    try {
+                        document.execCommand('copy');
+                        showToast('success', '重複清單已複製');
+                    } catch (err) {
+                        showToast('error', '複製失敗');
+                    }
+                    document.body.removeChild(textArea);
+                }
             };
 
             const adjustDate = (setter, current, days) => {
@@ -1177,10 +1236,23 @@
                                     <div className="date-input-wrapper"><input type="date" value={filterEndDate} onChange={(e) => setFilterEndDate(e.target.value)} className="bg-transparent border-none text-sm font-bold text-center text-white w-28 focus:ring-0 cursor-pointer hover:text-blue-400 transition-colors"/></div>
                                     <button onClick={() => adjustDate(setFilterEndDate, filterEndDate, 1)} className="p-2 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white transition-colors"><ArrowDownCircle size={18} className="-rotate-90" /></button>
                                 </div>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <button onClick={() => setShowTrackedOnly(!showTrackedOnly)} className={`flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all border ${showTrackedOnly ? 'bg-amber-500 text-white border-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.5)]' : 'bg-[#1F2937] border-slate-700 text-slate-400 hover:bg-slate-800'}`}><Star size={16} fill={showTrackedOnly ? "currentColor" : "none"} />只看追蹤</button>
-                                    <button onClick={handleCopy} className="flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white border border-emerald-500/50 rounded-xl text-sm font-bold transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)]"><Copy size={16} />{filterStrategy.length > 0 ? "複製所選" : "複製結果"}</button>
+                                
+                                {/* 調整按鈕佈局 */}
+                                <div className="space-y-3">
+                                    <button onClick={() => setShowTrackedOnly(!showTrackedOnly)} className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all border ${showTrackedOnly ? 'bg-amber-500 text-white border-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.5)]' : 'bg-[#1F2937] border-slate-700 text-slate-400 hover:bg-slate-800'}`}>
+                                        <Star size={16} fill={showTrackedOnly ? "currentColor" : "none"} />只看追蹤
+                                    </button>
+                                    
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <button onClick={handleCopy} className="flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white border border-emerald-500/50 rounded-xl text-xs font-bold transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+                                            <Copy size={14} />複製清單
+                                        </button>
+                                        <button onClick={handleCopyDuplicates} className="flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white border border-cyan-500/50 rounded-xl text-xs font-bold transition-all shadow-[0_0_15px_rgba(6,182,212,0.3)]">
+                                            <Layers size={14} />複製重複清單
+                                        </button>
+                                    </div>
                                 </div>
+
                                 <div className="grid grid-cols-2 gap-3 pt-3 border-t border-white/10">
                                     <button onClick={handleExport} className="flex items-center justify-center gap-2 py-3 bg-blue-900/20 hover:bg-blue-900/40 text-blue-400 border border-blue-500/30 rounded-xl text-xs font-bold transition-all"><Download size={14} />匯出紀錄</button>
                                     <button onClick={handleImportClick} className="flex items-center justify-center gap-2 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-600 rounded-xl text-xs font-bold transition-all"><Upload size={14} />匯入紀錄</button>
