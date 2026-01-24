@@ -769,18 +769,14 @@
                 copyToClipboard(text);
             };
 
-            // 新增：複製重複清單 (每符合一個條件就列出一次)
+            // 新增：複製重複清單 (邏輯修正：每支股票只出現一次)
             const handleCopyDuplicates = () => {
                 let text = '';
                 
                 displayLogs.forEach(group => {
-                    group.strategies.forEach(strat => {
-                        // 如果有設定篩選，只複製符合篩選的策略項目
-                        if (filterStrategy.length > 0 && !filterStrategy.includes(strat.strategyLabel)) {
-                            return;
-                        }
-                        text += `${group.code} ${group.name}\n`;
-                    });
+                    // 修正：不再遍歷 strategies，而是直接針對該股票(group)輸出一行
+                    // 這樣即使一支股票符合 3 個條件，也只會列出一次
+                    text += `${group.code} ${group.name}\n`;
                 });
 
                 if (!text) {
@@ -791,7 +787,7 @@
                 // 復用 copyToClipboard 邏輯
                 if (navigator.clipboard && window.isSecureContext) {
                     navigator.clipboard.writeText(text)
-                        .then(() => showToast('success', '重複清單已複製'))
+                        .then(() => showToast('success', '清單已複製'))
                         .catch(() => {
                             // fallback
                             const textArea = document.createElement("textarea");
@@ -803,7 +799,7 @@
                             textArea.select();
                             try {
                                 document.execCommand('copy');
-                                showToast('success', '重複清單已複製');
+                                showToast('success', '清單已複製');
                             } catch (err) {
                                 showToast('error', '複製失敗');
                             }
@@ -820,7 +816,7 @@
                     textArea.select();
                     try {
                         document.execCommand('copy');
-                        showToast('success', '重複清單已複製');
+                        showToast('success', '清單已複製');
                     } catch (err) {
                         showToast('error', '複製失敗');
                     }
