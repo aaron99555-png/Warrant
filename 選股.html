@@ -160,6 +160,10 @@
             const [inputIndustry, setInputIndustry] = useState('');
             const [selectedStrategies, setSelectedStrategies] = useState([STRATEGIES[0]]);
             
+            // Search Suggestions State (New)
+            const [suggestions, setSuggestions] = useState([]);
+            const [showSuggestions, setShowSuggestions] = useState(false);
+
             // Add Custom Stock Modal State
             const [showAddStockModal, setShowAddStockModal] = useState(false);
             const [newStockCode, setNewStockCode] = useState('');
@@ -221,6 +225,37 @@
             const stockMap = useMemo(() => {
                 return { ...STATIC_STOCK_DB, ...customStocks };
             }, [customStocks]);
+
+            // Smart Search Handler
+            const handleCodeChange = (e) => {
+                const val = e.target.value;
+                setInputCode(val);
+                
+                if (!val) {
+                    setSuggestions([]);
+                    setShowSuggestions(false);
+                    return;
+                }
+
+                // Filter logic
+                const matches = [];
+                for (const [code, data] of Object.entries(stockMap)) {
+                    // Match code starts with OR name includes
+                    if (code.startsWith(val) || data.name.includes(val)) {
+                        matches.push({ code, ...data });
+                    }
+                    if (matches.length >= 8) break; // Limit suggestions to keep UI clean
+                }
+                setSuggestions(matches);
+                setShowSuggestions(true);
+            };
+
+            const selectSuggestion = (stock) => {
+                setInputCode(stock.code);
+                // Name and Industry will be auto-filled by the useEffect below
+                setSuggestions([]);
+                setShowSuggestions(false);
+            };
 
             // Strategy Input Auto-fill using stockMap
             useEffect(() => {
@@ -284,21 +319,18 @@
             };
 
             const toggleFilterStrategy = (label) => {
-                setFilterStrategy(prev => {
-                    let newFilters;
-                    if (prev.includes(label)) {
-                        newFilters = prev.filter(l => l !== label);
-                    } else {
-                        newFilters = [...prev, label];
-                    }
-
-                    // 連動邏輯：同步更新左側的「選擇條件」
-                    // 找出所有標籤存在於 newFilters 中的策略物件
-                    const newSelectedStrategies = STRATEGIES.filter(s => newFilters.includes(s.label));
-                    setSelectedStrategies(newSelectedStrategies);
-
-                    return newFilters;
-                });
+                let newFilters;
+                if (filterStrategy.includes(label)) {
+                    newFilters = filterStrategy.filter(l => l !== label);
+                } else {
+                    newFilters = [...filterStrategy, label];
+                }
+                
+                setFilterStrategy(newFilters);
+                
+                // Sync with Selection
+                const newSelectedStrategies = STRATEGIES.filter(s => newFilters.includes(s.label));
+                setSelectedStrategies(newSelectedStrategies);
             };
 
             // ... (Custom stock handlers remain unchanged) ...
@@ -1071,9 +1103,41 @@
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-bold text-slate-300 mb-1.5 ml-1 uppercase tracking-wide">股票代碼</label>
+                                        <label className="block text-xs font-bold text-slate-300 mb-1.5 ml-1 uppercase tracking-wide">股票代碼 / 名稱</label>
                                         <div className="relative">
-                                            <input id="stock-code-input" type="text" placeholder="例如 2330" value={inputCode} onChange={(e) => setInputCode(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAddStock()} className="w-full px-4 py-3 bg-[#1F2937] border border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-white font-bold text-sm font-mono tracking-wide shadow-inner hover:bg-slate-800 placeholder:text-slate-600"/>
+                                            <input 
+                                                id="stock-code-input" 
+                                                type="text" 
+                                                placeholder="輸入代號或名稱 (如 2330 或 台積)" 
+                                                value={inputCode} 
+                                                onChange={handleCodeChange} 
+                                                onFocus={() => inputCode && setShowSuggestions(true)}
+                                                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                                                onKeyDown={(e) => e.key === 'Enter' && handleAddStock()} 
+                                                className="w-full px-4 py-3 bg-[#1F2937] border border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-white font-bold text-sm font-mono tracking-wide shadow-inner hover:bg-slate-800 placeholder:text-slate-600"
+                                                autoComplete="off"
+                                            />
+                                            
+                                            {/* 智慧搜尋下拉選單 */}
+                                            {showSuggestions && suggestions.length > 0 && (
+                                                <div className="absolute left-0 right-0 top-full mt-1 bg-[#1F2937] border border-slate-600 rounded-xl shadow-2xl z-50 max-h-60 overflow-y-auto custom-scrollbar">
+                                                    {suggestions.map((s) => (
+                                                        <div 
+                                                            key={s.code} 
+                                                            onClick={() => selectSuggestion(s)}
+                                                            className="px-4 py-2.5 hover:bg-blue-600/20 cursor-pointer text-sm flex justify-between items-center border-b border-slate-700/50 last:border-0 transition-colors"
+                                                        >
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="font-mono font-bold text-blue-400 bg-blue-900/30 px-1.5 py-0.5 rounded">{s.code}</span>
+                                                                <span className="text-white font-bold">{s.name}</span>
+                                                            </div>
+                                                            <span className="text-xs text-slate-500">{s.industry}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {/* 原有的徽章/按鈕邏輯 */}
                                             {inputName === '無該檔股票資訊' ? (
                                                 <button 
                                                     onClick={() => { setNewStockCode(inputCode); setShowAddStockModal(true); }}
@@ -1193,7 +1257,7 @@
                                             />
                                             <span className={`text-[10px] font-bold transition-colors ${strictMode ? 'text-blue-400' : 'text-slate-500 group-hover:text-slate-300'}`}>完全符合</span>
                                         </label>
-                                        <button onClick={handleClearFilter} className="flex items-center gap-1 text-xs font-bold text-cyan-400 bg-cyan-950/30 px-2.5 py-1.5 rounded-lg border border-cyan-800 hover:bg-cyan-900/50 transition-colors"><RefreshCcw size={12} />清除</button>
+                                        <button onClick={() => { setFilterStrategy([]); setSelectedStrategies([]); }} className="flex items-center gap-1 text-xs font-bold text-cyan-400 bg-cyan-950/30 px-2.5 py-1.5 rounded-lg border border-cyan-800 hover:bg-cyan-900/50 transition-colors"><RefreshCcw size={12} />清除</button>
                                     </div>
                                 )}
                             </div>
@@ -1207,9 +1271,11 @@
                                             onClick={() => toggleFilterStrategy(strat.label)} 
                                             className={`flex items-center justify-between p-3.5 rounded-xl border transition-all cursor-pointer group relative overflow-hidden ${isSelected ? `${strat.color} border-transparent shadow-[0_0_15px_rgba(255,255,255,0.2)]` : 'bg-[#1F2937] border-white/5 hover:border-slate-600 hover:bg-slate-800'}`}
                                         >
+                                            {/* Selected Overlay Effect */}
                                             {isSelected && <div className="absolute inset-0 bg-white/10 mix-blend-overlay"></div>}
                                             
                                             <div className={`flex items-center gap-2 text-xs font-bold z-10 ${isSelected ? 'text-white' : 'text-slate-300'}`}>
+                                                {/* Checkbox Icon */}
                                                 {isSelected ? <CheckSquare size={14} className="text-white fill-white/20"/> : <Square size={14} className="text-slate-600"/>}
                                                 <span>{strat.label}</span>
                                             </div>
