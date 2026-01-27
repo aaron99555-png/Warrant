@@ -771,6 +771,9 @@
                     }
                 });
 
+                // 新增免責聲明
+                text += `『本分析僅供參考，不構成任何投資邀約或建議。股市投資具備風險，投資人應獨立判斷並自負盈虧。』`;
+
                 const copyToClipboard = (str) => {
                     if (navigator.clipboard && window.isSecureContext) {
                         navigator.clipboard.writeText(str)
