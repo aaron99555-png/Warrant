@@ -103,7 +103,7 @@
             Filter, X, PieChart, Target, AlertCircle, CheckCircle2, ArrowUpDown, RefreshCcw,
             Download, Upload, AlertTriangle, DollarSign, LogIn, LogOut, ShieldAlert, Trophy, Calculator, Save,
             BookOpen, ClipboardList, PenTool, FileText, Percent, Box, CalendarRange, TrendingDown,
-            Coins, Zap, RotateCcw, Globe, Landmark, Layers, Eye, Database, Square, CheckSquare
+            Coins, Zap, RotateCcw, Globe, Landmark, Layers, Eye, Database, Square, CheckSquare, Ticket
         } from 'lucide-react';
 
         // --- 完整台股資料庫 (壓縮儲存) ---
@@ -131,10 +131,11 @@
             { id: 'macd_red', label: 'MACD翻紅', icon: Activity, color: 'bg-gradient-to-r from-rose-500 via-red-500 to-orange-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.6)] border-red-300' },
             // 新增 高成交值 (更名)
             { id: 'turnover_value', label: '高成交值', icon: DollarSign, color: 'bg-gradient-to-r from-teal-500 via-teal-600 to-cyan-600 text-white shadow-[0_0_20px_rgba(20,184,166,0.6)] border-teal-400' },
-            // 修改：多頭OBV -> OBV突破
-            { id: 'bull_obv', label: 'OBV突破', icon: BarChart2, color: 'bg-gradient-to-r from-emerald-600 via-green-600 to-lime-600 text-white shadow-[0_0_20px_rgba(16,185,129,0.6)] border-emerald-400' },
+            { id: 'bull_obv', label: '多頭OBV', icon: BarChart2, color: 'bg-gradient-to-r from-emerald-600 via-green-600 to-lime-600 text-white shadow-[0_0_20px_rgba(16,185,129,0.6)] border-emerald-400' },
             { id: 'foreign_buy', label: '外資買進', icon: Globe, color: 'bg-gradient-to-r from-sky-500 to-indigo-500 text-white shadow-[0_0_20px_rgba(99,102,241,0.6)] border-indigo-300' },
             { id: 'trust_buy', label: '投信買進', icon: Landmark, color: 'bg-gradient-to-r from-amber-500 to-red-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.6)] border-red-300' },
+            // 新增 權證大單追蹤
+            { id: 'warrant_big', label: '權證大單追蹤', icon: Ticket, color: 'bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 text-white shadow-[0_0_20px_rgba(147,51,234,0.6)] border-violet-400' },
             { id: 'bear_trend', label: '空方趨勢', icon: ArrowDownCircle, color: 'bg-gradient-to-r from-slate-600 to-slate-800 text-white shadow-[0_0_15px_rgba(71,85,105,0.6)] border-slate-500' },
         ];
         
@@ -586,6 +587,7 @@
                     const ws = XLSX.utils.json_to_sheet(dataToExport);
                     const wb = XLSX.utils.book_new();
                     XLSX.utils.book_append_sheet(wb, ws, "StockLogs");
+                    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(Object.entries(customStocks).map(([code, data]) => ({ code, ...data }))), "CustomStocks");
                     XLSX.writeFile(wb, `RyansStockJournal_Backup_${today}.xlsx`);
                     showToast('success', '匯出成功 (含自訂資料庫)');
                 } catch (error) {
@@ -743,10 +745,11 @@
                     if (label === 'KD金叉') return '⚡';
                     if (label === 'MACD翻紅') return '📶';
                     if (label === '高成交值') return '💰'; 
-                    if (label === 'OBV突破') return '📊'; // 修改對應名稱
+                    if (label === '多頭OBV') return '📊';
                     if (label === '空方趨勢') return '📉';
                     if (label === '外資買進') return '🌏';
                     if (label === '投信買進') return '🏦';
+                    if (label === '權證大單追蹤') return '🎫';
                     return '📌';
                 };
 
@@ -901,7 +904,7 @@
                     const entry = log.entry ? parseFloat(log.entry) : 0;
                     const exit = log.exit ? parseFloat(log.exit) : null;
                     const current = log.currentPrice ? parseFloat(log.currentPrice) : null;
-                    const qty = parseFloat(log.qty || 0);
+                    const qty = parseFloat(log.qty || 1);
                     const sl = log.stopLoss ? parseFloat(log.stopLoss) : 0;
                     const isShort = sl > entry; 
 
@@ -1043,32 +1046,14 @@
                     let valA = a[sortConfig.key];
                     let valB = b[sortConfig.key];
 
-                    // 特殊欄位處理
                     if (sortConfig.key === 'code') {
                         valA = parseInt(valA) || valA;
                         valB = parseInt(valB) || valB;
-                    } else if (sortConfig.key === 'strategies') {
-                        // 策略排序：將該股票的所有策略名稱排序後組合成字串來比較
-                        // 這樣相同策略組合的會排在一起
-                        valA = a.strategies.map(s => s.strategyLabel).sort().join(',');
-                        valB = b.strategies.map(s => s.strategyLabel).sort().join(',');
-                    } else if (sortConfig.key === 'industry') {
-                         valA = valA || '';
-                         valB = valB || '';
                     }
 
-                    // 比較邏輯
-                    if (typeof valA === 'string' && typeof valB === 'string') {
-                        // 字串使用 localeCompare 以支援中文排序
-                        return sortConfig.direction === 'asc' 
-                            ? valA.localeCompare(valB, 'zh-Hant') 
-                            : valB.localeCompare(valA, 'zh-Hant');
-                    } else {
-                        // 數值或其他類型比較
-                        if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
-                        if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
-                        return 0;
-                    }
+                    if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
+                    if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
+                    return 0;
                 });
 
                 return result;
@@ -1199,10 +1184,9 @@
                                             <th className="py-4 px-6 w-32 cursor-pointer hover:text-white select-none transition-colors" onClick={() => handleSort('date')}><div className="flex items-center gap-1">日期{sortConfig.key === 'date' && <ArrowUpDown size={12} className="text-blue-500" />}</div></th>
                                             <th className="py-4 px-6 w-24 cursor-pointer hover:text-white select-none transition-colors" onClick={() => handleSort('code')}><div className="flex items-center gap-1">代號{sortConfig.key === 'code' && <ArrowUpDown size={12} className="text-blue-500" />}</div></th>
                                             <th className="py-4 px-6 w-32 cursor-pointer hover:text-white select-none transition-colors" onClick={() => handleSort('name')}><div className="flex items-center gap-1">名稱{sortConfig.key === 'name' && <ArrowUpDown size={12} className="text-blue-500" />}</div></th>
-                                            {/* 產業欄位：加入排序功能 */}
-                                            <th className="py-4 px-6 w-32 hidden md:table-cell cursor-pointer hover:text-white select-none transition-colors" onClick={() => handleSort('industry')}><div className="flex items-center gap-1">產業{sortConfig.key === 'industry' && <ArrowUpDown size={12} className="text-blue-500" />}</div></th>
-                                            {/* 符合條件：加入排序功能 (key='strategies') */}
-                                            <th className="py-4 px-6 cursor-pointer hover:text-white select-none transition-colors" onClick={() => handleSort('strategies')}><div className="flex items-center gap-1">符合條件{sortConfig.key === 'strategies' && <ArrowUpDown size={12} className="text-blue-500" />}</div></th>
+                                            {/* 產業欄位移到這裡 */}
+                                            <th className="py-4 px-6 w-32 hidden md:table-cell">產業</th>
+                                            <th className="py-4 px-6">符合條件</th>
                                             <th className="py-4 px-6 w-24 text-right">操作</th>
                                         </tr>
                                     </thead>
@@ -1313,16 +1297,21 @@
                                     <button onClick={() => setShowTrackedOnly(!showTrackedOnly)} className={`flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all border ${showTrackedOnly ? 'bg-amber-500 text-white border-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.5)]' : 'bg-[#1F2937] border-slate-700 text-slate-400 hover:bg-slate-800'}`}><Star size={16} fill={showTrackedOnly ? "currentColor" : "none"} />只看追蹤</button>
                                     <button onClick={handleCopy} className="flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white border border-emerald-500/50 rounded-xl text-sm font-bold transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)]"><Copy size={16} />{filterStrategy.length > 0 ? "複製所選" : "複製結果"}</button>
                                 </div>
-                                <div className="grid grid-cols-2 gap-3 pt-3 border-t border-white/10">
-                                    <button onClick={handleExport} className="flex items-center justify-center gap-2 py-3 bg-blue-900/20 hover:bg-blue-900/40 text-blue-400 border border-blue-500/30 rounded-xl text-xs font-bold transition-all"><Download size={14} />匯出紀錄</button>
-                                    <button onClick={handleImportClick} className="flex items-center justify-center gap-2 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-600 rounded-xl text-xs font-bold transition-all"><Upload size={14} />匯入紀錄</button>
-                                    <input type="file" ref={fileInputRef} onChange={handleImport} accept=".xlsx, .xls" className="hidden" />
-                                </div>
-                                <div className="pt-3 border-t border-white/10">
-                                    <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">資料庫</h4>
-                                    <button onClick={() => setShowAddStockModal(true)} className="w-full flex items-center justify-center gap-2 py-3 bg-indigo-900/30 hover:bg-indigo-900/50 text-indigo-400 border border-indigo-500/30 rounded-xl text-xs font-bold transition-all">
-                                        <Database size={14} /> 新增股號
+                                <div className="space-y-3">
+                                    <button onClick={handleCopyDuplicates} className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white border border-cyan-500/50 rounded-xl text-xs font-bold transition-all shadow-[0_0_15px_rgba(6,182,212,0.3)]">
+                                        <Layers size={14} />複製重複清單
                                     </button>
+                                    <div className="grid grid-cols-2 gap-3 pt-3 border-t border-white/10">
+                                        <button onClick={handleExport} className="flex items-center justify-center gap-2 py-3 bg-blue-900/20 hover:bg-blue-900/40 text-blue-400 border border-blue-500/30 rounded-xl text-xs font-bold transition-all"><Download size={14} />匯出紀錄</button>
+                                        <button onClick={handleImportClick} className="flex items-center justify-center gap-2 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-600 rounded-xl text-xs font-bold transition-all"><Upload size={14} />匯入紀錄</button>
+                                        <input type="file" ref={fileInputRef} onChange={handleImport} accept=".xlsx, .xls" className="hidden" />
+                                    </div>
+                                    <div className="pt-3 border-t border-white/10">
+                                        <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">資料庫</h4>
+                                        <button onClick={() => setShowAddStockModal(true)} className="w-full flex items-center justify-center gap-2 py-3 bg-indigo-900/30 hover:bg-indigo-900/50 text-indigo-400 border border-indigo-500/30 rounded-xl text-xs font-bold transition-all">
+                                            <Database size={14} /> 新增股號
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1763,7 +1752,6 @@
 
             return (
                 <div className="min-h-screen bg-[#0B1121] text-slate-100 font-sans pb-20 selection:bg-fuchsia-500/30 relative">
-                    
                     {/* Add Custom Stock Modal (Restored) */}
                     {showAddStockModal && (
                         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
