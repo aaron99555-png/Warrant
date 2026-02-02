@@ -8,8 +8,8 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Babel for JSX -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Babel for JSX (Switch to a stable version to fix the .targets["esmodules"] error) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
     
     <!-- SheetJS for Excel Export/Import -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
@@ -129,14 +129,17 @@
             { id: 'kd_gold', label: 'KD金叉', icon: Zap, color: 'bg-gradient-to-r from-yellow-400 via-yellow-500 to-amber-500 text-white shadow-[0_0_20px_rgba(234,179,8,0.8)] border-yellow-200' },
             // 新增 MACD 翻紅
             { id: 'macd_red', label: 'MACD翻紅', icon: Activity, color: 'bg-gradient-to-r from-rose-500 via-red-500 to-orange-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.6)] border-red-300' },
-            // 新增 高成交值 (更名)
+            // 新增 高成交值
             { id: 'turnover_value', label: '高成交值', icon: DollarSign, color: 'bg-gradient-to-r from-teal-500 via-teal-600 to-cyan-600 text-white shadow-[0_0_20px_rgba(20,184,166,0.6)] border-teal-400' },
             { id: 'bull_obv', label: 'OBV突破', icon: BarChart2, color: 'bg-gradient-to-r from-emerald-600 via-green-600 to-lime-600 text-white shadow-[0_0_20px_rgba(16,185,129,0.6)] border-emerald-400' },
             { id: 'foreign_buy', label: '外資買進', icon: Globe, color: 'bg-gradient-to-r from-sky-500 to-indigo-500 text-white shadow-[0_0_20px_rgba(99,102,241,0.6)] border-indigo-300' },
             { id: 'trust_buy', label: '投信買進', icon: Landmark, color: 'bg-gradient-to-r from-amber-500 to-red-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.6)] border-red-300' },
             // 新增 權證大單追蹤
             { id: 'warrant_big', label: '權證大單追蹤', icon: Ticket, color: 'bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 text-white shadow-[0_0_20px_rgba(147,51,234,0.6)] border-violet-400' },
-            { id: 'bear_trend', label: '空方趨勢', icon: ArrowDownCircle, color: 'bg-gradient-to-r from-slate-600 to-slate-800 text-white shadow-[0_0_15px_rgba(71,85,105,0.6)] border-slate-500' },
+            // 新增 回後買上漲 (補上)
+            { id: 'pullback_buy', label: '回後買上漲', icon: RotateCcw, color: 'bg-gradient-to-r from-lime-500 to-green-500 text-white shadow-[0_0_20px_rgba(132,204,22,0.6)] border-lime-400' },
+            { id: 'bear_trend', label: '跌破月季線', icon: ArrowDownCircle, color: 'bg-gradient-to-r from-slate-600 to-slate-800 text-white shadow-[0_0_15px_rgba(71,85,105,0.6)] border-slate-500' },
+            { id: 'bear_trend_2', label: '高檔反轉', icon: TrendingDown, color: 'bg-gradient-to-r from-zinc-600 to-zinc-800 text-white shadow-[0_0_15px_rgba(82,82,91,0.6)] border-zinc-500' },
         ];
         
         function RyanStockJournal() {
@@ -746,10 +749,12 @@
                     if (label === 'MACD翻紅') return '📶';
                     if (label === '高成交值') return '💰'; 
                     if (label === 'OBV突破') return '📊';
-                    if (label === '空方趨勢') return '📉';
+                    if (label === '跌破月季線') return '📉';
+                    if (label === '高檔反轉') return '⤵️';
                     if (label === '外資買進') return '🌏';
                     if (label === '投信買進') return '🏦';
                     if (label === '權證大單追蹤') return '🎫';
+                    if (label === '回後買上漲') return '↩️'; // 新增 icon 對應
                     return '📌';
                 };
 
