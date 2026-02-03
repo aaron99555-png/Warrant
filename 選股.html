@@ -103,7 +103,7 @@
             Filter, X, PieChart, Target, AlertCircle, CheckCircle2, ArrowUpDown, RefreshCcw,
             Download, Upload, AlertTriangle, DollarSign, LogIn, LogOut, ShieldAlert, Trophy, Calculator, Save,
             BookOpen, ClipboardList, PenTool, FileText, Percent, Box, CalendarRange, TrendingDown,
-            Coins, Zap, RotateCcw, Globe, Landmark, Layers, Eye, Database, Square, CheckSquare, Ticket, LineChart
+            Coins, Zap, RotateCcw, Globe, Landmark, Layers, Eye, Database, Square, CheckSquare, Ticket, LineChart, ChevronsUp
         } from 'lucide-react';
 
         // --- 完整台股資料庫 (壓縮儲存) ---
@@ -140,6 +140,8 @@
             { id: 'pullback_buy', label: '回後買上漲', icon: RotateCcw, color: 'bg-gradient-to-r from-lime-500 to-green-500 text-white shadow-[0_0_20px_rgba(132,204,22,0.6)] border-lime-400' },
             // 新增 四線上揚籌碼集中
             { id: 'four_lines_up', label: '四線上揚籌碼集中', icon: LineChart, color: 'bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white shadow-[0_0_20px_rgba(168,85,247,0.6)] border-purple-400' },
+            // 新增 收盤期貨續拉
+            { id: 'close_futures_pull', label: '收盤期貨續拉', icon: ChevronsUp, color: 'bg-gradient-to-r from-orange-600 via-red-600 to-rose-600 text-white shadow-[0_0_20px_rgba(225,29,72,0.6)] border-red-400' },
             { id: 'bear_trend', label: '跌破月季線', icon: ArrowDownCircle, color: 'bg-gradient-to-r from-slate-600 to-slate-800 text-white shadow-[0_0_15px_rgba(71,85,105,0.6)] border-slate-500' },
             { id: 'bear_trend_2', label: '高檔反轉', icon: TrendingDown, color: 'bg-gradient-to-r from-zinc-600 to-zinc-800 text-white shadow-[0_0_15px_rgba(82,82,91,0.6)] border-zinc-500' },
         ];
@@ -367,15 +369,20 @@
                 }
             };
 
-            const handleAddStock = (e) => {
-                if (e) e.preventDefault();
+            // Modified to handle overrideData
+            const handleAddStock = (e, overrideData = null) => {
+                if (e && e.preventDefault) e.preventDefault();
                 
-                if (inputName === '無該檔股票資訊') {
+                const targetCode = overrideData ? overrideData.code : inputCode;
+                const targetName = overrideData ? overrideData.name : inputName;
+                const targetIndustry = overrideData ? overrideData.industry : inputIndustry;
+
+                if (targetName === '無該檔股票資訊') {
                     showToast('error', "請輸入正確的股票名稱，或使用「新增股號」功能加入資料庫。");
                     return;
                 }
 
-                if (!inputCode || !inputName || selectedStrategies.length === 0) {
+                if (!targetCode || !targetName || selectedStrategies.length === 0) {
                     showToast('error', "請填寫股票代號並至少選擇一個條件");
                     return; 
                 }
@@ -386,7 +393,7 @@
                 selectedStrategies.forEach(strat => {
                     const exists = logs.some(log => 
                         log.date === inputDate && 
-                        log.code === inputCode && 
+                        log.code === targetCode && 
                         log.strategyId === strat.id
                     );
 
@@ -394,9 +401,9 @@
                         newLogs.push({
                             id: Date.now() + Math.random(),
                             date: inputDate,
-                            code: inputCode,
-                            name: inputName,
-                            industry: inputIndustry,
+                            code: targetCode,
+                            name: targetName,
+                            industry: targetIndustry,
                             strategyId: strat.id,
                             strategyLabel: strat.label,
                             isTracked: false,
@@ -407,7 +414,7 @@
 
                 if (addedCount > 0) {
                     setLogs([...newLogs, ...logs]);
-                    showToast('success', `已新增 ${inputName} - ${addedCount} 個條件標記`);
+                    showToast('success', `已新增 ${targetName} - ${addedCount} 個條件標記`);
                     setInputCode('');
                     setInputName('');
                     setInputIndustry('');
@@ -417,6 +424,27 @@
                     setInputCode('');
                     setInputName('');
                     setInputIndustry('');
+                }
+            };
+
+            // Enhanced KeyDown Handler for Input
+            const handleInputKeyDown = (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (suggestions.length > 0) {
+                        // Automatically select the first suggestion
+                        const firstMatch = suggestions[0];
+                        // Update state for UI consistency (though handleAddStock uses override)
+                        setInputCode(firstMatch.code);
+                        // Call Add Stock directly with the suggestion data
+                        handleAddStock(e, firstMatch);
+                        // Close suggestions
+                        setSuggestions([]);
+                        setShowSuggestions(false);
+                    } else {
+                        // Fallback to normal behavior if no suggestions
+                        handleAddStock(e);
+                    }
                 }
             };
             
@@ -758,6 +786,7 @@
                     if (label === '權證大單追蹤') return '🎫';
                     if (label === '回後買上漲') return '↩️';
                     if (label === '四線上揚籌碼集中') return '💹';
+                    if (label === '收盤期貨續拉') return '⏫'; // 新增 icon
                     return '📌';
                 };
 
@@ -912,7 +941,7 @@
                     const entry = log.entry ? parseFloat(log.entry) : 0;
                     const exit = log.exit ? parseFloat(log.exit) : null;
                     const current = log.currentPrice ? parseFloat(log.currentPrice) : null;
-                    const qty = parseFloat(log.qty || 1);
+                    const qty = parseFloat(log.qty || 0);
                     const sl = log.stopLoss ? parseFloat(log.stopLoss) : 0;
                     const isShort = sl > entry; 
 
@@ -1116,7 +1145,7 @@
                                                 onChange={handleCodeChange} 
                                                 onFocus={() => inputCode && setShowSuggestions(true)}
                                                 onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                                                onKeyDown={(e) => e.key === 'Enter' && handleAddStock()} 
+                                                onKeyDown={handleInputKeyDown} 
                                                 className="w-full px-4 py-3 bg-[#1F2937] border border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-white font-bold text-sm font-mono tracking-wide shadow-inner hover:bg-slate-800 placeholder:text-slate-600"
                                                 autoComplete="off"
                                             />
