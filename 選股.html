@@ -147,6 +147,11 @@
             { id: 'price_volume_up', label: '量價齊揚', icon: ArrowUpRight, color: 'bg-gradient-to-r from-emerald-400 via-cyan-500 to-blue-500 text-white shadow-[0_0_20px_rgba(6,182,212,0.6)] border-cyan-300' },
             // 新增 法人加持
             { id: 'institutional_support', label: '法人加持', icon: Briefcase, color: 'bg-gradient-to-r from-blue-500 via-indigo-500 to-violet-500 text-white shadow-[0_0_20px_rgba(99,102,241,0.6)] border-indigo-400' },
+            // 新增 籌碼集中度系列
+            { id: 'chip_1d_10', label: '1日籌碼集中度>10%', icon: Percent, color: 'bg-gradient-to-r from-sky-500 to-blue-500 text-white shadow-[0_0_15px_rgba(14,165,233,0.6)] border-sky-400' },
+            { id: 'chip_1d_20', label: '1日籌碼集中度>20%', icon: Percent, color: 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-[0_0_15px_rgba(37,99,235,0.6)] border-blue-500' },
+            { id: 'chip_5d_10', label: '5日籌碼集中度>10%', icon: Layers, color: 'bg-gradient-to-r from-fuchsia-500 to-purple-500 text-white shadow-[0_0_15px_rgba(217,70,239,0.6)] border-fuchsia-400' },
+            { id: 'chip_5d_20', label: '5日籌碼集中度>20%', icon: Layers, color: 'bg-gradient-to-r from-purple-600 to-violet-600 text-white shadow-[0_0_15px_rgba(147,51,234,0.6)] border-purple-500' },
             { id: 'bear_trend', label: '跌破月季線', icon: ArrowDownCircle, color: 'bg-gradient-to-r from-slate-600 to-slate-800 text-white shadow-[0_0_15px_rgba(71,85,105,0.6)] border-slate-500' },
             { id: 'bear_trend_2', label: '高檔反轉', icon: TrendingDown, color: 'bg-gradient-to-r from-zinc-600 to-zinc-800 text-white shadow-[0_0_15px_rgba(82,82,91,0.6)] border-zinc-500' },
         ];
@@ -794,6 +799,7 @@
                     if (label === '收盤期貨續拉') return '⏫';
                     if (label === '量價齊揚') return '🔥';
                     if (label === '法人加持') return '💼';
+                    if (label.includes('籌碼集中度')) return '💧';
                     return '📌';
                 };
 
@@ -888,6 +894,91 @@
                     try {
                         document.execCommand('copy');
                         showToast('success', '清單已複製');
+                    } catch (err) {
+                        showToast('error', '複製失敗');
+                    }
+                    document.body.removeChild(textArea);
+                }
+            };
+
+            // 新增：專屬籌碼集中度複製邏輯
+            const handleCopyChips = () => {
+                const chip1d10 = [];
+                const chip1d20 = [];
+                const chip5d10 = [];
+                const chip5d20 = [];
+
+                displayLogs.forEach(group => {
+                    const stockStr = `${group.code} ${group.name}`;
+                    const strategies = group.strategies.map(s => s.strategyLabel);
+                    
+                    // 過濾 1 日籌碼 (大於20%就不放進10%)
+                    if (strategies.includes('1日籌碼集中度>20%')) {
+                        if (!chip1d20.includes(stockStr)) chip1d20.push(stockStr);
+                    } else if (strategies.includes('1日籌碼集中度>10%')) {
+                        if (!chip1d10.includes(stockStr)) chip1d10.push(stockStr);
+                    }
+
+                    // 過濾 5 日籌碼 (大於20%就不放進10%)
+                    if (strategies.includes('5日籌碼集中度>20%')) {
+                        if (!chip5d20.includes(stockStr)) chip5d20.push(stockStr);
+                    } else if (strategies.includes('5日籌碼集中度>10%')) {
+                        if (!chip5d10.includes(stockStr)) chip5d10.push(stockStr);
+                    }
+                });
+
+                if (chip1d10.length === 0 && chip1d20.length === 0 && chip5d10.length === 0 && chip5d20.length === 0) {
+                    showToast('error', '目前無籌碼集中度資料可複製');
+                    return;
+                }
+
+                let text = `【${filterEndDate} 籌碼集中度強勢觀察】\n\n`;
+
+                if (chip1d20.length > 0) {
+                    text += `💧 1日籌碼集中度>20%:\n${chip1d20.join('、')}\n\n`;
+                }
+                if (chip1d10.length > 0) {
+                    text += `💧 1日籌碼集中度>10%:\n${chip1d10.join('、')}\n\n`;
+                }
+                if (chip5d20.length > 0) {
+                    text += `🌊 5日籌碼集中度>20%:\n${chip5d20.join('、')}\n\n`;
+                }
+                if (chip5d10.length > 0) {
+                    text += `🌊 5日籌碼集中度>10%:\n${chip5d10.join('、')}\n\n`;
+                }
+
+                text += `『本分析僅供參考，不構成任何投資邀約或建議。股市投資具備風險，投資人應獨立判斷並自負盈虧。』`;
+
+                if (navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard.writeText(text)
+                        .then(() => showToast('success', '籌碼集中度已複製'))
+                        .catch(() => {
+                            const textArea = document.createElement("textarea");
+                            textArea.value = text;
+                            textArea.style.position = "fixed";
+                            textArea.style.left = "-9999px";
+                            document.body.appendChild(textArea);
+                            textArea.focus();
+                            textArea.select();
+                            try {
+                                document.execCommand('copy');
+                                showToast('success', '籌碼集中度已複製');
+                            } catch (err) {
+                                showToast('error', '複製失敗');
+                            }
+                            document.body.removeChild(textArea);
+                        });
+                } else {
+                    const textArea = document.createElement("textarea");
+                    textArea.value = text;
+                    textArea.style.position = "fixed";
+                    textArea.style.left = "-9999px";
+                    document.body.appendChild(textArea);
+                    textArea.focus();
+                    textArea.select();
+                    try {
+                        document.execCommand('copy');
+                        showToast('success', '籌碼集中度已複製');
                     } catch (err) {
                         showToast('error', '複製失敗');
                     }
@@ -1196,10 +1287,13 @@
                                     <div className="relative"><label className="block text-xs font-bold text-slate-400 mb-1.5 ml-1 uppercase tracking-wide">名稱</label><input type="text" value={inputName} onChange={(e) => setInputName(e.target.value)} placeholder="--" className="w-full px-4 py-2.5 bg-[#1F2937]/80 border border-slate-700 rounded-xl text-sm focus:border-blue-500 outline-none transition-colors shadow-inner font-bold text-blue-200 placeholder:text-slate-700"/></div>
                                     <div className="relative"><label className="block text-xs font-bold text-slate-400 mb-1.5 ml-1 uppercase tracking-wide">產業</label><input type="text" value={inputIndustry} onChange={(e) => setInputIndustry(e.target.value)} placeholder="--" className="w-full px-4 py-2.5 bg-[#1F2937]/80 border border-slate-700 rounded-xl text-slate-300 text-sm focus:border-blue-500 outline-none shadow-inner font-medium placeholder:text-slate-700"/></div>
                                 </div>
+                                
                                 <div>
                                     <label className="block text-xs font-bold text-slate-300 mb-2 ml-1 uppercase tracking-wide">選擇條件 (單選)</label>
-                                    <div className="flex flex-wrap gap-3">
-                                        {STRATEGIES.map((strat) => {
+                                    
+                                    {/* 區塊 1：一般條件 */}
+                                    <div className="flex flex-wrap gap-3 mb-4">
+                                        {STRATEGIES.filter(strat => !strat.id.startsWith('chip_')).map((strat) => {
                                             const Icon = strat.icon;
                                             const isSelected = selectedStrategies.some(s => s.id === strat.id);
                                             return (
@@ -1211,7 +1305,28 @@
                                             );
                                         })}
                                     </div>
+
+                                    {/* 區塊 2：籌碼集中度分析 */}
+                                    <div className="pt-3 border-t border-slate-700/50">
+                                        <div className="text-[10px] font-bold text-sky-400 mb-2 ml-1 uppercase tracking-wider flex items-center gap-1">
+                                            <Percent size={12} /> 籌碼集中度分析
+                                        </div>
+                                        <div className="flex flex-wrap gap-3">
+                                            {STRATEGIES.filter(strat => strat.id.startsWith('chip_')).map((strat) => {
+                                                const Icon = strat.icon;
+                                                const isSelected = selectedStrategies.some(s => s.id === strat.id);
+                                                return (
+                                                    <button key={strat.id} onClick={() => toggleStrategy(strat)} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold border transition-all duration-300 relative overflow-hidden group ${isSelected ? `${strat.color} ring-2 ring-white/20 scale-105 z-10 shadow-lg` : 'bg-slate-800/50 border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-white hover:border-slate-500'}`}>
+                                                        {isSelected && <div className="absolute inset-0 bg-white/10 mix-blend-overlay"></div>}
+                                                        <Icon size={16} className={`relative z-10 ${isSelected ? 'animate-pulse' : ''}`}/>
+                                                        <span className="relative z-10">{strat.label}</span>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
                                 </div>
+
                                 <button onClick={handleAddStock} className="w-full bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-bold tracking-widest py-2.5 rounded-lg shadow-[0_0_15px_rgba(139,92,246,0.5)] transition-all active:scale-[0.98] flex items-center justify-center gap-2 border border-white/20 text-sm group relative overflow-hidden">
                                     <span className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></span>
                                     <Plus size={18} strokeWidth={3} className="group-hover:rotate-90 transition-transform duration-300"/> 加入日誌
@@ -1341,10 +1456,15 @@
                                     <button onClick={() => setShowTrackedOnly(!showTrackedOnly)} className={`flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all border ${showTrackedOnly ? 'bg-amber-500 text-white border-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.5)]' : 'bg-[#1F2937] border-slate-700 text-slate-400 hover:bg-slate-800'}`}><Star size={16} fill={showTrackedOnly ? "currentColor" : "none"} />只看追蹤</button>
                                     <button onClick={handleCopy} className="flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white border border-emerald-500/50 rounded-xl text-sm font-bold transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)]"><Copy size={16} />{filterStrategy.length > 0 ? "複製所選" : "複製結果"}</button>
                                 </div>
-                                <div className="space-y-3">
-                                    <button onClick={handleCopyDuplicates} className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white border border-cyan-500/50 rounded-xl text-xs font-bold transition-all shadow-[0_0_15px_rgba(6,182,212,0.3)]">
-                                        <Layers size={14} />複製重複清單
-                                    </button>
+                                <div className="space-y-3 mt-3">
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <button onClick={handleCopyDuplicates} className="flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white border border-cyan-500/50 rounded-xl text-xs font-bold transition-all shadow-[0_0_15px_rgba(6,182,212,0.3)]">
+                                            <Layers size={14} />複製重複清單
+                                        </button>
+                                        <button onClick={handleCopyChips} className="flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white border border-indigo-500/50 rounded-xl text-xs font-bold transition-all shadow-[0_0_15px_rgba(99,102,241,0.3)]">
+                                            <Percent size={14} />複製籌碼集中度
+                                        </button>
+                                    </div>
                                     <div className="grid grid-cols-2 gap-3 pt-3 border-t border-white/10">
                                         <button onClick={handleExport} className="flex items-center justify-center gap-2 py-3 bg-blue-900/20 hover:bg-blue-900/40 text-blue-400 border border-blue-500/30 rounded-xl text-xs font-bold transition-all"><Download size={14} />匯出紀錄</button>
                                         <button onClick={handleImportClick} className="flex items-center justify-center gap-2 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-600 rounded-xl text-xs font-bold transition-all"><Upload size={14} />匯入紀錄</button>
