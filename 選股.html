@@ -150,8 +150,8 @@
             { id: 'bear_trend_2', label: '高檔反轉', icon: TrendingDown, color: 'bg-gradient-to-r from-zinc-600 to-zinc-800 text-white shadow-[0_0_15px_rgba(82,82,91,0.6)] border-zinc-500' },
             
             // --- 當沖專區系列 ---
-            { id: 'day_trade_long', label: '當沖多方標', icon: ArrowUpRight, color: 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-[0_0_15px_rgba(16,185,129,0.6)] border-emerald-400' },
-            { id: 'day_trade_short', label: '當沖空方標', icon: ArrowDownRight, color: 'bg-gradient-to-r from-rose-500 to-red-600 text-white shadow-[0_0_15px_rgba(244,63,94,0.6)] border-rose-400' },
+            { id: 'day_trade_long', label: '當沖多方標的', icon: ArrowUpRight, color: 'bg-gradient-to-r from-rose-500 to-red-600 text-white shadow-[0_0_15px_rgba(244,63,94,0.6)] border-rose-400' },
+            { id: 'day_trade_short', label: '當沖空方標的', icon: ArrowDownRight, color: 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-[0_0_15px_rgba(16,185,129,0.6)] border-emerald-400' },
             { id: 'day_trade_cross', label: '當沖十字變盤', icon: Crosshair, color: 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-[0_0_15px_rgba(245,158,11,0.6)] border-amber-400' },
 
             // --- 籌碼集中度分析系列 ---
@@ -816,8 +816,8 @@
                     if (label === '收盤期貨續拉') return '⏫';
                     if (label === '量價齊揚') return '🔥';
                     if (label === '法人加持') return '💼';
-                    if (label === '當沖多方標') return '🔺';
-                    if (label === '當沖空方標') return '🔻';
+                    if (label === '當沖多方標的') return '🔺';
+                    if (label === '當沖空方標的') return '🔻';
                     if (label === '當沖十字變盤') return '⚔️';
                     if (label.includes('籌碼集中度')) return '💧';
                     return '📌';
