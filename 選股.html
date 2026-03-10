@@ -103,7 +103,7 @@
             Filter, X, PieChart, Target, AlertCircle, CheckCircle2, ArrowUpDown, RefreshCcw,
             Download, Upload, AlertTriangle, DollarSign, LogIn, LogOut, ShieldAlert, Trophy, Calculator, Save,
             BookOpen, ClipboardList, PenTool, FileText, Percent, Box, CalendarRange, TrendingDown,
-            Coins, Zap, RotateCcw, Globe, Landmark, Layers, Eye, Database, Square, CheckSquare, Ticket, LineChart, ChevronsUp, Briefcase, ArrowUpRight, ArrowDownRight, Crosshair
+            Coins, Zap, RotateCcw, Globe, Landmark, Layers, Eye, Database, Square, CheckSquare, Ticket, LineChart, ChevronsUp, Briefcase, ArrowUpRight, ArrowDownRight, Crosshair, Award
         } from 'lucide-react';
 
         // --- 完整台股資料庫 (壓縮儲存) ---
@@ -146,6 +146,8 @@
             { id: 'price_volume_up', label: '量價齊揚', icon: ArrowUpRight, color: 'bg-gradient-to-r from-emerald-400 via-cyan-500 to-blue-500 text-white shadow-[0_0_20px_rgba(6,182,212,0.6)] border-cyan-300' },
             // 新增 法人加持
             { id: 'institutional_support', label: '法人加持', icon: Briefcase, color: 'bg-gradient-to-r from-blue-500 via-indigo-500 to-violet-500 text-white shadow-[0_0_20px_rgba(99,102,241,0.6)] border-indigo-400' },
+            // 新增 營收創新高
+            { id: 'revenue_high', label: '營收創新高', icon: Award, color: 'bg-gradient-to-r from-yellow-500 via-amber-500 to-orange-500 text-white shadow-[0_0_15px_rgba(245,158,11,0.6)] border-yellow-300' },
             { id: 'bear_trend', label: '跌破月季線', icon: ArrowDownCircle, color: 'bg-gradient-to-r from-slate-600 to-slate-800 text-white shadow-[0_0_15px_rgba(71,85,105,0.6)] border-slate-500' },
             { id: 'bear_trend_2', label: '高檔反轉', icon: TrendingDown, color: 'bg-gradient-to-r from-zinc-600 to-zinc-800 text-white shadow-[0_0_15px_rgba(82,82,91,0.6)] border-zinc-500' },
             
@@ -816,6 +818,7 @@
                     if (label === '收盤期貨續拉') return '⏫';
                     if (label === '量價齊揚') return '🔥';
                     if (label === '法人加持') return '💼';
+                    if (label === '營收創新高') return '🏆';
                     if (label === '當沖多方標的') return '🔺';
                     if (label === '當沖空方標的') return '🔻';
                     if (label === '當沖十字變盤') return '⚔️';
@@ -1170,6 +1173,91 @@
                     try {
                         document.execCommand('copy');
                         showToast('success', '當沖選股已複製');
+                    } catch (err) {
+                        showToast('error', '複製失敗');
+                    }
+                    document.body.removeChild(textArea);
+                }
+            };
+
+            // 新增：營收創新高專屬複製邏輯
+            const handleCopyRevenueHigh = () => {
+                const targetStrategies = ['營收創新高'];
+                const groupedByStrategy = {};
+                
+                displayLogs.forEach(group => {
+                    group.strategies.forEach(strat => {
+                        if (targetStrategies.includes(strat.strategyLabel)) {
+                            // 尊重目前的 filterStrategy
+                            if (filterStrategy.length > 0 && !filterStrategy.includes(strat.strategyLabel)) {
+                                return;
+                            }
+
+                            if (!groupedByStrategy[strat.strategyLabel]) {
+                                groupedByStrategy[strat.strategyLabel] = [];
+                            }
+                            const entry = `${group.code} ${group.name}`;
+                            if (!groupedByStrategy[strat.strategyLabel].includes(entry)) {
+                                groupedByStrategy[strat.strategyLabel].push(entry);
+                            }
+                        }
+                    });
+                });
+
+                if (Object.keys(groupedByStrategy).length === 0) {
+                    showToast('error', '目前無營收創新高資料可複製');
+                    return;
+                }
+
+                // 取得當天日期
+                const todayObj = new Date();
+                const yyyy = todayObj.getFullYear();
+                const mm = String(todayObj.getMonth() + 1).padStart(2, '0');
+                const dd = String(todayObj.getDate()).padStart(2, '0');
+                const formattedDate = `${yyyy}/${mm}/${dd}`;
+                
+                let text = `【營收創新高個股 截至${formattedDate}】\n\n`;
+
+                targetStrategies.forEach(strat => {
+                    if (groupedByStrategy[strat] && groupedByStrategy[strat].length > 0) {
+                        text += `🏆 ${strat}:\n`;
+                        text += groupedByStrategy[strat].join('、');
+                        text += '\n\n';
+                    }
+                });
+
+                text += `『本分析僅供參考，不構成任何投資邀約或建議。股市投資具備風險，投資人應獨立判斷並自負盈虧。』`;
+
+                if (navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard.writeText(text)
+                        .then(() => showToast('success', '營收創新高已複製'))
+                        .catch(() => {
+                            const textArea = document.createElement("textarea");
+                            textArea.value = text;
+                            textArea.style.position = "fixed";
+                            textArea.style.left = "-9999px";
+                            document.body.appendChild(textArea);
+                            textArea.focus();
+                            textArea.select();
+                            try {
+                                document.execCommand('copy');
+                                showToast('success', '營收創新高已複製');
+                            } catch (err) {
+                                showToast('error', '複製失敗');
+                            }
+                            document.body.removeChild(textArea);
+                        });
+                } else {
+                    const textArea = document.createElement("textarea");
+                    textArea.value = text;
+                    textArea.style.position = "fixed";
+                    textArea.style.left = "-9999px";
+                    document.body.appendChild(textArea);
+                    textArea.focus();
+                    textArea.select();
+                    try {
+                        document.execCommand('copy');
+                        showToast('success', '營收創新高已複製');
                     } catch (err) {
                         showToast('error', '複製失敗');
                     }
@@ -1678,10 +1766,13 @@
                                         <button onClick={handleCopyChips} className="flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white border border-indigo-500/50 rounded-xl text-xs font-bold transition-all shadow-[0_0_15px_rgba(99,102,241,0.3)]">
                                             <Percent size={14} />複製籌碼集中度
                                         </button>
+                                        <button onClick={handleCopyDayTrade} className="flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white border border-amber-500/50 rounded-xl text-xs font-bold transition-all shadow-[0_0_15px_rgba(245,158,11,0.3)]">
+                                            <Crosshair size={14} />當沖選股複製
+                                        </button>
+                                        <button onClick={handleCopyRevenueHigh} className="flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-white border border-yellow-400/50 rounded-xl text-xs font-bold transition-all shadow-[0_0_15px_rgba(245,158,11,0.3)]">
+                                            <Award size={14} />營收創新高複製
+                                        </button>
                                     </div>
-                                    <button onClick={handleCopyDayTrade} className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white border border-amber-500/50 rounded-xl text-xs font-bold transition-all shadow-[0_0_15px_rgba(245,158,11,0.3)]">
-                                        <Crosshair size={14} />當沖選股複製
-                                    </button>
                                     <div className="grid grid-cols-2 gap-3 pt-3 border-t border-white/10">
                                         <button onClick={handleExport} className="flex items-center justify-center gap-2 py-3 bg-blue-900/20 hover:bg-blue-900/40 text-blue-400 border border-blue-500/30 rounded-xl text-xs font-bold transition-all"><Download size={14} />匯出紀錄</button>
                                         <button onClick={handleImportClick} className="flex items-center justify-center gap-2 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-600 rounded-xl text-xs font-bold transition-all"><Upload size={14} />匯入紀錄</button>
