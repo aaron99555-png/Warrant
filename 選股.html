@@ -1284,16 +1284,19 @@
                 return result;
             }, [groupedRawLogs, filterStrategy, sortConfig, strictMode]);
 
+            // 【已修正】讓右側條件統計精準計算左邊畫面上剩餘的項目 (動態統計)
             const summaryStats = useMemo(() => {
                 const stats = {};
                 STRATEGIES.forEach(s => stats[s.label] = 0);
-                baseLogs.forEach(log => {
-                    if (stats[log.strategyLabel] !== undefined) {
-                        stats[log.strategyLabel]++;
-                    }
+                displayLogs.forEach(group => {
+                    group.strategies.forEach(strat => {
+                        if (stats[strat.strategyLabel] !== undefined) {
+                            stats[strat.strategyLabel]++;
+                        }
+                    });
                 });
                 return stats;
-            }, [baseLogs]);
+            }, [displayLogs]);
 
             const trackedCount = useMemo(() => {
                 return displayLogs.filter(g => g.isTracked).length;
