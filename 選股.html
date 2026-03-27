@@ -104,7 +104,7 @@
             Filter, X, PieChart, Target, AlertCircle, CheckCircle2, ArrowUpDown, RefreshCcw,
             Download, Upload, AlertTriangle, DollarSign, LogIn, LogOut, ShieldAlert, Trophy, Calculator, Save,
             BookOpen, ClipboardList, PenTool, FileText, Percent, Box, CalendarRange, TrendingDown,
-            Coins, Zap, RotateCcw, Globe, Landmark, Layers, Eye, Database, Square, CheckSquare, Ticket, LineChart, ChevronsUp, Briefcase, ArrowUpRight, ArrowDownRight, Crosshair, Award
+            Coins, Zap, RotateCcw, Globe, Landmark, Layers, Eye, Database, Square, CheckSquare, Ticket, LineChart, ChevronsUp, Briefcase, ArrowUpRight, ArrowDownRight, Crosshair, Award, ArrowUpCircle
         } from 'lucide-react';
 
         // --- 完整台股資料庫 (壓縮儲存) ---
@@ -123,6 +123,8 @@
         const STRATEGIES = [
             // 調整順序：芝麻開花移至第一位
             { id: 'twist_flower', label: '芝麻開花', icon: Sprout, color: 'bg-gradient-to-r from-fuchsia-600 via-purple-600 to-indigo-600 text-white shadow-[0_0_20px_rgba(192,38,211,0.6)] border-fuchsia-400' },
+            // 新增 多頭突破上關
+            { id: 'bull_breakout_upper', label: '多頭突破上關', icon: ArrowUpCircle, color: 'bg-gradient-to-r from-rose-500 to-pink-600 text-white shadow-[0_0_15px_rgba(225,29,72,0.6)] border-rose-400' },
             { id: 'monthly_up', label: '月來越好', icon: TrendingUp, color: 'bg-gradient-to-r from-red-600 via-rose-600 to-pink-600 text-white shadow-[0_0_20px_rgba(244,63,94,0.6)] border-rose-400' },
             { id: 'quarterly_gold', label: '季不可失', icon: Rocket, color: 'bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 text-white shadow-[0_0_20px_rgba(245,158,11,0.6)] border-amber-300' },
             { id: 'wait_monthly', label: '守株待兔', icon: Clock, color: 'bg-gradient-to-r from-blue-600 via-sky-600 to-cyan-500 text-white shadow-[0_0_20px_rgba(14,165,233,0.6)] border-sky-400' },
@@ -819,6 +821,7 @@
                     if (label === '月來越好') return '📈';
                     if (label === '季不可失') return '🚀';
                     if (label === '芝麻開花') return '🌀';
+                    if (label === '多頭突破上關') return '🆙';
                     if (label === '守株待兔') return '🐰';
                     if (label === 'KD金叉') return '⚡';
                     if (label === 'MACD翻紅') return '📶';
