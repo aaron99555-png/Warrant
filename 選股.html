@@ -632,8 +632,11 @@
                     group.strategies.forEach(strat => {
                         if (filterStrategy.length > 0 && !filterStrategy.includes(strat.strategyLabel)) return;
                         if (!groupedByStrategy[strat.strategyLabel]) groupedByStrategy[strat.strategyLabel] = [];
-                        const entry = `${group.code} ${group.name}`;
-                        if (!groupedByStrategy[strat.strategyLabel].includes(entry)) groupedByStrategy[strat.strategyLabel].push(entry);
+                        const entryText = `${group.code} ${group.name}`;
+                        // 將文字與輸入時間(id)綁定，以備特殊排序
+                        if (!groupedByStrategy[strat.strategyLabel].some(item => item.text === entryText)) {
+                            groupedByStrategy[strat.strategyLabel].push({ text: entryText, id: strat.id });
+                        }
                     });
                 });
 
@@ -656,7 +659,18 @@
                     if (groupedByStrategy[strat.label] && groupedByStrategy[strat.label].length > 0) {
                         const count = groupedByStrategy[strat.label].length;
                         text += `${getIcon(strat.label)} ${strat.label} (${count}檔):\n`;
-                        const sortedList = sortStockList(groupedByStrategy[strat.label]);
+                        
+                        let sortedList;
+                        // 針對興櫃突破策略：依輸入時間由先到後排序
+                        if (strat.label === '興櫃-多頭突破上關價') {
+                            sortedList = groupedByStrategy[strat.label]
+                                .sort((a, b) => a.id - b.id)
+                                .map(item => item.text);
+                        } else {
+                        // 其他策略：依股號由小到大排序
+                            sortedList = sortStockList(groupedByStrategy[strat.label].map(item => item.text));
+                        }
+                        
                         text += sortedList.join('\n');
                         text += '\n\n';
                     }
