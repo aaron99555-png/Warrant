@@ -315,11 +315,11 @@
                 let text = title;
 
                 if (type === 'cdp') {
-                    text += `\n[CDP 系統]\nAH (追買): ${calcResults.cdp.AH}\nNH (壓力): ${calcResults.cdp.NH}\nCDP(中軸): ${calcResults.cdp.CDP}\nNL (支撐): ${calcResults.cdp.NL}\nAL (追賣): ${calcResults.cdp.AL}\n`;
+                    text += `\n[#️⃣ CDP 系統]\nAH (追買): ${calcResults.cdp.AH}\nNH (壓力): ${calcResults.cdp.NH}\nCDP(中軸): ${calcResults.cdp.CDP}\nNL (支撐): ${calcResults.cdp.NL}\nAL (追賣): ${calcResults.cdp.AL}\n`;
                 } else if (type === 'pivot') {
-                    text += `\n[Pivot Points 樞軸點]\nR2 (壓二): ${calcResults.pivot.R2}\nR1 (壓一): ${calcResults.pivot.R1}\nP  (樞軸): ${calcResults.pivot.P}\nS1 (撐一): ${calcResults.pivot.S1}\nS2 (撐二): ${calcResults.pivot.S2}\n`;
+                    text += `\n[🎯 Pivot Points 樞軸點]\nR2 (壓二): ${calcResults.pivot.R2}\nR1 (壓一): ${calcResults.pivot.R1}\nP  (樞軸): ${calcResults.pivot.P}\nS1 (撐一): ${calcResults.pivot.S1}\nS2 (撐二): ${calcResults.pivot.S2}\n`;
                 } else if (type === 'fibo') {
-                    text += `\n[Fibonacci 黃金切割]\nR3 (1.000): ${calcResults.fibo.R3}\nR2 (0.618): ${calcResults.fibo.R2}\nR1 (0.382): ${calcResults.fibo.R1}\nP  (基 準): ${calcResults.fibo.P}\nS1 (0.382): ${calcResults.fibo.S1}\nS2 (0.618): ${calcResults.fibo.S2}\nS3 (1.000): ${calcResults.fibo.S3}\n`;
+                    text += `\n[📊 Fibonacci 黃金分割]\nR3 (1.000): ${calcResults.fibo.R3}\nR2 (0.618): ${calcResults.fibo.R2}\nR1 (0.382): ${calcResults.fibo.R1}\nP  (基 準): ${calcResults.fibo.P}\nS1 (0.382): ${calcResults.fibo.S1}\nS2 (0.618): ${calcResults.fibo.S2}\nS3 (1.000): ${calcResults.fibo.S3}\n`;
                 }
 
                 copyCalcDataToClipboard(text, type);
@@ -1402,8 +1402,8 @@
             );
 
             const renderCalculatorView = () => (
-                <div className="w-full flex-1 flex flex-col items-center justify-center py-8">
-                    <div className="w-full max-w-4xl mx-auto space-y-8 animate-fade-in-down flex flex-col items-center">
+                <div className="w-full flex-1 flex flex-col items-center justify-start py-8 lg:pl-[20%]">
+                    <div className="w-full max-w-4xl mx-auto space-y-8 animate-fade-in-down flex flex-col items-center pb-20 pr-4 lg:pr-8">
                         <div className="flex flex-col items-center text-center gap-4 w-full">
                             <div className="p-4 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-[2rem] shadow-xl shadow-purple-500/20">
                                 <Calculator className="text-white w-12 h-12" strokeWidth={1.5} />
