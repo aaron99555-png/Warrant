@@ -101,14 +101,14 @@
             { id: 'macd_red', label: 'MACD翻紅', icon: Activity, color: 'bg-gradient-to-r from-rose-500 via-red-500 to-orange-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.6)] border-red-300' },
             { id: 'turnover_value', label: '高成交值', icon: DollarSign, color: 'bg-gradient-to-r from-teal-500 via-teal-600 to-cyan-600 text-white shadow-[0_0_20px_rgba(20,184,166,0.6)] border-teal-400' },
             { id: 'bull_obv', label: 'OBV突破', icon: BarChart2, color: 'bg-gradient-to-r from-emerald-600 via-green-600 to-lime-600 text-white shadow-[0_0_20px_rgba(16,185,129,0.6)] border-emerald-400' },
-            { id: 'chip_foreign_buy', label: '外資買進', icon: Globe, color: 'bg-gradient-to-r from-sky-500 to-indigo-500 text-white shadow-[0_0_20px_rgba(99,102,241,0.6)] border-indigo-300' },
-            { id: 'chip_trust_buy', label: '投信買進', icon: Landmark, color: 'bg-gradient-to-r from-amber-500 to-red-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.6)] border-red-300' },
+            { id: 'foreign_buy', label: '外資買進', icon: Globe, color: 'bg-gradient-to-r from-sky-500 to-indigo-500 text-white shadow-[0_0_20px_rgba(99,102,241,0.6)] border-indigo-300' },
+            { id: 'trust_buy', label: '投信買進', icon: Landmark, color: 'bg-gradient-to-r from-amber-500 to-red-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.6)] border-red-300' },
             { id: 'warrant_big', label: '權證大單追蹤', icon: Ticket, color: 'bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 text-white shadow-[0_0_20px_rgba(147,51,234,0.6)] border-violet-400' },
             { id: 'pullback_buy', label: '回後買上漲', icon: RotateCcw, color: 'bg-gradient-to-r from-lime-500 to-green-500 text-white shadow-[0_0_20px_rgba(132,204,22,0.6)] border-lime-400' },
-            { id: 'chip_four_lines_up', label: '四線上揚籌碼集中', icon: LineChart, color: 'bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white shadow-[0_0_20px_rgba(168,85,247,0.6)] border-purple-400' },
+            { id: 'four_lines_up', label: '四線上揚籌碼集中', icon: LineChart, color: 'bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white shadow-[0_0_20px_rgba(168,85,247,0.6)] border-purple-400' },
             { id: 'close_futures_pull', label: '收盤期貨續拉', icon: ChevronsUp, color: 'bg-gradient-to-r from-orange-600 via-red-600 to-rose-600 text-white shadow-[0_0_20px_rgba(225,29,72,0.6)] border-red-400' },
             { id: 'price_volume_up', label: '量價齊揚', icon: ArrowUpRight, color: 'bg-gradient-to-r from-emerald-400 via-cyan-500 to-blue-500 text-white shadow-[0_0_20px_rgba(6,182,212,0.6)] border-cyan-300' },
-            { id: 'chip_institutional_support', label: '法人加持', icon: Briefcase, color: 'bg-gradient-to-r from-blue-500 via-indigo-500 to-violet-500 text-white shadow-[0_0_20px_rgba(99,102,241,0.6)] border-indigo-400' },
+            { id: 'institutional_support', label: '法人加持', icon: Briefcase, color: 'bg-gradient-to-r from-blue-500 via-indigo-500 to-violet-500 text-white shadow-[0_0_20px_rgba(99,102,241,0.6)] border-indigo-400' },
             { id: 'revenue_high', label: '多頭月營收創高', icon: Award, color: 'bg-gradient-to-r from-yellow-500 via-amber-500 to-orange-500 text-white shadow-[0_0_15px_rgba(245,158,11,0.6)] border-yellow-300' },
             { id: 'bear_trend', label: '跌破月季線', icon: ArrowDownCircle, color: 'bg-gradient-to-r from-slate-600 to-slate-800 text-white shadow-[0_0_15px_rgba(71,85,105,0.6)] border-slate-500' },
             { id: 'bear_trend_2', label: '高檔反轉', icon: TrendingDown, color: 'bg-gradient-to-r from-zinc-600 to-zinc-800 text-white shadow-[0_0_15px_rgba(82,82,91,0.6)] border-zinc-500' },
@@ -207,123 +207,6 @@
 
             const [toast, setToast] = useState(null);
             const [confirmModal, setConfirmModal] = useState({ show: false, title: '', message: '', onConfirm: () => {} });
-
-            // --- 新增：計算機狀態與邏輯 ---
-            const [calcSessionType, setCalcSessionType] = useState('日盤');
-            const [calcHigh, setCalcHigh] = useState('');
-            const [calcLow, setCalcLow] = useState('');
-            const [calcClose, setCalcClose] = useState('');
-            const [calcError, setCalcError] = useState('');
-            const [calcResults, setCalcResults] = useState(null);
-            const [calcCopyState, setCalcCopyState] = useState({ cdp: false, pivot: false, fibo: false });
-
-            const getTodayStringForCalc = () => {
-                const d = new Date();
-                const yyyy = d.getFullYear();
-                const mm = String(d.getMonth() + 1).padStart(2, '0');
-                const dd = String(d.getDate()).padStart(2, '0');
-                return `${yyyy}/${mm}/${dd}`;
-            };
-
-            const handleCalculatePoints = () => {
-                setCalcError('');
-                setCalcResults(null);
-
-                if (!calcHigh || !calcLow || !calcClose) {
-                    setCalcError('請填寫完整的 最高價、最低價 與 收盤價。');
-                    return;
-                }
-
-                const H = parseFloat(calcHigh);
-                const L = parseFloat(calcLow);
-                const C = parseFloat(calcClose);
-
-                if (H < L) {
-                    setCalcError('錯誤：最高價 (High) 不能低於 最低價 (Low)！');
-                    return;
-                }
-                if (C > H || C < L) {
-                    setCalcError('錯誤：收盤價 (Close) 必須介於最高價與最低價之間！');
-                    return;
-                }
-
-                const range = H - L;
-
-                const cdp = (H + L + 2 * C) / 4;
-                const cdpData = {
-                    AH: (cdp + range).toFixed(2),
-                    NH: (2 * cdp - L).toFixed(2),
-                    CDP: cdp.toFixed(2),
-                    NL: (2 * cdp - H).toFixed(2),
-                    AL: (cdp - range).toFixed(2)
-                };
-
-                const p = (H + L + C) / 3;
-                const pivotData = {
-                    R2: (p + range).toFixed(2),
-                    R1: (2 * p - L).toFixed(2),
-                    P: p.toFixed(2),
-                    S1: (2 * p - H).toFixed(2),
-                    S2: (p - range).toFixed(2)
-                };
-
-                const fiboData = {
-                    R3: (p + range * 1.000).toFixed(2),
-                    R2: (p + range * 0.618).toFixed(2),
-                    R1: (p + range * 0.382).toFixed(2),
-                    P: p.toFixed(2),
-                    S1: (p - range * 0.382).toFixed(2),
-                    S2: (p - range * 0.618).toFixed(2),
-                    S3: (p - range * 1.000).toFixed(2)
-                };
-
-                setCalcResults({
-                    date: getTodayStringForCalc(),
-                    sessionType: calcSessionType,
-                    cdp: cdpData,
-                    pivot: pivotData,
-                    fibo: fiboData
-                });
-            };
-
-            const copyCalcDataToClipboard = (text, type) => {
-                const textArea = document.createElement("textarea");
-                textArea.value = text;
-                textArea.style.position = "fixed";
-                textArea.style.left = "-9999px";
-                document.body.appendChild(textArea);
-                textArea.focus();
-                textArea.select();
-
-                try {
-                    document.execCommand('copy');
-                    setCalcCopyState(prev => ({ ...prev, [type]: true }));
-                    setTimeout(() => {
-                        setCalcCopyState(prev => ({ ...prev, [type]: false }));
-                    }, 2000);
-                } catch (err) {
-                    console.error('複製失敗', err);
-                    setCalcError('瀏覽器不支援複製功能，請手動選取複製。');
-                }
-                document.body.removeChild(textArea);
-            };
-
-            const handleCopyCalcAction = (type) => {
-                if (!calcResults) return;
-
-                const title = `【${calcResults.date} ${calcResults.sessionType} 關鍵點位參考】\n`;
-                let text = title;
-
-                if (type === 'cdp') {
-                    text += `\n[#️⃣ CDP 系統]\nAH (追買): ${calcResults.cdp.AH}\nNH (壓力): ${calcResults.cdp.NH}\nCDP(中軸): ${calcResults.cdp.CDP}\nNL (支撐): ${calcResults.cdp.NL}\nAL (追賣): ${calcResults.cdp.AL}\n`;
-                } else if (type === 'pivot') {
-                    text += `\n[🎯 Pivot Points 樞軸點]\nR2 (壓二): ${calcResults.pivot.R2}\nR1 (壓一): ${calcResults.pivot.R1}\nP  (樞軸): ${calcResults.pivot.P}\nS1 (撐一): ${calcResults.pivot.S1}\nS2 (撐二): ${calcResults.pivot.S2}\n`;
-                } else if (type === 'fibo') {
-                    text += `\n[📊 Fibonacci 黃金分割]\nR3 (1.000): ${calcResults.fibo.R3}\nR2 (0.618): ${calcResults.fibo.R2}\nR1 (0.382): ${calcResults.fibo.R1}\nP  (基 準): ${calcResults.fibo.P}\nS1 (0.382): ${calcResults.fibo.S1}\nS2 (0.618): ${calcResults.fibo.S2}\nS3 (1.000): ${calcResults.fibo.S3}\n`;
-                }
-
-                copyCalcDataToClipboard(text, type);
-            };
 
             useEffect(() => {
                 localStorage.setItem('ryan_stock_logs', JSON.stringify(logs));
@@ -1394,193 +1277,6 @@
                 </section>
             );
 
-            const PointRow = ({ label, value, colorClass }) => (
-                <div className="flex justify-between items-center py-2.5 border-b border-slate-700/50 last:border-0">
-                    <span className={`text-sm font-bold tracking-wide ${colorClass}`}>{label}</span>
-                    <span className="font-mono text-lg font-bold text-white tracking-wider drop-shadow-sm">{value}</span>
-                </div>
-            );
-
-            const renderCalculatorView = () => (
-                <div className="w-full flex-1 flex flex-col items-center justify-start py-8 lg:pl-[20%]">
-                    <div className="w-full max-w-4xl mx-auto space-y-8 animate-fade-in-down flex flex-col items-center pb-20 pr-4 lg:pr-8">
-                        <div className="flex flex-col items-center text-center gap-4 w-full">
-                            <div className="p-4 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-[2rem] shadow-xl shadow-purple-500/20">
-                                <Calculator className="text-white w-12 h-12" strokeWidth={1.5} />
-                            </div>
-                            <div className="space-y-2">
-                                <h1 className="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-100 via-purple-200 to-pink-300 tracking-tight">
-                                    大盤支撐壓力計算機
-                                </h1>
-                                <p className="text-slate-400 text-sm md:text-base font-medium tracking-widest uppercase flex items-center justify-center gap-2">
-                                    <Activity size={16} className="text-pink-400"/>
-                                    CDP / Pivot / Fibonacci 專業點位分析
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="w-full bg-[#111827]/80 backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-8 md:p-10 shadow-2xl relative overflow-hidden group transition-all duration-500 hover:border-purple-500/40 hover:shadow-purple-900/20">
-                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.02] group-hover:opacity-[0.04] transition-opacity duration-700 pointer-events-none scale-150">
-                                <Calculator size={400} />
-                            </div>
-                            
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10 w-full">
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                                        <Clock size={14} className="text-purple-400" /> 預測目標盤別
-                                    </label>
-                                    <select 
-                                        value={calcSessionType}
-                                        onChange={(e) => setCalcSessionType(e.target.value)}
-                                        className="w-full bg-[#1F2937] border border-slate-700 text-white rounded-xl px-4 py-3 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 transition-all font-bold appearance-none cursor-pointer shadow-inner hover:bg-slate-800"
-                                        style={{ backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: 'right 0.5rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.5em 1.5em', paddingRight: '2.5rem' }}
-                                    >
-                                        <option value="日盤">日盤</option>
-                                        <option value="夜盤">夜盤</option>
-                                        <option value="全盤 (日+夜)">全盤 (日+夜)</option>
-                                    </select>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                                        <TrendingUp size={14} className="text-rose-400" /> 昨日最高價 (High)
-                                    </label>
-                                    <input 
-                                        type="number" step="any" placeholder="輸入最高價"
-                                        value={calcHigh} onChange={(e) => setCalcHigh(e.target.value)}
-                                        className="w-full bg-[#1F2937] border border-slate-700 text-rose-100 rounded-xl px-4 py-3 outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/50 transition-all font-mono font-bold text-lg placeholder:text-slate-600 shadow-inner hover:bg-slate-800"
-                                    />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                                        <TrendingDown size={14} className="text-emerald-400" /> 昨日最低價 (Low)
-                                    </label>
-                                    <input 
-                                        type="number" step="any" placeholder="輸入最低價"
-                                        value={calcLow} onChange={(e) => setCalcLow(e.target.value)}
-                                        className="w-full bg-[#1F2937] border border-slate-700 text-emerald-100 rounded-xl px-4 py-3 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/50 transition-all font-mono font-bold text-lg placeholder:text-slate-600 shadow-inner hover:bg-slate-800"
-                                    />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                                        <Crosshair size={14} className="text-amber-400" /> 昨日收盤價 (Close)
-                                    </label>
-                                    <input 
-                                        type="number" step="any" placeholder="輸入收盤價"
-                                        value={calcClose} onChange={(e) => setCalcClose(e.target.value)}
-                                        className="w-full bg-[#1F2937] border border-slate-700 text-amber-100 rounded-xl px-4 py-3 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/50 transition-all font-mono font-bold text-lg placeholder:text-slate-600 shadow-inner hover:bg-slate-800"
-                                    />
-                                </div>
-                            </div>
-
-                            {calcError && (
-                                <div className="mt-8 flex items-center justify-center gap-3 text-rose-500 bg-rose-500/10 px-6 py-4 rounded-xl border border-rose-500/20 animate-fade-in-down relative z-10 text-center max-w-lg mx-auto shadow-lg">
-                                    <AlertCircle size={20} />
-                                    <span className="text-base font-bold tracking-wide">{calcError}</span>
-                                </div>
-                            )}
-
-                            <div className="mt-10 pt-8 border-t border-slate-700/50 relative z-10 flex justify-center w-full">
-                                <button 
-                                    onClick={handleCalculatePoints}
-                                    className="w-full md:w-[320px] flex justify-center items-center gap-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-black tracking-widest px-8 py-4 rounded-2xl shadow-[0_0_30px_rgba(219,39,119,0.5)] transition-all active:scale-95 text-xl border border-pink-500/30"
-                                >
-                                    <Activity size={24} /> 開始計算
-                                </button>
-                            </div>
-                        </div>
-
-                        {calcResults && (
-                            <div className="w-full animate-fade-in-down space-y-8 pb-10">
-                                <div className="text-center py-5 bg-slate-800/80 border border-slate-600 rounded-3xl shadow-xl w-full relative overflow-hidden">
-                                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500"></div>
-                                    <h2 className="text-xl md:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-200 to-pink-400">
-                                        【{calcResults.date} {calcResults.sessionType} 關鍵點位參考】
-                                    </h2>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
-                                    
-                                    {/* CDP */}
-                                    <div className="bg-[#111827] border border-white/10 rounded-[2rem] overflow-hidden flex flex-col shadow-2xl hover:-translate-y-1 transition-transform duration-300">
-                                        <div className="bg-[#1F2937] py-4 px-6 border-b border-slate-700 flex items-center justify-center gap-2">
-                                            <Hash size={18} className="text-purple-400" />
-                                            <h3 className="font-black text-slate-100 uppercase tracking-widest text-base">CDP 系統</h3>
-                                        </div>
-                                        <div className="p-6 space-y-2 flex-1">
-                                            <PointRow label="AH (追買)" value={calcResults.cdp.AH} colorClass="text-rose-400" />
-                                            <PointRow label="NH (壓力)" value={calcResults.cdp.NH} colorClass="text-pink-400" />
-                                            <PointRow label="CDP (中軸)" value={calcResults.cdp.CDP} colorClass="text-amber-400" />
-                                            <PointRow label="NL (支撐)" value={calcResults.cdp.NL} colorClass="text-teal-400" />
-                                            <PointRow label="AL (追賣)" value={calcResults.cdp.AL} colorClass="text-emerald-400" />
-                                        </div>
-                                        <div className="p-6 pt-0 mt-auto">
-                                            <button 
-                                                onClick={() => handleCopyCalcAction('cdp')}
-                                                className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-all border ${calcCopyState.cdp ? 'bg-emerald-500 text-white border-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.5)]' : 'bg-slate-800 text-slate-300 border-slate-600 hover:bg-slate-700 hover:text-white'}`}
-                                            >
-                                                {calcCopyState.cdp ? <><CheckCircle2 size={18}/> 複製成功</> : <><Copy size={18}/> 📋 一鍵複製</>}
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {/* Pivot Points */}
-                                    <div className="bg-[#111827] border border-white/10 rounded-[2rem] overflow-hidden flex flex-col shadow-2xl hover:-translate-y-1 transition-transform duration-300 transform md:-translate-y-4">
-                                        <div className="bg-[#1F2937] py-4 px-6 border-b border-slate-700 flex items-center justify-center gap-2">
-                                            <Crosshair size={18} className="text-blue-400" />
-                                            <h3 className="font-black text-slate-100 uppercase tracking-widest text-base">Pivot 樞軸點</h3>
-                                        </div>
-                                        <div className="p-6 space-y-2 flex-1">
-                                            <PointRow label="R2 (壓二)" value={calcResults.pivot.R2} colorClass="text-rose-400" />
-                                            <PointRow label="R1 (壓一)" value={calcResults.pivot.R1} colorClass="text-pink-400" />
-                                            <PointRow label="P (樞軸)" value={calcResults.pivot.P} colorClass="text-amber-400" />
-                                            <PointRow label="S1 (撐一)" value={calcResults.pivot.S1} colorClass="text-teal-400" />
-                                            <PointRow label="S2 (撐二)" value={calcResults.pivot.S2} colorClass="text-emerald-400" />
-                                        </div>
-                                        <div className="p-6 pt-0 mt-auto">
-                                            <button 
-                                                onClick={() => handleCopyCalcAction('pivot')}
-                                                className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-all border ${calcCopyState.pivot ? 'bg-emerald-500 text-white border-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.5)]' : 'bg-slate-800 text-slate-300 border-slate-600 hover:bg-slate-700 hover:text-white'}`}
-                                            >
-                                                {calcCopyState.pivot ? <><CheckCircle2 size={18}/> 複製成功</> : <><Copy size={18}/> 📋 一鍵複製</>}
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {/* Fibonacci */}
-                                    <div className="bg-[#111827] border border-white/10 rounded-[2rem] overflow-hidden flex flex-col shadow-2xl hover:-translate-y-1 transition-transform duration-300">
-                                        <div className="bg-[#1F2937] py-4 px-6 border-b border-slate-700 flex items-center justify-center gap-2">
-                                            <Layers size={18} className="text-amber-400" />
-                                            <h3 className="font-black text-slate-100 uppercase tracking-widest text-base">Fibonacci 分割</h3>
-                                        </div>
-                                        <div className="p-6 space-y-2 flex-1">
-                                            <PointRow label="R3 (1.000)" value={calcResults.fibo.R3} colorClass="text-rose-500" />
-                                            <PointRow label="R2 (0.618)" value={calcResults.fibo.R2} colorClass="text-rose-400" />
-                                            <PointRow label="R1 (0.382)" value={calcResults.fibo.R1} colorClass="text-pink-400" />
-                                            <PointRow label="P (基 準)" value={calcResults.fibo.P} colorClass="text-amber-400" />
-                                            <PointRow label="S1 (0.382)" value={calcResults.fibo.S1} colorClass="text-teal-400" />
-                                            <PointRow label="S2 (0.618)" value={calcResults.fibo.S2} colorClass="text-emerald-400" />
-                                            <PointRow label="S3 (1.000)" value={calcResults.fibo.S3} colorClass="text-emerald-500" />
-                                        </div>
-                                        <div className="p-6 pt-0 mt-auto">
-                                            <button 
-                                                onClick={() => handleCopyCalcAction('fibo')}
-                                                className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-all border ${calcCopyState.fibo ? 'bg-emerald-500 text-white border-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.5)]' : 'bg-slate-800 text-slate-300 border-slate-600 hover:bg-slate-700 hover:text-white'}`}
-                                            >
-                                                {calcCopyState.fibo ? <><CheckCircle2 size={18}/> 複製成功</> : <><Copy size={18}/> 📋 一鍵複製</>}
-                                            </button>
-                                        </div>
-                                    </div>
-                                    
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            );
-
             const renderPlanView = () => {
                 return (
                 <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -1691,22 +1387,7 @@
                             <table className="w-full text-left border-collapse">
                                 <thead>
                                     <tr className="bg-slate-950/80 text-blue-300 text-xs font-bold uppercase tracking-wider border-b border-white/10">
-                                        <th className="py-3 px-2 text-center w-24">日期</th>
-                                        <th className="py-3 px-2 text-center w-16">代號</th>
-                                        <th className="py-3 px-2 w-24">名稱</th>
-                                        <th className="py-3 px-1 text-center bg-slate-900/50 w-24">股票進出</th>
-                                        <th className="py-3 px-1 text-center bg-slate-900/50 w-16">移動停利</th>
-                                        <th className="py-3 px-1 text-center bg-slate-800/80 border-l border-white/10 w-16">現價</th>
-                                        <th className="py-3 px-1 text-center bg-slate-900/50 w-12">張</th>
-                                        <th className="py-3 px-1 text-center bg-slate-900/50 w-20">股損益</th>
-                                        <th className="py-3 px-1 text-center bg-yellow-900/10 border-l border-white/5 w-24">權證代號</th>
-                                        <th className="py-3 px-1 text-center bg-yellow-900/10 w-24">權證進出</th>
-                                        <th className="py-3 px-1 text-center bg-yellow-900/10 w-16 border-l border-white/5">權證現價</th>
-                                        <th className="py-3 px-1 text-center bg-yellow-900/10 w-12">張</th>
-                                        <th className="py-3 px-1 text-center bg-yellow-900/10 w-20">權損益</th>
-                                        <th className="py-3 px-1 text-center bg-slate-900/20 w-24 border-l border-white/10 font-black text-white">單筆總益</th>
-                                        <th className="py-3 px-1 w-14 text-center">庫存</th>
-                                        <th className="py-3 px-1 w-16 text-right">操作</th>
+                                        <th className="py-3 px-1 w-20">日期</th><th className="py-3 px-1 w-16">代號</th><th className="py-3 px-1 w-20">名稱</th><th className="py-3 px-1 text-center bg-slate-900/50 w-24">股票進出</th><th className="py-3 px-1 text-center bg-slate-900/50 w-16">移動停利</th><th className="py-3 px-1 text-center bg-slate-800/80 border-l border-white/10 w-16">現價</th><th className="py-3 px-1 text-center bg-slate-900/50 w-12">張</th><th className="py-3 px-1 text-center bg-slate-900/50 w-20">股損益</th><th className="py-3 px-1 text-center bg-yellow-900/10 border-l border-white/5 w-24">權證代號</th><th className="py-3 px-1 text-center bg-yellow-900/10 w-24">權證進出</th><th className="py-3 px-1 text-center bg-yellow-900/10 w-16 border-l border-white/5">權證現價</th><th className="py-3 px-1 text-center bg-yellow-900/10 w-12">張</th><th className="py-3 px-1 text-center bg-yellow-900/10 w-20">權損益</th><th className="py-3 px-1 text-center bg-slate-900/20 w-24 border-l border-white/10 font-black text-white">單筆總益</th><th className="py-3 px-1 w-14 text-center">庫存</th><th className="py-3 px-1 w-16 text-right">操作</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-white/5">
@@ -1746,9 +1427,9 @@
 
                                             return (
                                                 <tr key={log.id} className={`hover:bg-white/5 transition-colors text-xs ${editingId === log.id ? 'bg-blue-900/10 border-l-2 border-blue-500' : ''}`}>
-                                                    <td className="py-3 px-2 text-center text-slate-400 font-mono">{log.date}</td>
-                                                    <td className="py-3 px-2 text-center font-mono text-cyan-300 font-bold">{log.code}</td>
-                                                    <td className="py-3 px-2 text-white font-bold truncate max-w-[80px]" title={log.name}>{log.name}</td>
+                                                    <td className="py-3 px-1 text-slate-400 font-mono">{log.date}</td>
+                                                    <td className="py-3 px-1 font-mono text-cyan-300 font-bold">{log.code}</td>
+                                                    <td className="py-3 px-1 text-white font-bold max-w-[80px] truncate" title={log.name}>{log.name}</td>
                                                     <td className="py-3 px-1 text-center bg-slate-900/30"><div className="flex flex-col gap-0.5"><span className="text-[10px] text-slate-400">進: {log.entry || '-'}</span><span className="text-[10px] text-slate-300">出: {log.exit || '-'}</span></div></td>
                                                     <td className="py-3 px-1 text-center font-mono text-red-400 bg-slate-900/30">{log.takeProfit || '-'}</td>
                                                     <td className="py-3 px-1 text-center bg-slate-800/80 border-l border-white/5"><input type="number" className="w-14 bg-slate-900 border border-slate-600 rounded px-1 text-right text-white focus:border-blue-500 outline-none text-xs font-mono font-bold py-1" placeholder="-" value={log.currentPrice || ''} onClick={(e) => e.stopPropagation()} onChange={(e) => handleUpdateLogField(log.id, 'currentPrice', e.target.value)} /></td>
@@ -1780,7 +1461,7 @@
             };
 
             return (
-                <div className="min-h-screen bg-[#0B1121] text-slate-100 font-sans pb-20 selection:bg-fuchsia-500/30 relative flex flex-col">
+                <div className="min-h-screen bg-[#0B1121] text-slate-100 font-sans pb-20 selection:bg-fuchsia-500/30 relative">
                     
                     {/* Add Custom Stock Modal */}
                     {showAddStockModal && (
@@ -1838,20 +1519,19 @@
                     )}
 
                     <header className="bg-[#0B1121]/80 border-b border-white/10 backdrop-blur-xl sticky top-0 z-30 shadow-2xl">
-                        <div className="w-[98%] max-w-[2400px] mx-auto px-4 py-4 flex flex-col xl:flex-row justify-between items-center gap-4 relative">
-                            <div className="flex items-center justify-center xl:justify-start gap-4 group w-full xl:w-1/3">
+                        <div className="w-[98%] max-w-[2400px] mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+                            <div className="flex items-center gap-4 group">
                                 <div className="bg-gradient-to-br from-cyan-500 via-blue-600 to-purple-600 p-2.5 rounded-xl shadow-[0_0_20px_rgba(59,130,246,0.5)] group-hover:scale-105 transition-transform duration-300"><Activity size={24} className="text-white" /></div>
-                                <h1 className="text-2xl font-artistic tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-200 to-cyan-300 drop-shadow-sm whitespace-nowrap">萊恩交易手札</h1>
+                                <h1 className="text-2xl font-artistic tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-200 to-cyan-300 drop-shadow-sm">萊恩交易手札</h1>
                             </div>
                             
-                            <div className="flex bg-[#1F2937] p-1.5 rounded-xl border border-white/5 shrink-0 mx-auto justify-center overflow-x-auto w-full md:w-auto">
-                                <button onClick={() => setActiveTab('journal')} className={`px-4 md:px-5 py-2.5 rounded-lg text-xs md:text-sm font-bold transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === 'journal' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-900/50' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}><BookOpen size={16} /> 選股日誌</button>
-                                <button onClick={() => setActiveTab('calculator')} className={`px-4 md:px-5 py-2.5 rounded-lg text-xs md:text-sm font-bold transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === 'calculator' ? 'bg-gradient-to-r from-purple-500 to-pink-600 text-white shadow-lg shadow-pink-900/50' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}><Calculator size={16} /> 支撐壓力計算機</button>
-                                <button onClick={() => setActiveTab('plan')} className={`px-4 md:px-5 py-2.5 rounded-lg text-xs md:text-sm font-bold transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === 'plan' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-900/50' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}><ClipboardList size={16} /> 交易規劃紀錄</button>
+                            <div className="flex bg-[#1F2937] p-1.5 rounded-xl border border-white/5">
+                                <button onClick={() => setActiveTab('journal')} className={`px-5 py-2.5 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'journal' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-900/50' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}><BookOpen size={16} /> 選股日誌</button>
+                                <button onClick={() => setActiveTab('plan')} className={`px-5 py-2.5 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'plan' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-900/50' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}><ClipboardList size={16} /> 交易規劃紀錄</button>
                             </div>
 
-                            <div className="flex items-center justify-center xl:justify-end gap-4 text-sm font-medium w-full xl:w-1/3">
-                                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#1F2937] border border-slate-700 shadow-inner"><Target size={14} className="text-cyan-400"/><span className="text-slate-300">筆數:</span><span className="text-white font-mono font-bold">{activeTab === 'journal' ? displayLogs.length : (activeTab === 'plan' ? logsWithPlans.length : '-')}</span></div>
+                            <div className="flex items-center gap-4 text-sm font-medium">
+                                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#1F2937] border border-slate-700 shadow-inner"><Target size={14} className="text-cyan-400"/><span className="text-slate-300">筆數:</span><span className="text-white font-mono font-bold">{activeTab === 'journal' ? displayLogs.length : logsWithPlans.length}</span></div>
                                 {activeTab === 'journal' && (
                                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#1F2937] border border-slate-700 shadow-inner"><Star size={14} className="text-amber-400 fill-amber-400 animate-pulse"/><span className="text-slate-300">追蹤清單:</span><span className="text-amber-400 font-mono font-bold">{trackedCount}</span></div>
                                 )}
@@ -1859,10 +1539,8 @@
                         </div>
                     </header>
 
-                    <main className="w-[98%] max-w-[2400px] mx-auto p-4 md:p-6 space-y-8 flex-1">
-                        {activeTab === 'journal' && renderJournalView()}
-                        {activeTab === 'calculator' && renderCalculatorView()}
-                        {activeTab === 'plan' && renderPlanView()}
+                    <main className="w-[98%] max-w-[2400px] mx-auto p-4 md:p-6 space-y-8">
+                        {activeTab === 'journal' ? renderJournalView() : renderPlanView()}
                     </main>
                 </div>
             );
